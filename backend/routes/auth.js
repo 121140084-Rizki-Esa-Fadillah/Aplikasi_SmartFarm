@@ -7,10 +7,11 @@ const router = express.Router();
 router.post("/login", async (req, res) => {
       const {
             username,
-            password
+            password,
+            deviceToken
       } = req.body;
       try {
-            const result = await AuthService.login(username, password);
+            const result = await AuthService.login(username, password, deviceToken);
             res.json(result);
       } catch (error) {
             res.status(400).json({
@@ -18,6 +19,7 @@ router.post("/login", async (req, res) => {
             });
       }
 });
+
 
 // ✅ Logout Route
 router.post("/logout", async (req, res) => {

@@ -33,12 +33,12 @@ class KontrolPakanAerator extends StatelessWidget {
             child: SingleChildScrollView(
               padding: const EdgeInsets.only(bottom: 60.0), // Hindari overlap dengan navigasi
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 20),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     KontrolPakan(pondId: pondId), // ✅ Pastikan pondId dikirim
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 20),
                     KontrolAerator(pondId: pondId), // ✅ Pastikan pondId dikirim
                   ],
                 ),

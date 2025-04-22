@@ -7,6 +7,7 @@ class KolomInformasiSensor extends StatelessWidget {
   final String description;
   final List<String> specifications;
   final String optimalRange;
+  final String rangeTitle;
 
   const KolomInformasiSensor({
     super.key,
@@ -15,6 +16,7 @@ class KolomInformasiSensor extends StatelessWidget {
     required this.description,
     required this.specifications,
     required this.optimalRange,
+    required this.rangeTitle,
   });
 
   @override
@@ -108,7 +110,7 @@ class KolomInformasiSensor extends StatelessWidget {
           SizedBox(height: screenHeight * 0.015),
 
           // Rentang Suhu Optimal (Tetap Start)
-          _buildSectionTitle("Rentang Suhu Optimal", screenWidth),
+          _buildSectionTitle(rangeTitle, screenWidth),
           Text(
             optimalRange,
             style: TextStyle(fontSize: screenWidth * 0.035, color: Colors.white),

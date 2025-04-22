@@ -2,9 +2,10 @@ import 'package:flutter/material.dart';
 import '../../color/color_constant.dart';
 import '../../server/api_service.dart';
 import '../widget/button/button_outlined.dart';
-import '../widget/input/input_value.dart';
+import '../widget/input/input_treshold.dart';
 import '../widget/button/button_text.dart';
 import '../pages/monitoring/monitoirng_sensor/informasi_sensor.dart';
+import '../widget/pop_up/custom_dialog.dart';
 
 class KolomPengaturanSensor extends StatefulWidget {
   final String pondId;
@@ -89,8 +90,33 @@ class _KolomPengaturanSensorState extends State<KolomPengaturanSensor> {
         highestValue = tempHighValue;
         lowestValue = tempLowValue;
       });
+
+      String readableSensorName = getReadableSensorName(widget.sensorType);
+
+      CustomDialog.show(
+        context: context,
+        isSuccess: true,
+        message: "Batasan sensor $readableSensorName berhasil diperbarui.",
+      );
     }
   }
+
+// 🔹 Fungsi mapping sensorType ke nama yang ditampilkan
+  String getReadableSensorName(String sensorType) {
+    switch (sensorType.toLowerCase()) {
+      case 'temperature':
+        return 'Suhu';
+      case 'salinity':
+        return 'Salinitas';
+      case 'turbidity':
+        return 'Kekeruhan';
+      case 'ph':
+        return 'pH';
+      default:
+        return sensorType; // fallback ke original jika tidak ditemukan
+    }
+  }
+
 
   String formatNumber(double? number) {
     if (number == null) return "--";
@@ -133,7 +159,11 @@ class _KolomPengaturanSensorState extends State<KolomPengaturanSensor> {
     return Container(
       width: screenWidth * 0.9,
       height: screenHeight * 0.7,
-      padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.05, vertical: screenHeight * 0.02),
+      padding: EdgeInsets.only(
+        left: screenWidth * 0.05,
+        right: screenWidth * 0.05,
+        bottom: screenHeight * 0.02,
+      ),
       decoration: BoxDecoration(
         color: const Color(0x80D9DCD6),
         borderRadius: BorderRadius.circular(10),
@@ -143,7 +173,7 @@ class _KolomPengaturanSensorState extends State<KolomPengaturanSensor> {
         children: [
           // Header
           _buildHeader(screenWidth),
-          SizedBox(height: screenHeight * 0.03),
+          SizedBox(height: screenHeight * 0.04),
 
           // Data Sensor
           Row(
@@ -155,7 +185,7 @@ class _KolomPengaturanSensorState extends State<KolomPengaturanSensor> {
             ],
           ),
 
-          SizedBox(height: screenHeight * 0.03),
+          SizedBox(height: screenHeight * 0.05),
 
           if (tempHighValue != null && tempLowValue != null) ...[
             _buildSettingBox("Tertinggi", tempHighValue!, minValue, maxValue, unit, recommendedHighValue, screenWidth, screenHeight, (value) {
@@ -170,12 +200,17 @@ class _KolomPengaturanSensorState extends State<KolomPengaturanSensor> {
               });
             }),
           ] else
-            CircularProgressIndicator(),
 
           SizedBox(height: screenHeight * 0.02),
           _buildSaveButton(),
 
           SizedBox(height: screenHeight * 0.015),
+          Divider(
+            color: Colors.white,
+            thickness: 1,
+
+          ),
+
           _buildInfoButton(context),
         ],
       ),
@@ -209,7 +244,8 @@ class _KolomPengaturanSensorState extends State<KolomPengaturanSensor> {
     return Column(
       children: [
         Text(label, textAlign: TextAlign.center, style: TextStyle(fontSize: screenWidth * 0.04, fontWeight: FontWeight.bold, color: Colors.white)),
-        Text("$value $unit", style: TextStyle(fontSize: screenWidth * 0.065, fontWeight: FontWeight.bold, color: ColorConstant.primary)),
+        SizedBox(height: 12),
+        Text("$value $unit", style: TextStyle(fontSize: screenWidth * 0.06, fontWeight: FontWeight.bold, color: ColorConstant.primary)),
       ],
     );
   }
@@ -239,7 +275,7 @@ class _KolomPengaturanSensorState extends State<KolomPengaturanSensor> {
         Text(
           "$label",
           style: TextStyle(
-            fontSize: screenWidth * 0.045,
+            fontSize: screenWidth * 0.05,
             fontWeight: FontWeight.bold,
             color: Colors.white,
           ),
@@ -251,14 +287,14 @@ class _KolomPengaturanSensorState extends State<KolomPengaturanSensor> {
           children: [
             Expanded(
               child: Text(
-                "Atur batasan $label \nNilai rekomendasi: ${value % 1 == 0 ? value.toInt() : value}$unit",
+                "Atur batasan $label \nNilai rekomendasi : ${_getFixedRecommendation(label)} $unit",
                 style: TextStyle(
-                  fontSize: screenWidth * 0.03,
+                  fontSize: screenWidth * 0.036,
                   color: Colors.white,
                 ),
               ),
             ),
-            InputValue(
+            InputTresholds(
               initialValue: value,
               minValue: minValue,
               maxValue: maxValue,
@@ -268,11 +304,35 @@ class _KolomPengaturanSensorState extends State<KolomPengaturanSensor> {
             ),
           ],
         ),
-        SizedBox(height: screenHeight * 0.02),
+        SizedBox(height: screenHeight * 0.03),
       ],
     );
   }
 
+  String _getFixedRecommendation(String label) {
+    String sensor = widget.sensorType.toLowerCase();
+
+    Map<String, Map<String, String>> recommendations = {
+      "ph": {
+        "Tertinggi": "8.5",
+        "Terendah": "7.5",
+      },
+      "salinity": {
+        "Tertinggi": "25",
+        "Terendah": "15",
+      },
+      "turbidity": {
+        "Tertinggi": "40",
+        "Terendah": "15",
+      },
+      "temperature": {
+        "Tertinggi": "32",
+        "Terendah": "28",
+      },
+    };
+
+    return "${recommendations[sensor]?[label] ?? '--'}";
+  }
 
   Widget _buildSaveButton() {
     return ButtonOutlined(

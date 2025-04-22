@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../color/color_constant.dart';
 import '../../server/api_service.dart';
+import 'dart:async';
+
 
 class KolomNotifikasi extends StatefulWidget {
   final String pondId;
@@ -16,12 +18,25 @@ class _KolomNotifikasiState extends State<KolomNotifikasi> {
   int _currentPage = 0;
   static const int itemsPerPage = 6;
   int? _selectedIndex;
+  Timer? _refreshTimer;
 
   @override
   void initState() {
     super.initState();
     _fetchNotifications();
+
+    // 🔄 Timer untuk auto-refresh
+    _refreshTimer = Timer.periodic(const Duration(seconds: 5), (timer) {
+      _fetchNotifications();
+    });
   }
+
+  @override
+  void dispose() {
+    _refreshTimer?.cancel();
+    super.dispose();
+  }
+
 
   Future<void> _fetchNotifications() async {
     final notifications = await ApiService.getNotificationsByPondId(widget.pondId);
@@ -44,7 +59,6 @@ class _KolomNotifikasiState extends State<KolomNotifikasi> {
     }
   }
 
-
   Future<void> _fetchNotificationDetail(String id, int index) async {
     final notifDetail = await ApiService.getNotificationById(id);
     if (notifDetail != null) {
@@ -63,16 +77,18 @@ class _KolomNotifikasiState extends State<KolomNotifikasi> {
         _selectedIndex = globalIndex;
       });
 
+      // Memanggil fungsi untuk menandai notifikasi sebagai sudah dibaca
       bool success = await ApiService.markNotificationAsRead(id);
       if (success) {
         setState(() {
           notifikasiList[globalIndex]["status"] = "read"; // ✅ Ubah status menjadi "read"
         });
+
+        // Memanggil ulang untuk memperbarui data
+        await _fetchNotifications();
       }
     }
   }
-
-
 
   String _formatTime(String timestamp) {
     DateTime notifTime = DateTime.parse(timestamp).toLocal();
@@ -157,7 +173,6 @@ class _KolomNotifikasiState extends State<KolomNotifikasi> {
                         );
                       },
                     ),
-
                   ),
                 ),
 
@@ -264,7 +279,6 @@ class _KolomNotifikasiState extends State<KolomNotifikasi> {
               ),
             ],
           ),
-
         ],
       ),
     );

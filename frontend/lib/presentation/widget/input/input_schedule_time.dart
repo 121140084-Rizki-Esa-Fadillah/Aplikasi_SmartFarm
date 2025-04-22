@@ -44,7 +44,7 @@ class _InputScheduleTimeState extends State<InputScheduleTime> {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 45,
+      height: 40,
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -57,7 +57,7 @@ class _InputScheduleTimeState extends State<InputScheduleTime> {
               color: Colors.white,
             ),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: 16),
 
           // Waktu yang dapat diklik
           GestureDetector(
@@ -73,7 +73,6 @@ class _InputScheduleTimeState extends State<InputScheduleTime> {
                     color: const Color(0xFF003A5D),
                   ),
                 ),
-                const SizedBox(width: 4),
 
                 // Ikon jam
                 IconButton(

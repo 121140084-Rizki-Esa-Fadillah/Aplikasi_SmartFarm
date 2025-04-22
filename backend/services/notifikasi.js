@@ -4,35 +4,48 @@ const {
 } = require("../config/firebaseConfig");
 const cron = require("node-cron");
 const Kolam = require("../models/kolam");
-const User = require("../models/users"); // ✅ Import model User untuk mendapatkan token pengguna
+const User = require("../models/users");
 
 // 🔹 Kirim Push Notification ke Pengguna yang Login
 const sendPushNotification = async (title, message, metadata = {}) => {
       if (!title || !message) {
             console.warn("⚠️ Notifikasi kosong tidak akan dikirim.");
-            return; // Jangan kirim jika title atau message kosong
+            return;
+      }
+
+      const allowedTypes = ["feed_alert", "water_quality_alert", "threshold_update", "feed_schedule_update", "aerator_control_update"];
+      const type = metadata.type;
+
+      if (!allowedTypes.includes(type)) {
+            console.warn(`⚠️ Jenis notifikasi tidak valid: ${type}`);
+            return;
       }
 
       const payload = {
+            topic: "global_notifications",
             notification: {
-                  title,
+                  title: title,
                   body: message,
             },
-            data: Object.fromEntries(
-                  Object.entries(metadata).map(([key, value]) => [key, String(value)])
-            ), // Konversi semua nilai metadata ke string
-            topic: "global_notifications",
+            data: {
+                  ...Object.fromEntries(
+                        Object.entries(metadata).map(([key, value]) => [key, String(value)])
+                  )
+            },
             android: {
                   priority: "high",
+                  notification: {
+                        channelId: "high_importance_channel",
+                  },
             },
             apns: {
                   payload: {
                         aps: {
-                              contentAvailable: true,
                               alert: {
-                                    title,
+                                    title: title,
                                     body: message,
                               },
+                              contentAvailable: true,
                         },
                   },
             },
@@ -49,25 +62,23 @@ const sendPushNotification = async (title, message, metadata = {}) => {
 // 🔹 Simpan Notifikasi ke Database & Kirim Push Notification
 const createNotification = async (data) => {
       try {
-            // ✅ Cek apakah idPond ada di database Kolam
             const kolam = await Kolam.findOne({
                   idPond: data.idPond
             });
             if (!kolam) {
                   console.warn(`⚠️ Notifikasi dibatalkan: idPond ${data.idPond} tidak ditemukan di database.`);
-                  return null; // ❌ Jangan kirim notifikasi jika idPond tidak terdaftar
+                  return null;
             }
 
-            // ✅ Simpan notifikasi jika idPond valid
-            const newNotification = new Notification({
-                  ...data,
-                  updated_by: data.type === "feed_alert" ? null : data.updated_by,
-            });
-
+            const newNotification = new Notification(data);
             await newNotification.save();
-            await sendPushNotification(data.title, data.message, {
-                  id: newNotification._id
-            });
+
+            const metadata = {
+                  id: newNotification._id,
+                  type: data.type
+            };
+
+            await sendPushNotification(data.title, data.message, metadata);
 
             return newNotification;
       } catch (error) {

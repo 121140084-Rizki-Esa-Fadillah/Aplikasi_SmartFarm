@@ -186,7 +186,7 @@ class _KolomRiwayatState extends State<KolomRiwayat> {
                                   onDownloadPressed: () {},
                                   pondId: widget.pondId,
                                 ),
-                                if ((index + 1) % itemsPerPage != 0) // ✅ Tidak menambahkan divider pada item terakhir di halaman
+                                if (index != displayedData.length - 1)
                                   const Divider(color: Colors.white, thickness: 1),
                               ],
                             );

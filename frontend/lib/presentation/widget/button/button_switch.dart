@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../color/color_constant.dart';
 
-class ButtonSwitch extends StatefulWidget {
+class ButtonSwitch extends StatelessWidget {
   final bool value;
   final ValueChanged<bool> onChanged;
 
@@ -10,19 +10,6 @@ class ButtonSwitch extends StatefulWidget {
     required this.value,
     required this.onChanged,
   });
-
-  @override
-  _ButtonSwitchState createState() => _ButtonSwitchState();
-}
-
-class _ButtonSwitchState extends State<ButtonSwitch> {
-  late bool isSwitched;
-
-  @override
-  void initState() {
-    super.initState();
-    isSwitched = widget.value; // Gunakan nilai awal dari parent
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -34,21 +21,15 @@ class _ButtonSwitchState extends State<ButtonSwitch> {
           child: Transform.scale(
             scale: 0.75,
             child: Switch(
-              value: isSwitched,
-              onChanged: (value) {
-                setState(() {
-                  isSwitched = value;
-                });
-                widget.onChanged(value); // Kirim status ke parent
-              },
+              value: value,
+              onChanged: onChanged,
               activeColor: ColorConstant.primary,
               inactiveTrackColor: Colors.white,
             ),
           ),
         ),
-
         Text(
-          "Status: ${isSwitched ? "On" : "Off"}",
+          "Status: ${value ? "On" : "Off"}",
           style: TextStyle(
             fontSize: 14,
             fontStyle: FontStyle.italic,

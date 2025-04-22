@@ -12,16 +12,33 @@ class ChartSensor extends StatelessWidget {
     double screenHeight = MediaQuery.of(context).size.height;
     double textScale = MediaQuery.of(context).textScaleFactor;
 
+    if (sensorData.isEmpty) {
+      return Center(
+        child: Text(
+          "No data available",
+          style: TextStyle(fontSize: 16 * textScale),
+        ),
+      );
+    }
+
+    // Ambil nilai tertinggi & terendah dari sensor untuk set minY dan maxY
+    final values = sensorData.map((e) => (e["value"] as num).toDouble()).toList();
+    final minValue = values.reduce((a, b) => a < b ? a : b);
+    final maxValue = values.reduce((a, b) => a > b ? a : b);
+    final yPadding = (maxValue - minValue) * 0.1; // beri jarak 10%
+
     return Padding(
-      padding: EdgeInsets.only(right: screenWidth * 0.02), // Responsif padding
+      padding: EdgeInsets.only(right: screenWidth * 0.02),
       child: LineChart(
         LineChartData(
+          minY: minValue - yPadding,
+          maxY: maxValue + yPadding,
           gridData: FlGridData(show: true, drawVerticalLine: false),
           titlesData: FlTitlesData(
             leftTitles: AxisTitles(
               sideTitles: SideTitles(
                 showTitles: true,
-                reservedSize: screenWidth * 0.08, // Responsif ukuran sumbu Y
+                reservedSize: screenWidth * 0.08,
                 getTitlesWidget: (value, meta) {
                   return Padding(
                     padding: EdgeInsets.only(right: screenWidth * 0.005),
@@ -42,13 +59,14 @@ class ChartSensor extends StatelessWidget {
             bottomTitles: AxisTitles(
               sideTitles: SideTitles(
                 showTitles: true,
-                reservedSize: screenHeight * 0.02, // Responsif ukuran sumbu X
+                reservedSize: screenHeight * 0.03,
                 getTitlesWidget: (value, meta) {
-                  if (value.toInt() >= 0 && value.toInt() < sensorData.length) {
+                  int index = value.toInt();
+                  if (index >= 0 && index < sensorData.length) {
                     return Padding(
                       padding: EdgeInsets.only(right: screenWidth * 0.005),
                       child: Text(
-                        sensorData[value.toInt()]["time"],
+                        sensorData[index]["time"],
                         style: TextStyle(fontSize: 10 * textScale),
                         textAlign: TextAlign.center,
                       ),
@@ -65,6 +83,7 @@ class ChartSensor extends StatelessWidget {
               left: BorderSide(color: Colors.grey),
               bottom: BorderSide(color: Colors.grey),
               right: BorderSide(color: Colors.transparent),
+              top: BorderSide(color: Colors.transparent),
             ),
           ),
           lineBarsData: [
@@ -76,12 +95,14 @@ class ChartSensor extends StatelessWidget {
                 );
               }).toList(),
               isCurved: true,
+              curveSmoothness: 0.15, // Kurangi agar tidak menembus sumbu
               color: Colors.blue,
-              barWidth: screenWidth * 0.007, // Responsif lebar garis
+              barWidth: screenWidth * 0.007,
               belowBarData: BarAreaData(
                 show: true,
                 color: Colors.blue.withAlpha(50),
               ),
+              dotData: FlDotData(show: true), // Tampilkan titik
             ),
           ],
         ),

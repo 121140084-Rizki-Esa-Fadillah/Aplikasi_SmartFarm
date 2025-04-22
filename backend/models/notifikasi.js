@@ -32,10 +32,6 @@ const notificationSchema = new mongoose.Schema({
             type: mongoose.Schema.Types.Mixed,
             default: {}
       },
-      updated_by: {
-            type: String,
-            default: null
-      },
       created_at: {
             type: Date,
             default: Date.now,

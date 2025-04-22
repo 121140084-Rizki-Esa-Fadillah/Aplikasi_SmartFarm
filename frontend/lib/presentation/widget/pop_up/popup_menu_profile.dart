@@ -23,7 +23,7 @@ class PopupMenuProfile extends StatelessWidget {
       context: MyApp.navigatorKey.currentContext!,
       title: "Konfirmasi Logout",
       message: "Apakah Anda yakin ingin logout?",
-      confirmText: "Ya, Logout",
+      confirmText: "Ya",
       onConfirm: () async {
 
         await ApiService.logout();

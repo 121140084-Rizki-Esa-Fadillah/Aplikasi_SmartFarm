@@ -29,25 +29,40 @@ class _ResetPasswordState extends State<ResetPassword> {
   }
 
   void _resetPassword() async {
-    if (passwordController.text.isEmpty || confirmPasswordController.text.isEmpty) {
+    String password = passwordController.text;
+    String confirmPassword = confirmPasswordController.text;
+
+    if (password.isEmpty || confirmPassword.isEmpty) {
       CustomDialog.show(
         context: context,
         isSuccess: false,
-        message: "Password tidak boleh kosong",
+        message: "Password dan confirm password tidak boleh kosong",
       );
       return;
     }
 
-    if (passwordController.text != confirmPasswordController.text) {
+    if (password != confirmPassword) {
       CustomDialog.show(
         context: context,
         isSuccess: false,
-        message: "Password tidak cocok",
+        message: "Password tidak cocok dengan confirm password",
       );
       return;
     }
 
-    bool success = await ApiService.resetPassword(widget.token, passwordController.text);
+    // 🔒 Validasi password kuat
+    final passwordRegex = RegExp(r'^(?=.*[0-9])(?=.*[!@#\$&*~]).{8,20}$');
+
+    if (!passwordRegex.hasMatch(password)) {
+      CustomDialog.show(
+        context: context,
+        isSuccess: false,
+        message: "Password harus 8-20 karakter, mengandung angka dan simbol.\nContoh: Tambak@123",
+      );
+      return;
+    }
+
+    bool success = await ApiService.resetPassword(widget.token, password);
 
     if (success) {
       CustomDialog.show(
@@ -68,6 +83,7 @@ class _ResetPasswordState extends State<ResetPassword> {
       );
     }
   }
+
 
 
   @override

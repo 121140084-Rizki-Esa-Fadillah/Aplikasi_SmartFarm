@@ -6,6 +6,7 @@ import '../widget/button/button_outlined.dart';
 import '../widget/button/button_switch.dart';
 import '../widget/input/input_schedule_time.dart';
 import '../widget/input/input_value.dart';
+import '../widget/pop_up/custom_dialog.dart';
 
 class KontrolPakan extends StatefulWidget {
   final String pondId;
@@ -17,10 +18,10 @@ class KontrolPakan extends StatefulWidget {
 
 class _KontrolPakanState extends State<KontrolPakan> {
   List<TimeOfDay?> _feedingSchedule = List.filled(4, null);
-  bool isFeedingOn = false;
+  bool? isFeedingOn;
   double feedAmount = 100.0;
-  bool isLoading = true; // Indikator loading awal
-  bool isSaving = false; // Indikator tombol Simpan
+  bool isLoading = true;
+  bool isSaving = false;
 
   @override
   void initState() {
@@ -28,89 +29,116 @@ class _KontrolPakanState extends State<KontrolPakan> {
     _loadInitialData();
   }
 
-  // 🔹 Mengambil data awal dari Firebase saat halaman dibuka
   Future<void> _loadInitialData() async {
     try {
-      var scheduleData = await ApiService.getDeviceConfig(widget.pondId, "feeding_schedule/schedule");
-      var statusData = await ApiService.getDeviceConfig(widget.pondId, "feeding_schedule/status");
-      var amountData = await ApiService.getDeviceConfig(widget.pondId, "feeding_schedule/amount");
+      setState(() => isLoading = true);
 
+      final responses = await Future.wait([
+        ApiService.getDeviceConfig(widget.pondId, "feeding_schedule/schedule"),
+        ApiService.getDeviceConfig(widget.pondId, "feeding_schedule/status"),
+        ApiService.getDeviceConfig(widget.pondId, "feeding_schedule/amount"),
+      ]);
+
+      // Process schedule
+      final scheduleData = responses[0];
       if (scheduleData != null && scheduleData["data"] is List) {
-        List<String> scheduleList = List<String>.from(scheduleData["data"]);
+        final times = (scheduleData["data"] as List).cast<String>();
         setState(() {
           _feedingSchedule = List.generate(4, (index) {
-            if (index < scheduleList.length && scheduleList[index].contains(":")) {
-              List<String> parts = scheduleList[index].split(":");
-              return TimeOfDay(hour: int.parse(parts[0]), minute: int.parse(parts[1]));
+            if (index < times.length) {
+              final parts = times[index].split(':');
+              if (parts.length == 2) {
+                return TimeOfDay(
+                  hour: int.parse(parts[0]),
+                  minute: int.parse(parts[1]),
+                );
+              }
             }
             return null;
           });
         });
       }
 
-      if (statusData != null && statusData["data"] is bool) {
+      // 2. Process Status
+      final statusData = responses[1];
+      print("📦 Raw statusData: $statusData");
+
+      if (statusData != null && statusData["on"] != null) {
+        final bool statusValue = statusData["on"] == true;
+
+        print('✅ isFeedingOn set to: $statusValue');
+
         setState(() {
-          isFeedingOn = statusData["data"];
+          isFeedingOn = statusValue;
         });
+      } else {
+        print("⚠️ statusData is null or missing 'on' key");
       }
 
+
+      // Process amount
+      final amountData = responses[2];
       if (amountData != null && amountData["data"] is num) {
-        setState(() {
-          feedAmount = amountData["data"].toDouble();
-        });
+        setState(() => feedAmount = amountData["data"].toDouble());
       }
+
     } catch (e) {
-      print("❌ Error saat mengambil konfigurasi: $e");
-    } finally {
+      print('Error loading config: $e');
       setState(() {
-        isLoading = false;
+        isFeedingOn = false;
+        feedAmount = 100.0;
+        _feedingSchedule = List.filled(4, null);
       });
+    } finally {
+      setState(() => isLoading = false);
     }
   }
 
-  // 🔹 Menyimpan data ke Firebase hanya saat tombol "Simpan" ditekan
   Future<void> _saveData() async {
-    setState(() {
-      isSaving = true;
-    });
+    setState(() => isSaving = true);
 
     try {
-      // 🔹 Konversi TimeOfDay ke List<String> untuk schedule
-      List<String> formattedSchedule = _feedingSchedule
-          .where((time) => time != null) // Hanya waktu yang tidak null
+      final formattedSchedule = _feedingSchedule
+          .where((time) => time != null)
           .map((time) =>
       "${time!.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}")
           .toList();
 
-      // 🔹 Kirim seluruh jadwal sebagai array ke Firebase
-      if (formattedSchedule.isNotEmpty) {
-        await ApiService.updateDeviceConfig(widget.pondId, "feeding_schedule/schedule", formattedSchedule);
-      }
+      await Future.wait([
+        if (formattedSchedule.isNotEmpty)
+          ApiService.updateDeviceConfig(
+              widget.pondId,
+              "feeding_schedule/schedule",
+              formattedSchedule
+          ),
+        ApiService.updateDeviceConfig(
+            widget.pondId,
+            "feeding_schedule/amount",
+            feedAmount.toInt()
+        ),
+        ApiService.updateDeviceConfig(
+            widget.pondId,
+            "feeding_schedule/status",
+            {"on": isFeedingOn ?? false}
+        ),
+      ]);
 
-      // 🔹 Kirim jumlah pakan sebagai integer
-      await ApiService.updateDeviceConfig(widget.pondId, "feeding_schedule/amount", feedAmount.toInt());
-
-      // 🔹 Kirim status sebagai boolean (pastikan bukan string!)
-      await ApiService.updateDeviceConfig(widget.pondId, "feeding_schedule/status", {"on": isFeedingOn});
-
-      print("📤 Sending status: ${isFeedingOn.runtimeType} - $isFeedingOn");
-
-      // ✅ Notifikasi sukses
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Konfigurasi berhasil disimpan")),
+      CustomDialog.show(
+        context: context,
+        isSuccess: true,
+        message: "Konfigurasi berhasil disimpan",
       );
     } catch (e) {
-      print("❌ Error saat menyimpan konfigurasi: $e");
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Gagal menyimpan data")),
+      print("❌ Error saving config: $e");
+      CustomDialog.show(
+        context: context,
+        isSuccess: false,
+        message: "Gagal menyimpan konfigurasi: ${e.toString()}",
       );
     } finally {
-      setState(() {
-        isSaving = false;
-      });
+      setState(() => isSaving = false);
     }
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -134,6 +162,7 @@ class _KontrolPakanState extends State<KontrolPakan> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Title
           Text(
             "Kontrol Pakan",
             style: TextStyle(
@@ -142,81 +171,107 @@ class _KontrolPakanState extends State<KontrolPakan> {
               color: ColorConstant.primary,
             ),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 12),
+
+          // On/Off Pakan (dibuat seperti Aerator)
+          Container(
+            width: MediaQuery.of(context).size.width * 0.75,
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: const Color(0x80D9DCD6),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Row(
+              children: [
+                Text(
+                  "On/Off Pakan : ",
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white,
+                  ),
+                ),
+                ButtonSwitch(
+                  value: isFeedingOn ?? false,
+                  onChanged: (value) async {
+                    setState(() => isFeedingOn = value);
+
+                    try {
+                      print("📩 PUT Request API: http://192.168.1.38:5000/api/konfigurasi/${widget.pondId}/feeding_schedule/status with data: {\"on\": $isFeedingOn}");
+                      final statusUpdated = await ApiService.updateDeviceConfig(
+                        widget.pondId,
+                        "feeding_schedule/status",
+                        {"on": isFeedingOn ?? false},
+                      );
+                      print("📥 Response (200): $statusUpdated");
+
+                      // Logging saja, tanpa dialog
+                      if (isFeedingOn == true) {
+                        print("✅ Pakan berhasil diaktifkan");
+                      } else {
+                        print("⚠️ Pakan berhasil dinonaktifkan");
+                      }
+
+                    } catch (e) {
+                      print("❌ Error saat memperbarui status pakan: $e");
+                    }
+                  },
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 8),
+
+          // Subtitle
           Text(
-            "Penjadwalan pemberian pakan udang",
+            "Penjadwalan pemberian dan jumlah pakan udang",
             style: TextStyle(
               fontSize: 14,
               color: ColorConstant.primary,
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 12),
 
+          // Main Row
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // **Kolom Jadwal Pakan**
-              SizedBox(
-                width: 160,
+              // Kolom Jadwal
+              Expanded(
+                flex: 4,
                 child: Container(
-                  padding: const EdgeInsets.only(left: 6, top: 4, bottom: 4),
+                  padding: const EdgeInsets.symmetric(vertical: 4),
                   decoration: BoxDecoration(
                     color: const Color(0x80D9DCD6),
                     borderRadius: BorderRadius.circular(8),
-                    boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 4)],
                   ),
                   child: Column(
                     children: List.generate(4, (index) {
-                      return InputScheduleTime(
-                        label: 'Waktu ${index + 1}',
-                        initialTime: _feedingSchedule[index] ?? const TimeOfDay(hour: 7, minute: 0),
-                        onTimeSelected: (TimeOfDay? newTime) {
-                          setState(() {
-                            _feedingSchedule[index] = newTime;
-                          });
-                        },
+                      return Padding(
+                        padding: const EdgeInsets.only(left: 10),
+                        child: InputScheduleTime(
+                          label: 'Waktu ${index + 1}',
+                          initialTime: _feedingSchedule[index] ??
+                              const TimeOfDay(hour: 7, minute: 0),
+                          onTimeSelected: (TimeOfDay? newTime) {
+                            setState(() => _feedingSchedule[index] = newTime);
+                          },
+                        ),
                       );
                     }),
                   ),
                 ),
               ),
-
               const SizedBox(width: 8),
 
+              // Kolom Jumlah Pakan & Simpan
               Expanded(
+                flex: 3,
                 child: Column(
                   children: [
-                    // **On/Off Pakan**
                     Container(
-                      padding: const EdgeInsets.only(top: 4, right: 8, bottom: 8),
-                      decoration: BoxDecoration(
-                        color: const Color(0x80D9DCD6),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Column(
-                        children: [
-                          Text(
-                            "On/Off Pakan",
-                            style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.white),
-                          ),
-                          const SizedBox(height: 4),
-                          ButtonSwitch(
-                            value: isFeedingOn,
-                            onChanged: (value) {
-                              setState(() {
-                                isFeedingOn = value;
-                              });
-                            },
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    const SizedBox(height: 12),
-
-                    // **Jumlah Pakan**
-                    Container(
-                      padding: const EdgeInsets.all(10),
+                      padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
                         color: const Color(0x80D9DCD6),
                         borderRadius: BorderRadius.circular(8),
@@ -225,33 +280,29 @@ class _KontrolPakanState extends State<KontrolPakan> {
                         children: [
                           Text(
                             "Jumlah Pakan",
-                            style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.white),
+                            style: GoogleFonts.poppins(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white,
+                            ),
                           ),
+                          const SizedBox(height: 12),
                           InputValue(
                             initialValue: feedAmount,
                             minValue: 100,
                             maxValue: 500,
                             step: 100,
                             unit: "Gr",
-                            onChanged: (value) {
-                              setState(() {
-                                feedAmount = value;
-                              });
-                            },
+                            onChanged: (value) =>
+                                setState(() => feedAmount = value),
                           ),
                         ],
                       ),
                     ),
-
-                    const SizedBox(height: 16),
-
-                    Center(
-                      child: isSaving
-                          ? const CircularProgressIndicator()
-                          : ButtonOutlined(
-                        text: "Simpan",
-                        onPressed: _saveData,
-                      ),
+                    const SizedBox(height: 20),
+                    ButtonOutlined(
+                      text: "Simpan",
+                      onPressed: _saveData,
                     ),
                   ],
                 ),

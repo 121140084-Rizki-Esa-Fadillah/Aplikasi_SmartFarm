@@ -1,68 +1,91 @@
 import 'package:flutter/material.dart';
+import 'dart:async';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:frontend_app/presentation/pages/monitoring/kontrol_pakan_aerator.dart';
 import '../../../widget/navigation/app_bar_widget.dart';
 import '../riwayat_kualitas_air/riwayat_kualitas_air.dart';
 import '../notifikasi.dart';
 import '../../../widget/navigation/navigasi_monitoring.dart';
 import '../../../widget/background_widget.dart';
-import '../../../blocks/kolom_monitoring.dart'; // Import KolomMonitoring
+import '../../../blocks/kolom_monitoring.dart';
+import 'package:frontend_app/data/sensor_data_store.dart';
 
-class Monitoring extends StatelessWidget {
+class Monitoring extends StatefulWidget {
   final String pondId;
-  final String namePond; // ✅ Tambahkan namePond
+  final String namePond;
 
   const Monitoring({super.key, required this.pondId, required this.namePond});
 
   @override
+  State<Monitoring> createState() => _MonitoringState();
+}
+
+class _MonitoringState extends State<Monitoring> {
+  bool isLoading = true;
+  Timer? _sensorFetchTimer;
+
+  final SensorDataStore _sensorStore = SensorDataStore();
+
+  @override
+  void initState() {
+    super.initState();
+    fetchSensorData();
+    _sensorFetchTimer = Timer.periodic(const Duration(seconds: 5), (timer) {
+      fetchSensorData();
+    });
+  }
+
+  @override
+  void dispose() {
+    _sensorFetchTimer?.cancel();
+    super.dispose();
+  }
+
+  void fetchSensorData() async {
+    try {
+      final ref = FirebaseDatabase.instance
+          .ref("Sadewa_SmartFarm/ponds/${widget.pondId}/sensor_data");
+      final snapshot = await ref.get();
+
+      if (snapshot.exists) {
+        final latestData = Map<String, dynamic>.from(snapshot.value as Map);
+
+        if (mounted) {
+          setState(() {
+            _sensorStore.updateSensorHistory(widget.pondId, "temperature", latestData["temperature"]);
+            _sensorStore.updateSensorHistory(widget.pondId, "ph", latestData["ph"]);
+            _sensorStore.updateSensorHistory(widget.pondId, "salinity", latestData["salinity"]);
+            _sensorStore.updateSensorHistory(widget.pondId, "turbidity", latestData["turbidity"]);
+
+            _sensorStore.setSensorData(widget.pondId, latestData);
+            isLoading = false;
+          });
+        }
+
+      } else {
+        if (mounted) {
+          setState(() => isLoading = false);
+        }
+      }
+    } catch (e) {
+      print("❌ Error: $e");
+      if (mounted) {
+        setState(() => isLoading = false);
+      }
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    debugPrint("Halaman Monitoring dibuka untuk pondId: $pondId");
     final double screenHeight = MediaQuery.of(context).size.height;
     final double screenWidth = MediaQuery.of(context).size.width;
+    final sensorHistory = {
+      "temperature": _sensorStore.getHistory(widget.pondId, "temperature"),
+      "ph": _sensorStore.getHistory(widget.pondId, "ph"),
+      "salinity": _sensorStore.getHistory(widget.pondId, "salinity"),
+      "turbidity": _sensorStore.getHistory(widget.pondId, "turbidity"),
+    };
 
-    // ** Data Dummy untuk Grafik Sensor **
-    final List<Map<String, dynamic>> dummyTemperatureData = [
-      {"time": "00:00", "value": 28.5},
-      {"time": "03:00", "value": 29.0},
-      {"time": "06:00", "value": 28.8},
-      {"time": "09:00", "value": 29.2},
-      {"time": "12:00", "value": 30.0},
-      {"time": "15:00", "value": 29.5},
-      {"time": "18:00", "value": 28.9},
-      {"time": "21:00", "value": 28.7},
-    ];
-
-    final List<Map<String, dynamic>> dummyPHData = [
-      {"time": "00:00", "value": 7.1},
-      {"time": "03:00", "value": 7.3},
-      {"time": "06:00", "value": 7.4},
-      {"time": "09:00", "value": 7.2},
-      {"time": "12:00", "value": 7.5},
-      {"time": "15:00", "value": 7.4},
-      {"time": "18:00", "value": 7.2},
-      {"time": "21:00", "value": 7.3},
-    ];
-
-    final List<Map<String, dynamic>> dummySalinityData = [
-      {"time": "00:00", "value": 30},
-      {"time": "03:00", "value": 29.8},
-      {"time": "06:00", "value": 30.2},
-      {"time": "09:00", "value": 30.5},
-      {"time": "12:00", "value": 30.1},
-      {"time": "15:00", "value": 29.9},
-      {"time": "18:00", "value": 30.3},
-      {"time": "21:00", "value": 30.0},
-    ];
-
-    final List<Map<String, dynamic>> dummyTurbidityData = [
-      {"time": "00:00", "value": 18},
-      {"time": "03:00", "value": 17.5},
-      {"time": "06:00", "value": 18.2},
-      {"time": "09:00", "value": 18.5},
-      {"time": "12:00", "value": 19.0},
-      {"time": "15:00", "value": 18.3},
-      {"time": "18:00", "value": 17.8},
-      {"time": "21:00", "value": 18.1},
-    ];
 
     return Scaffold(
       appBar: AppBarWidget(
@@ -76,56 +99,56 @@ class Monitoring extends StatelessWidget {
         children: [
           const BackgroundWidget(),
 
-          // **Konten Utama**
           Positioned(
             top: screenHeight * 0.0,
             left: screenWidth * 0.06,
             right: screenWidth * 0.06,
-            bottom: screenHeight * 0.10, // Tambahkan batas agar tidak menabrak navigasi
-            child: SingleChildScrollView(
+            bottom: screenHeight * 0.10,
+            child: isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : SingleChildScrollView(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const SizedBox(height: 20),
                   KolomMonitoring(
-                    pondId: pondId,
+                    pondId: widget.pondId,
                     sensorName: 'Sensor Suhu',
-                    sensorType: 'temperature', // 🔹 Tambahkan sensorType
-                    sensorData: dummyTemperatureData,
-                    namePond: namePond,
+                    sensorType: 'temperature',
+                    sensorData: sensorHistory["temperature"] ?? [],
+                    namePond: widget.namePond,
                   ),
                   const SizedBox(height: 10),
                   KolomMonitoring(
-                    pondId: pondId,
+                    pondId: widget.pondId,
                     sensorName: 'Sensor pH',
-                    sensorType: 'ph', // 🔹 Tambahkan sensorType
-                    sensorData: dummyPHData,
-                    namePond: namePond,
+                    sensorType: 'ph',
+                    sensorData: sensorHistory["ph"] ?? [],
+                    namePond: widget.namePond,
                   ),
                   const SizedBox(height: 10),
                   KolomMonitoring(
-                    pondId: pondId,
+                    pondId: widget.pondId,
                     sensorName: 'Sensor Salinitas',
-                    sensorType: 'salinity', // 🔹 Tambahkan sensorType
-                    sensorData: dummySalinityData,
-                    namePond: namePond,
+                    sensorType: 'salinity',
+                    sensorData: sensorHistory["salinity"] ?? [],
+                    namePond: widget.namePond,
                   ),
                   const SizedBox(height: 10),
                   KolomMonitoring(
-                    pondId: pondId,
+                    pondId: widget.pondId,
                     sensorName: 'Sensor Kekeruhan',
-                    sensorType: 'turbidity', // 🔹 Tambahkan sensorType
-                    sensorData: dummyTurbidityData,
-                    namePond: namePond,
+                    sensorType: 'turbidity',
+                    sensorData: sensorHistory["turbidity"] ?? [],
+                    namePond: widget.namePond,
                   ),
-
-                  const SizedBox(height: 20), // Jarak di bawah agar tidak tertutup navigasi
+                  const SizedBox(height: 20),
                 ],
               ),
             ),
           ),
 
-          // **Navigasi Monitoring dalam Stack**
+          // Navigasi
           Positioned(
             left: 0,
             right: 0,
@@ -136,17 +159,32 @@ class Monitoring extends StatelessWidget {
                 if (index == 1) {
                   Navigator.pushReplacement(
                     context,
-                    MaterialPageRoute(builder: (context) => RiwayatKualitasAir(pondId: pondId, namePond: namePond)),
+                    MaterialPageRoute(
+                      builder: (context) => RiwayatKualitasAir(
+                        pondId: widget.pondId,
+                        namePond: widget.namePond,
+                      ),
+                    ),
                   );
                 } else if (index == 2) {
                   Navigator.pushReplacement(
                     context,
-                    MaterialPageRoute(builder: (context) => Notifikasi(pondId: pondId, namePond: namePond)),
+                    MaterialPageRoute(
+                      builder: (context) => Notifikasi(
+                        pondId: widget.pondId,
+                        namePond: widget.namePond,
+                      ),
+                    ),
                   );
                 } else if (index == 3) {
                   Navigator.pushReplacement(
                     context,
-                    MaterialPageRoute(builder: (context) => KontrolPakanAerator(pondId: pondId, namePond: namePond)),
+                    MaterialPageRoute(
+                      builder: (context) => KontrolPakanAerator(
+                        pondId: widget.pondId,
+                        namePond: widget.namePond,
+                      ),
+                    ),
                   );
                 }
               },

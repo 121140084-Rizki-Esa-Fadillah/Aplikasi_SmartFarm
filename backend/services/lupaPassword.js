@@ -79,8 +79,13 @@ const sendOTP = async (email) => {
 
 // Verifikasi OTP
 const verifyOTP = (email, otp) => {
-	if (!otpStorage[email] || otpStorage[email].expiresAt < Date.now()) {
-		throw new Error("Kode OTP kadaluarsa atau tidak valid!");
+	if (!otpStorage[email]) {
+		throw new Error("Kode OTP tidak valid!");
+	}
+
+	if (otpStorage[email].expiresAt < Date.now()) {
+		delete otpStorage[email]; // Hapus OTP yang kedaluwarsa
+		return "expired"; // Mengembalikan string "expired" ke frontend
 	}
 
 	if (otpStorage[email].otp !== otp) {
@@ -96,6 +101,7 @@ const verifyOTP = (email, otp) => {
 
 	return token;
 };
+
 
 module.exports = {
 	sendOTP,

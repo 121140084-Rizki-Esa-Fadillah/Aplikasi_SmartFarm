@@ -34,10 +34,15 @@ class _TambahUserState extends State<TambahUser> {
   }
 
   Future<void> _simpanUser() async {
-    if (usernameController.text.isEmpty ||
-        emailController.text.isEmpty ||
-        passwordController.text.isEmpty ||
-        confirmPasswordController.text.isEmpty ||
+    String username = usernameController.text.trim();
+    String email = emailController.text.trim();
+    String password = passwordController.text;
+    String confirmPassword = confirmPasswordController.text;
+
+    if (username.isEmpty ||
+        email.isEmpty ||
+        password.isEmpty ||
+        confirmPassword.isEmpty ||
         selectedRole == null) {
       CustomDialog.show(
         context: context,
@@ -47,11 +52,22 @@ class _TambahUserState extends State<TambahUser> {
       return;
     }
 
-    if (passwordController.text != confirmPasswordController.text) {
+    if (password != confirmPassword) {
       CustomDialog.show(
         context: context,
         isSuccess: false,
         message: "Password tidak cocok",
+      );
+      return;
+    }
+
+    // 🔐 Validasi ketentuan password
+    final passwordRegex = RegExp(r'^(?=.*[0-9])(?=.*[!@#\$&*~]).{8,20}$');
+    if (!passwordRegex.hasMatch(password)) {
+      CustomDialog.show(
+        context: context,
+        isSuccess: false,
+        message: "Password harus 8-20 karakter, mengandung angka dan simbol.\nContoh: Tambak@123",
       );
       return;
     }
@@ -61,9 +77,9 @@ class _TambahUserState extends State<TambahUser> {
     });
 
     bool success = await ApiService.addUser(
-      usernameController.text,
-      emailController.text,
-      passwordController.text,
+      username,
+      email,
+      password,
       selectedRole!,
     );
 
@@ -77,12 +93,13 @@ class _TambahUserState extends State<TambahUser> {
       message: success ? "User berhasil ditambahkan" : "Gagal menambahkan user",
       onComplete: () {
         if (success) {
-          widget.onUserAdded(); // ✅ Panggil callback agar tabel di-update otomatis
-          Navigator.pop(context); // ✅ Kembali ke halaman manajemen user
+          widget.onUserAdded();
+          Navigator.pop(context);
         }
       },
     );
   }
+
 
   @override
   Widget build(BuildContext context) {

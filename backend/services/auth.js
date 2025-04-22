@@ -9,7 +9,7 @@ const SECRET_KEY = process.env.JWT_SECRET;
 
 const AuthService = {
       // ✅ Login User
-      login: async (username, password) => {
+      login: async (username, password, deviceToken) => {
             const user = await User.findOne({
                   username
             });
@@ -19,18 +19,17 @@ const AuthService = {
             if (!isMatch) throw new Error("Password salah!");
 
             const token = jwt.sign({
-                        id: user._id,
-                        username: user.username,
-                        role: user.role
-                  },
-                  SECRET_KEY, {
-                        expiresIn: "1h"
-                  }
-            );
+                  id: user._id,
+                  username: user.username,
+                  role: user.role
+            }, SECRET_KEY, {
+                  expiresIn: "1h"
+            });
 
-            // ✅ Subscribe ke topic global (tanpa perlu deviceToken)
-            await admin.messaging().subscribeToTopic([token], "global_notifications");
-            console.log(`✅ User ${username} berhasil subscribe ke global_notifications`);
+            if (!deviceToken) throw new Error("Device token tidak ditemukan!");
+
+            user.deviceToken = deviceToken;
+            await user.save();
 
             return {
                   message: "Login berhasil!",
@@ -39,16 +38,12 @@ const AuthService = {
       },
 
       // ✅ Logout User (Frontend menghapus token)
-      logout: async (token) => {
-            if (!token) throw new Error("Token tidak ditemukan!");
+      logout: async (userId) => {
+            const user = await User.findById(userId);
+            if (!user) throw new Error("User tidak ditemukan!");
 
-            try {
-                  // ✅ Unsubscribe dari topic global
-                  await admin.messaging().unsubscribeFromTopic([token], "global_notifications");
-                  console.log(`🚫 User dengan token ${token} berhasil unsubscribe dari global_notifications`);
-            } catch (error) {
-                  console.error(`❌ Gagal unsubscribe dari global_notifications: ${error.message}`);
-            }
+            user.deviceToken = null;
+            await user.save();
 
             return {
                   message: "Logout berhasil!"

@@ -75,10 +75,17 @@ class _LupaPasswordState extends State<LupaPassword> {
       return;
     }
 
-    String? token = await ApiService.verifyOTP(emailController.text, otpController.text);
-    if (token != null) {
+    String? response = await ApiService.verifyOTP(emailController.text, otpController.text);
+
+    if (response == "expired") {
+      CustomDialog.show(
+        context: context,
+        isSuccess: false,
+        message: "Kode OTP telah kedaluwarsa! Silakan minta kode baru.",
+      );
+    } else if (response != null) {
       Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (context) => ResetPassword(token: token)),
+        MaterialPageRoute(builder: (context) => ResetPassword(token: response)),
       );
     } else {
       CustomDialog.show(
@@ -88,6 +95,7 @@ class _LupaPasswordState extends State<LupaPassword> {
       );
     }
   }
+
 
   @override
   Widget build(BuildContext context) {

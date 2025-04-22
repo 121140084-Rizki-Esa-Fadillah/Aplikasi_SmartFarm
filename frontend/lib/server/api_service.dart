@@ -1,16 +1,28 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import '../main.dart';
 
 class ApiService {
-  static const String baseUrl = "http://192.168.35.45:5000/api";
+  static const String baseUrl = "http://192.168.60.45:5000/api";
 
   static Future<bool> login(String username, String password) async {
     try {
+      if (fcmDeviceToken == null) {
+        print("⚠️ Device token belum tersedia.");
+        return false;
+      }
+
       final response = await http.post(
-        Uri.parse("$baseUrl/auth/login"),
-        headers: {"Content-Type": "application/json"},
-        body: jsonEncode({"username": username, "password": password}),
+        Uri.parse('$baseUrl/auth/login'),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({
+          'username': username,
+          'password': password,
+          'deviceToken': fcmDeviceToken,
+        }),
       );
 
       if (response.statusCode == 200) {
@@ -22,10 +34,10 @@ class ApiService {
         return false;
       }
     } catch (e) {
+      print("Login error: $e");
       return false;
     }
   }
-
 
   static Future<bool> isAuthenticated() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -51,7 +63,7 @@ class ApiService {
 
   static Future<bool> sendOTP(String email) async {
     final response = await http.post(
-      Uri.parse("$baseUrl/auth/send-otp"),
+      Uri.parse("$baseUrl/password/send-otp"),
       headers: {"Content-Type": "application/json"},
       body: jsonEncode({"email": email}),
     );
@@ -62,7 +74,7 @@ class ApiService {
   // **2. Verifikasi OTP**
   static Future<String?> verifyOTP(String email, String otp) async {
     final response = await http.post(
-      Uri.parse("$baseUrl/auth/verify-otp"),
+      Uri.parse("$baseUrl/password/verify-otp"),
       headers: {"Content-Type": "application/json"},
       body: jsonEncode({"email": email, "otp": otp}),
     );
@@ -80,7 +92,7 @@ class ApiService {
     print("Mengirim token: '$token'");
     try {
       final response = await http.post(
-        Uri.parse("$baseUrl/auth/reset-password"),
+        Uri.parse("$baseUrl/password/reset-password"),
         headers: {"Content-Type": "application/json"},
         body: jsonEncode({"token": token, "newPassword": newPassword}),
       );

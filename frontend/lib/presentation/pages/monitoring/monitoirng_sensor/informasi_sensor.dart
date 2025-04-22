@@ -51,6 +51,7 @@ class InformasiSensor extends StatelessWidget {
                     description: sensorData["description"] ?? "Informasi sensor tidak tersedia.",
                     specifications: List<String>.from(sensorData["specifications"] ?? []),
                     optimalRange: sensorData["optimalRange"] ?? "Tidak ada data rentang optimal.",
+                    rangeTitle: sensorData["rangeTitle"] ?? "Rentang Optimal",
                   ),
                   const SizedBox(height: 20),
                 ],
@@ -105,6 +106,7 @@ class InformasiSensor extends StatelessWidget {
           "Rentang Suhu: -55°C hingga +125°C"
         ],
         "optimalRange": "Udang tumbuh optimal pada suhu air antara 28°C hingga 32°C dan memiliki toleransi antara 26°C hingga 35°C.",
+        "rangeTitle": "Rentang Suhu Optimal",
       },
       "ph": {
         "title": "Sensor pH",
@@ -118,6 +120,7 @@ class InformasiSensor extends StatelessWidget {
           "Akurasi: ±0.1 pH"
         ],
         "optimalRange": "Udang membutuhkan pH antara 7.5 hingga 8.5 untuk pertumbuhan yang optimal.",
+        "rangeTitle": "Rentang pH Optimal",
       },
       "salinity": {
         "title": "Sensor Salinitas",
@@ -131,6 +134,7 @@ class InformasiSensor extends StatelessWidget {
           "Akurasi: ±1% dari rentang pengukuran"
         ],
         "optimalRange": "Udang vannamei tumbuh optimal pada salinitas antara 15 - 25 ppt.",
+        "rangeTitle": "Rentang Salinitas Optimal",
       },
       "turbidity": {
         "title": "Sensor Kekeruhan",
@@ -144,6 +148,7 @@ class InformasiSensor extends StatelessWidget {
           "Akurasi: ±2% dari rentang pengukuran"
         ],
         "optimalRange": "Tingkat kekeruhan air yang aman untuk budidaya udang berkisar antara 30 - 80 NTU.",
+        "rangeTitle": "Rentang Kekeruhan Optimal",
       },
     };
 
@@ -153,6 +158,7 @@ class InformasiSensor extends StatelessWidget {
       "description": "Sensor ini belum terdaftar dalam sistem.",
       "specifications": <String>[],
       "optimalRange": "",
+      "rangeTitle": "",
     };
   }
 }

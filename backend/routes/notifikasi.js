@@ -66,21 +66,4 @@ router.patch("/:id/read", verifyToken, async (req, res) => { // ✅ Tambahkan au
       }
 });
 
-/*// 🔹 API: Hapus Notifikasi Lama (DELETE)
-router.delete("/old", verifyToken, async (req, res) => { // ✅ Tambahkan autentikasi
-      try {
-            await notificationService.deleteOldNotifications();
-            res.status(200).json({
-                  message: "🗑️ Notifikasi lama berhasil dihapus!"
-            });
-      } catch (error) {
-            console.error("❌ Error saat menghapus notifikasi lama:", error);
-            res.status(500).json({
-                  error: "Gagal menghapus notifikasi lama",
-                  details: error.message
-            });
-      }
-});
-*/
-
 module.exports = router;

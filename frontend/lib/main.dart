@@ -7,6 +7,7 @@ import 'package:frontend_app/presentation/pages/autentikasi/splash_screen.dart';
 // 🔹 Inisialisasi Firebase Messaging
 FirebaseMessaging messaging = FirebaseMessaging.instance;
 FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
+String? fcmDeviceToken;
 
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp();
@@ -63,7 +64,6 @@ class MyApp extends StatelessWidget {
 
 // ✅ Setup Firebase Messaging (Cegah Notifikasi Kosong)
 Future<void> setupFirebaseMessaging() async {
-  // 🔹 Minta izin notifikasi dari pengguna
   NotificationSettings settings = await messaging.requestPermission(
     alert: true,
     badge: true,
@@ -71,32 +71,53 @@ Future<void> setupFirebaseMessaging() async {
   );
 
   if (settings.authorizationStatus == AuthorizationStatus.authorized) {
-    print("✅ Izin notifikasi diberikan.");
+    fcmDeviceToken = await messaging.getToken();
+    print("🔑 Firebase Token: $fcmDeviceToken");
+
+    if (fcmDeviceToken == null) {
+      print("❌ Gagal mendapatkan device token");
+    }
+
+    // (Opsional) handle token refresh
+    FirebaseMessaging.instance.onTokenRefresh.listen((newToken) {
+      fcmDeviceToken = newToken;
+      print("🔁 Device token diperbarui: $fcmDeviceToken");
+    });
+
   } else {
     print("❌ Izin notifikasi ditolak.");
-    return;
   }
 
-  // 🔹 Handle notifikasi saat aplikasi berjalan (Foreground)
+  // Listener notifikasi
   FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+    String? type = message.data['type'];
     String title = message.notification?.title ?? "";
     String body = message.notification?.body ?? "";
 
     if (title.isNotEmpty && body.isNotEmpty) {
-      print("📩 Notifikasi diterima di foreground: $title - $body");
-      showLocalNotification(title, body);
+      switch (type) {
+        case 'feed_alert':
+        case 'water_quality_alert':
+        case 'threshold_update':
+        case 'feed_schedule_update':
+        case 'aerator_control_update':
+          showLocalNotification(title, body);
+          break;
+        default:
+          print("⚠️ Notifikasi dengan tipe tidak dikenali: $type");
+      }
     } else {
       print("⚠️ Notifikasi kosong diabaikan.");
     }
   });
 
-  // 🔹 Handle notifikasi saat aplikasi di background
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 }
 
+
 // ✅ Setup Lokal Notifikasi
 void setupLocalNotifications() {
-  var androidSettings = const AndroidInitializationSettings('@mipmap/ic_launcher');
+  var androidSettings = const AndroidInitializationSettings('@drawable/logo_app');
   var initializationSettings = InitializationSettings(android: androidSettings);
   flutterLocalNotificationsPlugin.initialize(initializationSettings);
 
@@ -111,7 +132,10 @@ void setupLocalNotifications() {
   flutterLocalNotificationsPlugin
       .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
       ?.createNotificationChannel(androidChannel);
+  print("🚨 Notification channel created: ${androidChannel.id}");
+
 }
+
 
 // ✅ Tampilkan Popup Notifikasi di Foreground (Cegah Notifikasi Kosong)
 void showLocalNotification(String title, String body) {
@@ -128,5 +152,6 @@ void showLocalNotification(String title, String body) {
   );
 
   var notificationDetails = NotificationDetails(android: androidDetails);
+  print("🚨 Menampilkan popup notifikasi lokal");
   flutterLocalNotificationsPlugin.show(0, title, body, notificationDetails);
 }

@@ -28,10 +28,17 @@ router.post("/verify-otp", (req, res) => {
 		otp
 	} = req.body;
 	try {
-		const token = verifyOTP(email, otp);
+		const result = verifyOTP(email, otp);
+
+		if (result === "expired") {
+			return res.status(401).json({
+				message: "expired"
+			}); // Status 401 untuk expired
+		}
+
 		res.json({
 			message: "OTP valid, lanjutkan reset password!",
-			token
+			token: result
 		});
 	} catch (error) {
 		res.status(400).json({
@@ -39,5 +46,6 @@ router.post("/verify-otp", (req, res) => {
 		});
 	}
 });
+
 
 module.exports = router;

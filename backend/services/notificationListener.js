@@ -9,19 +9,21 @@ const Notification = require("../models/notifikasi"); // Import model notifikasi
 
 // 🔹 Fungsi untuk mencegah notifikasi duplikat dalam 5 menit terakhir
 const isDuplicateNotification = async (idPond, type) => {
-      const fiveMinutesAgo = new Date();
-      fiveMinutesAgo.setMinutes(fiveMinutesAgo.getMinutes() - 5);
-
+      // Hanya periksa duplikasi untuk jenis 'feed_alert'
+      if (type !== "feed_alert") return false;
+    
+      const checkTime = new Date();
+      checkTime.setMinutes(checkTime.getMinutes() - 5);
+    
       const existingNotification = await Notification.findOne({
-            idPond,
-            type,
-            created_at: {
-                  $gte: fiveMinutesAgo
-            }
+        idPond,
+        type,
+        time: { $gte: checkTime }
       });
-
-      return !!existingNotification; // Kembalikan true jika ada notifikasi serupa dalam 5 menit terakhir
-};
+    
+      return !!existingNotification;
+    };
+    
 
 const previousValues = {};
 
@@ -36,9 +38,10 @@ const initializePreviousValues = async () => {
                   const pondData = pondsData[pondId];
 
                   previousValues[pondId] = {
-                        thresholds: pondData.device_config ?.thresholds || null,
-                        feeding_schedule: pondData.device_config ?.feeding_schedule ?.schedule || null,
-                        aerator_delay: pondData.device_config ?.aerator ?.aerator_delay || null,
+                        thresholds: pondData.device_config?.thresholds || null,
+                        feeding_schedule: pondData.device_config?.feeding_schedule?.schedule || null,
+                        aerator_delay: pondData.device_config?.aerator?.aerator_delay || null,
+                        feeding_amount: pondData.device_config?.feeding_schedule?.amount || null,
                   };
             });
       }
@@ -48,6 +51,8 @@ const initializePreviousValues = async () => {
 
 // 🔹 Panggil fungsi inisialisasi saat aplikasi dijalankan
 initializePreviousValues();
+
+const feedUpdateCache = {};
 
 // 🔹 Pemantauan Firebase Realtime Database
 db.ref("Sadewa_SmartFarm/ponds").on("child_changed", async (snapshot) => {
@@ -63,33 +68,210 @@ db.ref("Sadewa_SmartFarm/ponds").on("child_changed", async (snapshot) => {
 
       console.log(`📡 Data Changed for ${namePond} (Pond ID: ${pondId})`);
 
-      // 🔹 Notifikasi Isi Pakan (feed_alert)
-      if (pondData.isi_pakan === false && !(await isDuplicateNotification(pondId, "feed_alert"))) {
-            console.log(`📢 Feed alert triggered for ${namePond}`);
+      // 🔹 Notifikasi Perubahan Ambang Batas Sensor (threshold_update)
+      if (pondData.device_config && pondData.device_config.thresholds) {
+            const newThresholds = pondData.device_config.thresholds;
+            const prevThresholds = previousValues[pondId].thresholds;
 
-            await createNotification({
-                  idPond: pondId,
-                  type: "feed_alert",
-                  title: "Pakan Telah Diisi",
-                  message: `Pakan telah diisi pada kolam ${namePond}`,
-                  time: new Date(),
-                  status: "unread",
-                  metadata: {
-                        isi_pakan: true
+            if (prevThresholds && JSON.stringify(prevThresholds) !== JSON.stringify(newThresholds)) {
+                  console.log(`🔧 Threshold updated for ${namePond}`);
+
+                  const changes = [];
+                  for (const key in newThresholds) {
+                        const oldVal = prevThresholds[key];
+                        const newVal = newThresholds[key];
+                        if (JSON.stringify(oldVal) !== JSON.stringify(newVal)) {
+                              changes.push(
+                                    `${key.toUpperCase()}: ${oldVal.low}–${oldVal.high} ➡️ ${newVal.low}–${newVal.high}`
+                              );
+                        }
                   }
-            });
+
+                  await createNotification({
+                        idPond: pondId,
+                        type: "threshold_update",
+                        title: "Perubahan Batas Parameter Sensor",
+                        message: `Batas Parameter pada ${namePond} telah diubah :\n${changes.join(", ")}`,
+                        time: new Date(),
+                        status: "unread",
+                        metadata: {
+                              previous_thresholds: prevThresholds,
+                              new_thresholds: newThresholds
+                        }
+                  });
+            }
+
+            // Perbarui nilai sebelumnya
+            previousValues[pondId].thresholds = newThresholds;
       }
 
-      // 🔹 Notifikasi Kualitas Air (water_quality_alert)
-      if (pondData.sensor_data && pondData.device_config) {
+      // 🔹 Notifikasi Perubahan Jadwal & Jumlah Pakan (feed_schedule_update)
+      if (pondData.device_config && pondData.device_config.feeding_schedule) {
+            const newSchedule = pondData.device_config.feeding_schedule.schedule;
+            const newAmount = pondData.device_config.feeding_schedule.amount;
+
+            const prevSchedule = previousValues[pondId].feeding_schedule;
+            const prevAmount = previousValues[pondId].feeding_amount;
+
+            const scheduleChanged = prevSchedule && JSON.stringify(prevSchedule) !== JSON.stringify(newSchedule);
+            const amountChanged = prevAmount !== undefined && prevAmount !== newAmount;
+
+            if (scheduleChanged || amountChanged) {
+                  // Jika sudah ada timeout sebelumnya, batalkan dulu
+                  if (feedUpdateCache[pondId]?.timeout) {
+                        clearTimeout(feedUpdateCache[pondId].timeout);
+                  }
+
+                  // Simpan perubahan ke cache
+                  feedUpdateCache[pondId] = {
+                        scheduleChanged,
+                        amountChanged,
+                        newSchedule,
+                        newAmount,
+                        prevSchedule,
+                        prevAmount,
+                        timeout: setTimeout(async () => {
+                              const {
+                                    scheduleChanged,
+                                    amountChanged,
+                                    newSchedule,
+                                    newAmount,
+                                    prevSchedule,
+                                    prevAmount
+                              } = feedUpdateCache[pondId];
+
+                              let title = "Konfigurasi Pakan Diperbarui";
+                              let message = `Konfigurasi pakan pada ${namePond} telah diperbarui:\n`;
+                              const metadata = {};
+
+                              if (scheduleChanged && amountChanged) {
+                                    title = "Jadwal & Jumlah Pakan Diperbarui";
+                                    message += `🕒 Jadwal: ${prevSchedule?.join(", ")} ➡️ ${newSchedule.join(", ")}\n`;
+                                    message += `🍽️ Jumlah: ${prevAmount} ➡️ ${newAmount} gram`;
+                                    metadata.previous_schedule = prevSchedule;
+                                    metadata.new_schedule = newSchedule;
+                                    metadata.previous_amount = prevAmount;
+                                    metadata.new_amount = newAmount;
+                              } else if (scheduleChanged) {
+                                    title = "Jadwal Pakan Diperbarui";
+                                    message += `🕒 Jadwal: ${prevSchedule?.join(", ")} ➡️ ${newSchedule.join(", ")}`;
+                                    metadata.previous_schedule = prevSchedule;
+                                    metadata.new_schedule = newSchedule;
+                              } else if (amountChanged) {
+                                    title = "Jumlah Pakan Diperbarui";
+                                    message += `🍽️ Jumlah: ${prevAmount} ➡️ ${newAmount} gram`;
+                                    metadata.previous_amount = prevAmount;
+                                    metadata.new_amount = newAmount;
+                              }
+
+                              await createNotification({
+                                    idPond: pondId,
+                                    type: "feed_schedule_update",
+                                    title,
+                                    message: message.trim(),
+                                    time: new Date(),
+                                    status: "unread",
+                                    metadata
+                              });
+
+                              // Update nilai sebelumnya
+                              previousValues[pondId].feeding_schedule = newSchedule;
+                              previousValues[pondId].feeding_amount = newAmount;
+
+                              // Bersihkan cache
+                              delete feedUpdateCache[pondId];
+                        }, 1500) // Delay untuk hindari double-notif
+                  };
+            }
+      }
+
+      // 🔹 Notifikasi Perubahan Kontrol Aerator (aerator_control_update)
+      if (pondData.device_config && pondData.device_config.aerator) {
+            const newAerator = pondData.device_config.aerator.aerator_delay;
+            const prevAerator = previousValues[pondId].aerator_delay;
+
+            if (prevAerator !== undefined && newAerator !== undefined && prevAerator !== newAerator) {
+                  console.log(`💨 Aerator control updated for ${namePond}`);
+
+                  const message = `Delay aerator untuk ${namePond} telah diubah dari ${prevAerator} menit menjadi ${newAerator} menit`;
+
+                  await createNotification({
+                        idPond: pondId,
+                        type: "aerator_control_update",
+                        title: "Delay Aerator Diperbarui",
+                        message,
+                        time: new Date(),
+                        status: "unread",
+                        metadata: {
+                              previous_aerator_control: prevAerator,
+                              new_aerator_control: newAerator
+                        },
+                  });
+            }
+
+            // Perbarui nilai sebelumnya
+            previousValues[pondId].aerator_delay = newAerator;
+      }
+});
+
+const cron = require("node-cron");
+
+// 🔁 Cek Feed Alert setiap 15 menit
+cron.schedule("*/15 * * * *", async () => {
+    console.log("🔁 [CRON] Mengecek kondisi feed_alert...");
+
+    const pondsSnapshot = await db.ref("Sadewa_SmartFarm/ponds").once("value");
+    const pondsData = pondsSnapshot.val();
+
+    if (!pondsData) return;
+
+    for (const pondId of Object.keys(pondsData)) {
+        const pondData = pondsData[pondId];
+        const kolam = await Kolam.findOne({ idPond: pondId });
+        const namePond = kolam ? kolam.namePond : pondId;
+
+        if (pondData.isi_pakan === true) {
+            console.log(`📢 [CRON] Feed alert untuk ${namePond}`);
+
+            await createNotification({
+                idPond: pondId,
+                type: "feed_alert",
+                title: "Pakan Hampir Habis",
+                message: `Pakan pada kolam ${namePond} hampir habis, harap segera isi ulang`,
+                time: new Date(),
+                status: "unread",
+                metadata: {
+                    isi_pakan: true
+                }
+            });
+        }
+    }
+});
+
+// 🔁 Cek Water Quality setiap 1 menit
+cron.schedule("* * * * *", async () => {
+    console.log("🔁 [CRON] Mengecek kualitas air...");
+
+    const pondsSnapshot = await db.ref("Sadewa_SmartFarm/ponds").once("value");
+    const pondsData = pondsSnapshot.val();
+
+    if (!pondsData) return;
+
+    for (const pondId of Object.keys(pondsData)) {
+        const pondData = pondsData[pondId];
+        const kolam = await Kolam.findOne({ idPond: pondId });
+        const namePond = kolam ? kolam.namePond : pondId;
+
+        if (pondData.sensor_data && pondData.device_config?.thresholds) {
             const {
-                  ph,
-                  salinity,
-                  temperature,
-                  turbidity
+                ph,
+                salinity,
+                temperature,
+                turbidity
             } = pondData.sensor_data;
+
             const {
-                  thresholds
+                thresholds
             } = pondData.device_config;
 
             const alerts = [];
@@ -99,108 +281,34 @@ db.ref("Sadewa_SmartFarm/ponds").on("child_changed", async (snapshot) => {
             if (turbidity < thresholds.turbidity.low || turbidity > thresholds.turbidity.high) alerts.push("Kekeruhan");
 
             if (alerts.length > 0 && !(await isDuplicateNotification(pondId, "water_quality_alert"))) {
-                  console.log(`🚨 Water quality alert for ${namePond}: ${alerts.join(", ")}`);
+                console.log(`🚨 [CRON] Water quality alert untuk ${namePond}: ${alerts.join(", ")}`);
 
-                  await createNotification({
-                        idPond: pondId,
-                        type: "water_quality_alert",
-                        title: "Peringatan Kualitas Air",
-                        message: `Parameter berikut di luar batas normal: ${alerts.join(", ")} di kolam ${namePond}`,
-                        time: new Date(),
-                        status: "unread",
-                        metadata: {
-                              alerts
-                        },
-                  });
+                const alertDetails = alerts.map((param) => {
+                    switch (param) {
+                        case "pH": return `pH = ${ph}`;
+                        case "Salinitas": return `Salinitas = ${salinity} ppt`;
+                        case "Suhu": return `Suhu = ${temperature}°C`;
+                        case "Kekeruhan": return `Kekeruhan = ${turbidity} NTU`;
+                        default: return param;
+                    }
+                });
+
+                await createNotification({
+                    idPond: pondId,
+                    type: "water_quality_alert",
+                    title: "Peringatan Kualitas Air",
+                    message: `Kualitas ${alerts.join(", ")} air pada ${namePond} berada di luar batas normal.\n${alertDetails.join(", ")}`,
+                    time: new Date(),
+                    status: "unread",
+                    metadata: {
+                        alerts,
+                        sensor_values: { ph, salinity, temperature, turbidity },
+                    },
+                });
             }
-      }
-
-      // 🔹 Notifikasi Perubahan Ambang Batas Sensor (threshold_update)
-      if (pondData.device_config && pondData.device_config.thresholds) {
-            const newThresholds = pondData.device_config.thresholds;
-            const prevThresholds = previousValues[pondId].thresholds;
-
-            if (prevThresholds && JSON.stringify(prevThresholds) !== JSON.stringify(newThresholds)) {
-                  if (!(await isDuplicateNotification(pondId, "threshold_update"))) {
-                        console.log(`🔧 Threshold updated for ${namePond}`);
-
-                        await createNotification({
-                              idPond: pondId,
-                              type: "threshold_update",
-                              title: "Perubahan Ambang Batas Sensor",
-                              message: `Ambang batas sensor untuk kolam ${namePond} telah diperbarui`,
-                              time: new Date(),
-                              status: "unread",
-                              updated_by: "System",
-                              metadata: {
-                                    previous_thresholds: prevThresholds,
-                                    new_thresholds: newThresholds
-                              },
-                        });
-                  }
-            }
-
-            // Perbarui nilai sebelumnya
-            previousValues[pondId].thresholds = newThresholds;
-      }
-
-      // 🔹 Notifikasi Perubahan Jadwal Pakan (feed_schedule_update)
-      if (pondData.device_config && pondData.device_config.feeding_schedule) {
-            const newSchedule = pondData.device_config.feeding_schedule.schedule;
-            const prevSchedule = previousValues[pondId].feeding_schedule;
-
-            if (prevSchedule && JSON.stringify(prevSchedule) !== JSON.stringify(newSchedule)) {
-                  if (!(await isDuplicateNotification(pondId, "feed_schedule_update"))) {
-                        console.log(`📅 Feeding schedule updated for ${namePond}`);
-
-                        await createNotification({
-                              idPond: pondId,
-                              type: "feed_schedule_update",
-                              title: "Jadwal Pakan Diperbarui",
-                              message: `Jadwal pemberian pakan untuk kolam ${namePond} telah diubah`,
-                              time: new Date(),
-                              status: "unread",
-                              updated_by: "System",
-                              metadata: {
-                                    previous_schedule: prevSchedule,
-                                    new_schedule: newSchedule
-                              },
-                        });
-                  }
-            }
-
-            // Perbarui nilai sebelumnya
-            previousValues[pondId].feeding_schedule = newSchedule;
-      }
-
-      // 🔹 Notifikasi Perubahan Kontrol Aerator (aerator_control_update)
-      if (pondData.device_config && pondData.device_config.aerator) {
-            const newAerator = pondData.device_config.aerator.aerator_delay;
-            const prevAerator = previousValues[pondId].aerator_delay;
-
-            if (prevAerator !== undefined && newAerator !== undefined && prevAerator !== newAerator) {
-                  if (!(await isDuplicateNotification(pondId, "aerator_control_update"))) {
-                        console.log(`💨 Aerator control updated for ${namePond}`);
-
-                        await createNotification({
-                              idPond: pondId,
-                              type: "aerator_control_update",
-                              title: "Pengaturan Aerator Diperbarui",
-                              message: `Pengaturan aerator untuk kolam ${namePond} telah diperbarui`,
-                              time: new Date(),
-                              status: "unread",
-                              updated_by: "System",
-                              metadata: {
-                                    previous_aerator_control: prevAerator,
-                                    new_aerator_control: newAerator
-                              },
-                        });
-                  }
-            }
-
-            // Perbarui nilai sebelumnya
-            previousValues[pondId].aerator_delay = newAerator;
-      }
+        }
+    }
 });
+
 
 console.log("🔄 Firebase notification listener aktif...");
