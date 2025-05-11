@@ -4,7 +4,7 @@ const crypto = require("crypto");
 const nodemailer = require("nodemailer");
 const dotenv = require("dotenv");
 const jwt = require("jsonwebtoken");
-const User = require("../models/users");
+const User = require("../models/user");
 
 dotenv.config({
 	path: path.resolve(__dirname, "../.env")
@@ -30,7 +30,7 @@ const transporter = nodemailer.createTransport({
 });
 
 // Fungsi membaca dan mengganti variabel dalam template email
-const getEmailTemplate = (username, otp) => {
+const ambilTemplateEmail = (username, otp) => {
 	const templatePath = path.resolve(__dirname, "..", "templates", "email_template.html");
 
 	if (!fs.existsSync(templatePath)) {
@@ -43,10 +43,8 @@ const getEmailTemplate = (username, otp) => {
 };
 
 // Kirim OTP menggunakan email template
-const sendOTP = async (email) => {
-	const user = await User.findOne({
-		email
-	});
+const kirimOTP = async (email) => {
+	const user = await User.model.findOne({ email });
 	if (!user) {
 		throw new Error("Email tidak ditemukan!");
 	}
@@ -59,7 +57,7 @@ const sendOTP = async (email) => {
 
 	// Gunakan username, jika tidak ada gunakan "Pengguna"
 	const username = user.username || "Pengguna";
-	const htmlContent = getEmailTemplate(username, otp);
+	const htmlContent = ambilTemplateEmail(username, otp);
 
 	const mailOptions = {
 		from: `"Tambak Udang Sadewa Farm" <${process.env.EMAIL_USER}>`,
@@ -78,7 +76,7 @@ const sendOTP = async (email) => {
 };
 
 // Verifikasi OTP
-const verifyOTP = (email, otp) => {
+const verifikasiOTP = (email, otp) => {
 	if (!otpStorage[email]) {
 		throw new Error("Kode OTP tidak valid!");
 	}
@@ -104,6 +102,6 @@ const verifyOTP = (email, otp) => {
 
 
 module.exports = {
-	sendOTP,
-	verifyOTP
+	kirimOTP,
+	verifikasiOTP
 };

@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
-import 'package:firebase_database/firebase_database.dart';
 import 'package:frontend_app/presentation/pages/monitoring/kontrol_pakan_aerator.dart';
+import '../../../../server/api_service.dart';
 import '../../../widget/navigation/app_bar_widget.dart';
+import '../../beranda/beranda.dart';
 import '../riwayat_kualitas_air/riwayat_kualitas_air.dart';
 import '../notifikasi.dart';
 import '../../../widget/navigation/navigasi_monitoring.dart';
@@ -41,31 +42,20 @@ class _MonitoringState extends State<Monitoring> {
     super.dispose();
   }
 
+  // Mengambil data dari API menggunakan ApiService
   void fetchSensorData() async {
     try {
-      final ref = FirebaseDatabase.instance
-          .ref("Sadewa_SmartFarm/ponds/${widget.pondId}/sensor_data");
-      final snapshot = await ref.get();
+      final data = await ApiService.getMonitoringData(widget.pondId);
+      if (mounted) {
+        setState(() {
+          _sensorStore.updateSensorHistory(widget.pondId, "temperature", data["temperature"]);
+          _sensorStore.updateSensorHistory(widget.pondId, "ph", data["ph"]);
+          _sensorStore.updateSensorHistory(widget.pondId, "salinity", data["salinity"]);
+          _sensorStore.updateSensorHistory(widget.pondId, "turbidity", data["turbidity"]);
 
-      if (snapshot.exists) {
-        final latestData = Map<String, dynamic>.from(snapshot.value as Map);
-
-        if (mounted) {
-          setState(() {
-            _sensorStore.updateSensorHistory(widget.pondId, "temperature", latestData["temperature"]);
-            _sensorStore.updateSensorHistory(widget.pondId, "ph", latestData["ph"]);
-            _sensorStore.updateSensorHistory(widget.pondId, "salinity", latestData["salinity"]);
-            _sensorStore.updateSensorHistory(widget.pondId, "turbidity", latestData["turbidity"]);
-
-            _sensorStore.setSensorData(widget.pondId, latestData);
-            isLoading = false;
-          });
-        }
-
-      } else {
-        if (mounted) {
-          setState(() => isLoading = false);
-        }
+          _sensorStore.setSensorData(widget.pondId, data);
+          isLoading = false;
+        });
       }
     } catch (e) {
       print("❌ Error: $e");
@@ -74,6 +64,7 @@ class _MonitoringState extends State<Monitoring> {
       }
     }
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -86,12 +77,13 @@ class _MonitoringState extends State<Monitoring> {
       "turbidity": _sensorStore.getHistory(widget.pondId, "turbidity"),
     };
 
-
     return Scaffold(
       appBar: AppBarWidget(
         title: "Monitoring",
         onBackPress: () {
-          Navigator.pop(context);
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (_) => const Beranda()),
+          );
         },
       ),
       resizeToAvoidBottomInset: false,
@@ -118,7 +110,7 @@ class _MonitoringState extends State<Monitoring> {
                     sensorData: sensorHistory["temperature"] ?? [],
                     namePond: widget.namePond,
                   ),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 20),
                   KolomMonitoring(
                     pondId: widget.pondId,
                     sensorName: 'Sensor pH',
@@ -126,7 +118,7 @@ class _MonitoringState extends State<Monitoring> {
                     sensorData: sensorHistory["ph"] ?? [],
                     namePond: widget.namePond,
                   ),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 20),
                   KolomMonitoring(
                     pondId: widget.pondId,
                     sensorName: 'Sensor Salinitas',
@@ -134,7 +126,7 @@ class _MonitoringState extends State<Monitoring> {
                     sensorData: sensorHistory["salinity"] ?? [],
                     namePond: widget.namePond,
                   ),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 20),
                   KolomMonitoring(
                     pondId: widget.pondId,
                     sensorName: 'Sensor Kekeruhan',

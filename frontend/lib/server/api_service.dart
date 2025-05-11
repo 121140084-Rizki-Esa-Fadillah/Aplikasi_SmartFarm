@@ -4,7 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../main.dart';
 
 class ApiService {
-  static const String baseUrl = "http://192.168.60.45:5000/api";
+  static const String baseUrl = "http://192.168.1.38:5000/api";
 
   static Future<bool> login(String username, String password) async {
     try {
@@ -29,6 +29,12 @@ class ApiService {
         final data = jsonDecode(response.body);
         SharedPreferences prefs = await SharedPreferences.getInstance();
         await prefs.setString("token", data["token"]);
+
+        // Simpan role
+        if (data.containsKey("role")) {
+          await prefs.setString("role", data["role"]);
+        }
+
         return true;
       } else {
         return false;
@@ -38,6 +44,7 @@ class ApiService {
       return false;
     }
   }
+
 
   static Future<bool> isAuthenticated() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -104,6 +111,77 @@ class ApiService {
     }
   }
 
+  static Future<Map<String, bool>?> checkUsernameEmail(String username, String email) async {
+    try {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      String? token = prefs.getString("token");
+
+      if (token == null) return null;
+
+      final response = await http.post(
+        Uri.parse("$baseUrl/check/user"),
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer $token",
+        },
+        body: jsonEncode({
+          "username": username,
+          "email": email,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return {
+          "usernameExists": data["usernameExists"],
+          "emailExists": data["emailExists"],
+        };
+      } else {
+        return null;
+      }
+    } catch (e) {
+      print("Error saat cek username/email: $e");
+      return null;
+    }
+  }
+
+  static Future<Map<String, dynamic>?> checkIdPondNamePond(String idPond, String namePond) async {
+    try {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      String? token = prefs.getString("token");
+
+      if (token == null) return null;
+
+      final response = await http.post(
+        Uri.parse("$baseUrl/check/kolam"),
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer $token",
+        },
+        body: jsonEncode({
+          "idPond": idPond,
+          "namePond": namePond,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+
+        return {
+          "idPondExists": data["idPondExists"],
+          "namePondExists": data["namePondExists"],
+        };
+      } else {
+        print('Failed to load data');
+        return null;
+      }
+    } catch (e) {
+      print("Error saat cek idPond/namePond: $e");
+      return null;
+    }
+  }
+
+
   static Future<Map<String, dynamic>?> getProfile() async {
     try {
       SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -150,6 +228,7 @@ class ApiService {
 
     return response.statusCode == 200;
   }
+
   static Future<List<Map<String, dynamic>>> getUsers() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? token = prefs.getString("token");
@@ -349,142 +428,102 @@ class ApiService {
     }
   }
 
-  static Future<Map<String, dynamic>?> getDeviceConfig(String pondId, [String? keyPath]) async {
-    try {
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      String? token = prefs.getString("token");
+  // Fungsi untuk mengambil konfigurasi Aerator berdasarkan pondId
+  static Future<Map<String, dynamic>?> getAerator(String pondId) async {
+    final uri = Uri.parse('$baseUrl/konfigurasi/aerator/$pondId');
 
-      if (token == null) {
-        return null;
-      }
+    final response = await http.get(uri);
 
-      // Jika keyPath diberikan, tambahkan ke URL
-      String endpoint = keyPath != null ? "$baseUrl/konfigurasi/$pondId/$keyPath" : "$baseUrl/konfigurasi/$pondId";
-
-      final response = await http.get(
-        Uri.parse(endpoint),
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": "Bearer $token",
-        },
-      );
-
-      print("📩 GET Request API: $endpoint");
-      print("📥 Response (${response.statusCode}): ${response.body}");
-
-      if (response.statusCode == 200) {
-        var responseData = jsonDecode(response.body);
-
-        // Periksa tipe dari 'data'
-        var data = responseData["data"];
-
-        // Jika 'data' adalah Map, kembalikan sebagai Map
-        if (data is Map<String, dynamic>) {
-          return data;
-        }
-
-        // Jika 'data' adalah tipe lain (misalnya int, double, string, bool), kembalikan sebagai Map dengan satu key
-        else if (data != null) {
-          return {"data": data};
-        }
-
-        // Jika 'data' adalah null, kembalikan null
-        else {
-          print("⚠️ Error: Data tidak ditemukan atau null.");
-          return null;
-        }
-      } else {
-        print("Gagal mendapatkan konfigurasi: ${response.statusCode} - ${response.body}");
-        return null;
-      }
-    } catch (e, stacktrace) {
-      print("❌ Error saat mengambil konfigurasi: $e");
-      print(stacktrace);
-      return null;
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      print("Fetched Aerator: $data"); // Log respons untuk debug
+      return data;
+    } else {
+      throw Exception('Failed to load aerator data');
     }
   }
 
+// Fungsi untuk memperbarui konfigurasi Aerator
+  static Future<void> updateAerator(String pondId, Map<String, dynamic> data) async {
+    final uri = Uri.parse('$baseUrl/konfigurasi/aerator/$pondId');
 
-  // ✅ Fungsi untuk memperbarui konfigurasi perangkat
-  static Future<bool> updateDeviceConfig(String pondId, String keyPath, dynamic newValue) async {
-    try {
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      String? token = prefs.getString("token");
+    final response = await http.put(
+      uri,
+      body: json.encode(data),
+      headers: {'Content-Type': 'application/json'},
+    );
 
-      if (token == null) {
-        print("❌ Error: Token tidak ditemukan.");
-        return false;
-      }
-
-      // Pastikan keyPath tidak memiliki "/" di awal atau akhir
-      keyPath = keyPath.replaceAll(RegExp(r'^/|/$'), '');
-
-      // Pastikan newValue sesuai dengan tipe yang dapat dikirim
-      dynamic requestBody;
-      if (newValue is Map || newValue is List) {
-        requestBody = jsonEncode(newValue);
-      } else {
-        requestBody = jsonEncode(newValue); // Kirim newValue langsung tanpa tambahan objek pembungkus
-      }
-
-      final response = await http.patch(
-        Uri.parse("$baseUrl/konfigurasi/$pondId/$keyPath"),
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": "Bearer $token",
-        },
-        body: requestBody,
-      );
-
-      print("📩 Request API: PATCH /konfigurasi/$pondId/$keyPath");
-      print("📤 Body: $requestBody");
-      print("📥 Response (${response.statusCode}): ${response.body}");
-
-      return response.statusCode == 200;
-    } catch (e) {
-      print("❌ Error saat memperbarui konfigurasi: $e");
-      return false;
+    if (response.statusCode != 200) {
+      throw Exception('Failed to update aerator');
     }
   }
-  static Future<Map<String, dynamic>?> getMonitoringData(String pondId, String sensorType) async {
-    try {
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      String? token = prefs.getString("token");
 
-      if (token == null) {
-        print("❌ Error: Token tidak ditemukan.");
-        return null;
-      }
+  /// Ambil data feeding berdasarkan pondId
+  static Future<Map<String, dynamic>> getFeeding(String pondId) async {
+    final response = await http.get(Uri.parse('$baseUrl/konfigurasi/feeding/$pondId'));
 
-      // 🔹 Buat URL berdasarkan sensorType (jika ada)
-      String url = "$baseUrl/monitoring/$pondId";
-      if (sensorType != null) {
-        url += "/${sensorType.toLowerCase()}";
-      }
-
-      final response = await http.get(
-        Uri.parse(url),
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": "Bearer $token",
-        },
-      );
-
-      print("📩 GET Request API: $url");
-      print("📥 Response (${response.statusCode}): ${response.body}");
-
-      if (response.statusCode == 200) {
-        return jsonDecode(response.body); // ✅ Berhasil mendapatkan data
-      } else {
-        print("⚠️ Gagal mendapatkan data monitoring: ${response.statusCode} - ${response.body}");
-        return null;
-      }
-    } catch (e, stacktrace) {
-      print("❌ Error saat mengambil data monitoring: $e");
-      print(stacktrace);
-      return null;
+    if (response.statusCode == 200) {
+      return json.decode(response.body);
+    } else {
+      throw Exception('Gagal mengambil jadwal feeding: ${response.reasonPhrase}');
     }
   }
+
+  /// Update data feeding berdasarkan pondId
+  static Future<Map<String, dynamic>> updateFeeding(String pondId, Map<String, dynamic> feedingData) async {
+    final response = await http.put(
+      Uri.parse('$baseUrl/konfigurasi/feeding/$pondId'),
+      headers: {'Content-Type': 'application/json'},
+      body: json.encode(feedingData),
+    );
+
+    if (response.statusCode == 200) {
+      return json.decode(response.body);
+    } else {
+      throw Exception('Gagal memperbarui jadwal feeding: ${response.reasonPhrase}');
+    }
+  }
+
+  // Fungsi untuk mengambil data Monitoring berdasarkan pondId
+  static Future<Map<String, dynamic>> getMonitoringData(String pondId) async {
+    final response = await http.get(Uri.parse('$baseUrl/monitoring/$pondId'));
+
+    if (response.statusCode == 200) {
+      return json.decode(response.body);
+    } else {
+      throw Exception('Failed to load monitoring data');
+    }
+  }
+
+  // Fungsi untuk mengambil Threshold berdasarkan pondId dan tambahan query parameters
+  static Future<Map<String, dynamic>?> getThresholds(String pondId) async {
+    final uri = Uri.parse('$baseUrl/konfigurasi/thresholds/$pondId');
+
+    final response = await http.get(uri);
+
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      print("Fetched Thresholds: $data"); // Log untuk melihat data respons
+      return data;
+    } else {
+      throw Exception('Failed to load thresholds');
+    }
+  }
+
+  static Future<void> updateThresholds(String pondId, Map<String, dynamic> data) async {
+    final uri = Uri.parse('$baseUrl/konfigurasi/thresholds/$pondId');
+
+    final response = await http.put(
+      uri,
+      body: json.encode(data),
+      headers: {'Content-Type': 'application/json'},
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception('Failed to update thresholds');
+    }
+  }
+
 
   // ✅ Ambil Notifikasi Berdasarkan ID
   static Future<Map<String, dynamic>?> getNotificationById(String id) async {

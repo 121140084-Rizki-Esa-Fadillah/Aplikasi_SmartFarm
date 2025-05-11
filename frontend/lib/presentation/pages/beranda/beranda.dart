@@ -127,7 +127,7 @@ class _BerandaState extends State<Beranda> {
                     ),
                   ],
                 ),
-                const SizedBox(height: 15),
+                const SizedBox(height: 25),
                 Expanded(
                   child: LayoutBuilder(
                     builder: (context, constraints) {

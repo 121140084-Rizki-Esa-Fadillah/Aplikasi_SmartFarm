@@ -1,6 +1,6 @@
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-const User = require("../models/users");
+const User = require("../models/user");
 
 const SECRET_KEY = process.env.JWT_SECRET;
 
@@ -15,9 +15,7 @@ const resetPassword = async (token, newPassword) => {
 		console.log("✅ Token berhasil diverifikasi:", decoded);
 
 		// Cek apakah user ada di database
-		const user = await User.findOne({
-			email: decoded.email
-		});
+		const user = await User.model.findOne({ email: decoded.email });
 		if (!user) {
 			console.log("❌ User tidak ditemukan!");
 			throw new Error("User tidak ditemukan!");

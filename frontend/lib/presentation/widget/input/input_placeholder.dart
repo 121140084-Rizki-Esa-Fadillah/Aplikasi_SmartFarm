@@ -7,6 +7,7 @@ class InputPlaceholder extends StatefulWidget {
   final bool isPassword;
   final String? iconPath;
   final TextEditingController controller;
+  final bool isEmail; // ➕ Tambahkan flag email
 
   const InputPlaceholder({
     super.key,
@@ -14,6 +15,7 @@ class InputPlaceholder extends StatefulWidget {
     this.isPassword = false,
     this.iconPath,
     required this.controller,
+    this.isEmail = false, // ➕ Default false
   });
 
   @override
@@ -21,11 +23,11 @@ class InputPlaceholder extends StatefulWidget {
 }
 
 class _InputPlaceholderState extends State<InputPlaceholder> {
-  bool _obscureText = true; // Status awal: Password disembunyikan
+  bool _obscureText = true;
 
   @override
   Widget build(BuildContext context) {
-    final size = MediaQuery.of(context).size; // Ambil ukuran layar
+    final size = MediaQuery.of(context).size;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -35,58 +37,67 @@ class _InputPlaceholderState extends State<InputPlaceholder> {
           child: TextField(
             controller: widget.controller,
             style: GoogleFonts.poppins(
-              fontWeight: FontWeight.w400, // Tidak italic
-              fontSize: size.width * 0.04, // Sekitar 4% dari lebar layar
-              color: Colors.white, // Warna teks input menjadi putih
+              fontWeight: FontWeight.w400,
+              fontSize: size.width * 0.04,
+              color: Colors.white,
             ),
-            obscureText: widget.isPassword ? _obscureText : false, // Password mode
+            obscureText: widget.isPassword ? _obscureText : false,
+            keyboardType: widget.isEmail ? TextInputType.emailAddress : TextInputType.text,
+            textCapitalization: widget.isEmail ? TextCapitalization.none : TextCapitalization.sentences,
+            onChanged: (value) {
+              if (widget.isEmail) {
+                final cursorPos = widget.controller.selection;
+                widget.controller.text = value.toLowerCase();
+                widget.controller.selection = cursorPos;
+              }
+            },
             decoration: InputDecoration(
               prefixIcon: widget.iconPath != null
                   ? Padding(
-                padding: EdgeInsets.all(size.width * 0.03), // Padding responsif
+                padding: EdgeInsets.all(size.width * 0.03),
                 child: Image.asset(widget.iconPath!,
-                    width: size.width * 0.06, height: size.width * 0.06), // Ikon responsif
+                    width: size.width * 0.06, height: size.width * 0.06),
               )
                   : null,
               suffixIcon: widget.isPassword
                   ? IconButton(
                 icon: Icon(
-                  _obscureText ? Icons.visibility_off : Icons.visibility, // Mata terbuka/tutup
-                  color: Colors.white, // Warna ikon putih
-                  size: size.width * 0.05, // Ukuran ikon responsif
+                  _obscureText ? Icons.visibility_off : Icons.visibility,
+                  color: Colors.white,
+                  size: size.width * 0.05,
                 ),
                 onPressed: () {
                   setState(() {
-                    _obscureText = !_obscureText; // Toggle status password
+                    _obscureText = !_obscureText;
                   });
                 },
               )
                   : null,
-              labelText: widget.label, // Placeholder text
+              labelText: widget.label,
               labelStyle: GoogleFonts.poppins(
-                fontStyle: FontStyle.italic, // Placeholder italic
+                fontStyle: FontStyle.italic,
                 fontWeight: FontWeight.w400,
-                fontSize: size.width * 0.04, // Ukuran teks responsif
-                color: Colors.white, // Warna placeholder putih
+                fontSize: size.width * 0.04,
+                color: Colors.white,
               ),
-              floatingLabelBehavior: FloatingLabelBehavior.never, // Placeholder hilang saat mengetik
-              fillColor: Colors.transparent, // Background transparan
+              floatingLabelBehavior: FloatingLabelBehavior.never,
+              fillColor: Colors.transparent,
               filled: true,
               contentPadding: EdgeInsets.symmetric(
-                  vertical: size.height * 0.02, horizontal: size.width * 0.03), // Padding responsif
+                  vertical: size.height * 0.02, horizontal: size.width * 0.03),
               enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(size.width * 0.025), // Border melengkung responsif
+                borderRadius: BorderRadius.circular(size.width * 0.025),
                 borderSide: const BorderSide(color: Colors.white),
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(size.width * 0.025),
-                borderSide: const BorderSide(color: Colors.white), // Warna saat fokus
+                borderSide: const BorderSide(color: Colors.white),
               ),
             ),
-            cursorColor: Colors.white, // Warna kursor putih
+            cursorColor: Colors.white,
           ),
         ),
-        const Gap(20), // Jarak setelah input field
+        const Gap(20),
       ],
     );
   }

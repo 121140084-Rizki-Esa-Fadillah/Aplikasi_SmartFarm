@@ -33,55 +33,48 @@ class _KontrolPakanState extends State<KontrolPakan> {
     try {
       setState(() => isLoading = true);
 
-      final responses = await Future.wait([
-        ApiService.getDeviceConfig(widget.pondId, "feeding_schedule/schedule"),
-        ApiService.getDeviceConfig(widget.pondId, "feeding_schedule/status"),
-        ApiService.getDeviceConfig(widget.pondId, "feeding_schedule/amount"),
-      ]);
+      // Ambil data dari API
+      final feedingScheduleData = await ApiService.getFeeding(widget.pondId);
 
-      // Process schedule
-      final scheduleData = responses[0];
-      if (scheduleData != null && scheduleData["data"] is List) {
-        final times = (scheduleData["data"] as List).cast<String>();
-        setState(() {
-          _feedingSchedule = List.generate(4, (index) {
-            if (index < times.length) {
-              final parts = times[index].split(':');
-              if (parts.length == 2) {
-                return TimeOfDay(
-                  hour: int.parse(parts[0]),
-                  minute: int.parse(parts[1]),
-                );
-              }
+      final statusData = feedingScheduleData["feedStatus"];
+      final amountData = feedingScheduleData["amountFeeder"];
+
+      // Proses jadwal pakan berdasarkan schedule_1..4
+      final scheduleTimes = [
+        feedingScheduleData["schedule_1"],
+        feedingScheduleData["schedule_2"],
+        feedingScheduleData["schedule_3"],
+        feedingScheduleData["schedule_4"],
+      ];
+
+      setState(() {
+        _feedingSchedule = scheduleTimes.map((timeStr) {
+          if (timeStr != null && timeStr is String) {
+            final parts = timeStr.split(':');
+            if (parts.length == 2) {
+              return TimeOfDay(
+                hour: int.parse(parts[0]),
+                minute: int.parse(parts[1]),
+              );
             }
-            return null;
-          });
-        });
-      }
+          }
+          return null;
+        }).toList();
+      });
 
-      // 2. Process Status
-      final statusData = responses[1];
-      print("📦 Raw statusData: $statusData");
-
+      // Proses status feeding
       if (statusData != null && statusData["on"] != null) {
-        final bool statusValue = statusData["on"] == true;
-
-        print('✅ isFeedingOn set to: $statusValue');
-
         setState(() {
-          isFeedingOn = statusValue;
+          isFeedingOn = statusData["on"];
         });
-      } else {
-        print("⚠️ statusData is null or missing 'on' key");
       }
 
-
-      // Process amount
-      final amountData = responses[2];
-      if (amountData != null && amountData["data"] is num) {
-        setState(() => feedAmount = amountData["data"].toDouble());
+      // Proses jumlah pakan
+      if (amountData != null) {
+        setState(() {
+          feedAmount = amountData.toDouble();
+        });
       }
-
     } catch (e) {
       print('Error loading config: $e');
       setState(() {
@@ -94,35 +87,26 @@ class _KontrolPakanState extends State<KontrolPakan> {
     }
   }
 
+  // Fungsi untuk menyimpan data ke server
   Future<void> _saveData() async {
     setState(() => isSaving = true);
 
     try {
-      final formattedSchedule = _feedingSchedule
-          .where((time) => time != null)
-          .map((time) =>
-      "${time!.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}")
-          .toList();
+      final formattedSchedule = _feedingSchedule.map((time) {
+        return time != null
+            ? "${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}"
+            : null;
+      }).toList();
 
-      await Future.wait([
-        if (formattedSchedule.isNotEmpty)
-          ApiService.updateDeviceConfig(
-              widget.pondId,
-              "feeding_schedule/schedule",
-              formattedSchedule
-          ),
-        ApiService.updateDeviceConfig(
-            widget.pondId,
-            "feeding_schedule/amount",
-            feedAmount.toInt()
-        ),
-        ApiService.updateDeviceConfig(
-            widget.pondId,
-            "feeding_schedule/status",
-            {"on": isFeedingOn ?? false}
-        ),
-      ]);
+      final Map<String, dynamic> payload = {
+        "amount": feedAmount.toInt(),
+        "schedule": formattedSchedule,
+      };
 
+      await ApiService.updateFeeding(widget.pondId, payload);
+
+
+      // Dialog sukses
       CustomDialog.show(
         context: context,
         isSuccess: true,
@@ -139,6 +123,7 @@ class _KontrolPakanState extends State<KontrolPakan> {
       setState(() => isSaving = false);
     }
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -173,7 +158,7 @@ class _KontrolPakanState extends State<KontrolPakan> {
           ),
           const SizedBox(height: 12),
 
-          // On/Off Pakan (dibuat seperti Aerator)
+          // On/Off Pakan (seperti Aerator)
           Container(
             width: MediaQuery.of(context).size.width * 0.75,
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -197,23 +182,27 @@ class _KontrolPakanState extends State<KontrolPakan> {
                     setState(() => isFeedingOn = value);
 
                     try {
-                      print("📩 PUT Request API: http://192.168.1.38:5000/api/konfigurasi/${widget.pondId}/feeding_schedule/status with data: {\"on\": $isFeedingOn}");
-                      final statusUpdated = await ApiService.updateDeviceConfig(
+                      await ApiService.updateFeeding(
                         widget.pondId,
-                        "feeding_schedule/status",
-                        {"on": isFeedingOn ?? false},
+                        {
+                          "status": {"on": isFeedingOn ?? false}
+                        },
                       );
-                      print("📥 Response (200): $statusUpdated");
 
-                      // Logging saja, tanpa dialog
-                      if (isFeedingOn == true) {
-                        print("✅ Pakan berhasil diaktifkan");
-                      } else {
-                        print("⚠️ Pakan berhasil dinonaktifkan");
-                      }
-
+                      CustomDialog.show(
+                        context: context,
+                        isSuccess: true,
+                        message: isFeedingOn == true
+                            ? "Pakan berhasil diaktifkan"
+                            : "Pakan berhasil dinonaktifkan",
+                      );
                     } catch (e) {
                       print("❌ Error saat memperbarui status pakan: $e");
+                      CustomDialog.show(
+                        context: context,
+                        isSuccess: false,
+                        message: "Gagal mengubah status pakan",
+                      );
                     }
                   },
                 ),
@@ -249,7 +238,7 @@ class _KontrolPakanState extends State<KontrolPakan> {
                   child: Column(
                     children: List.generate(4, (index) {
                       return Padding(
-                        padding: const EdgeInsets.only(left: 10),
+                        padding: const EdgeInsets.only(left: 8),
                         child: InputScheduleTime(
                           label: 'Waktu ${index + 1}',
                           initialTime: _feedingSchedule[index] ??

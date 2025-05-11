@@ -34,16 +34,10 @@ class _LupaPasswordState extends State<LupaPassword> {
     String email = emailController.text.trim();
 
     if (email.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Email tidak boleh kosong!")),
-      );
-      return;
-    }
-
-    // **Validasi email harus mengandung '@'**
-    if (!email.contains("@")) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Email harus mengandung '@'")),
+      CustomDialog.show(
+        context: context,
+        isSuccess: false,
+        message: "Email tidak boleh kosong!",
       );
       return;
     }
@@ -69,8 +63,10 @@ class _LupaPasswordState extends State<LupaPassword> {
 
   void _verifyOTP() async {
     if (otpController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Kode OTP tidak boleh kosong!")),
+      CustomDialog.show(
+        context: context,
+        isSuccess: false,
+        message: "Kode OTP tidak boleh kosong!",
       );
       return;
     }
@@ -104,85 +100,98 @@ class _LupaPasswordState extends State<LupaPassword> {
     final double gapSize = size.height * 0.02;
 
     return Scaffold(
-      resizeToAvoidBottomInset: false,
+      resizeToAvoidBottomInset: true,
       body: Stack(
         children: [
           const BackgroundWidget(),
-          Center(
-            child: SingleChildScrollView(
-              padding: EdgeInsets.symmetric(horizontal: paddingHorizontal),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Text(
-                    "Lupa Password",
-                    style: GoogleFonts.poppins(
-                      fontSize: size.width * 0.09,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white,
+          SafeArea(
+            child: Column(
+              children: [
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: EdgeInsets.symmetric(horizontal: paddingHorizontal),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        SizedBox(height: size.height * 0.15),
+                        Text(
+                          "Lupa Password",
+                          style: GoogleFonts.poppins(
+                            fontSize: size.width * 0.09,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white,
+                          ),
+                        ),
+                        Gap(gapSize),
+                        Text(
+                          "Silahkan masukkan email anda",
+                          textAlign: TextAlign.center,
+                          style: GoogleFonts.poppins(
+                            fontSize: size.width * 0.045,
+                            fontWeight: FontWeight.w400,
+                            color: Colors.white,
+                          ),
+                        ),
+                        Gap(gapSize * 1.5),
+                        SizedBox(
+                          width: size.width * 0.8,
+                          child: InputPlaceholder(
+                            label: "Email",
+                            iconPath: "assets/icons/icon-email.png",
+                            controller: emailController,
+                            isEmail: true,
+                          ),
+                        ),
+                        SizedBox(
+                          child: ButtonFilled(
+                            text: "Minta Kode OTP",
+                            onPressed: _requestOTP,
+                          ),
+                        ),
+                        const Gap(40),
+                        Text(
+                          "Silahkan masukkan kode OTP",
+                          textAlign: TextAlign.center,
+                          style: GoogleFonts.poppins(
+                            fontSize: size.width * 0.045,
+                            fontWeight: FontWeight.w400,
+                            color: Colors.white,
+                          ),
+                        ),
+                        Gap(gapSize * 1.5),
+                        AnimatedPadding(
+                          duration: const Duration(milliseconds: 200),
+                          padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+                          child: Column(
+                            children: [
+                              SizedBox(
+                                width: size.width * 0.7,
+                                child: InputOTP(controller: otpController),
+                              ),
+                              const Gap(20),
+                              ButtonFilled(
+                                text: "Kirim Kode OTP",
+                                onPressed: _verifyOTP,
+                              ),
+                              const Gap(15),
+                              ButtonText(
+                                text: 'Kembali Login ?',
+                                fontSize: size.width * 0.045,
+                                onPressed: () {
+                                  Navigator.of(context).pushReplacement(
+                                    MaterialPageRoute(builder: (context) => const Login()),
+                                  );
+                                },
+                              ),
+                            ],
+                          ),
+                        ),
+                        SizedBox(height: size.height * 0.1), // 👈 memberi jarak bawah biar lebih seimbang
+                      ],
                     ),
                   ),
-                  Gap(gapSize),
-                  Text(
-                    "Silahkan masukkan email anda",
-                    textAlign: TextAlign.center,
-                    style: GoogleFonts.poppins(
-                      fontSize: size.width * 0.045,
-                      fontWeight: FontWeight.w400,
-                      color: Colors.white,
-                    ),
-                  ),
-                  Gap(gapSize * 1.5),
-                  SizedBox(
-                    width: size.width * 0.8,
-                    child: InputPlaceholder(
-                      label: "Email",
-                      iconPath: "assets/icons/icon-email.png",
-                      controller: emailController,
-                    ),
-                  ),
-                  Gap(gapSize),
-                  SizedBox(
-                    child: ButtonFilled(
-                      text: "Minta Kode OTP",
-                      onPressed: _requestOTP,
-                    ),
-                  ),
-                  const Gap(30),
-                  Text(
-                    "Silahkan masukkan kode OTP",
-                    textAlign: TextAlign.center,
-                    style: GoogleFonts.poppins(
-                      fontSize: size.width * 0.045,
-                      fontWeight: FontWeight.w400,
-                      color: Colors.white,
-                    ),
-                  ),
-                  Gap(gapSize * 1.5),
-                  SizedBox(
-                    width: size.width * 0.7,
-                    child: InputOTP(controller: otpController),
-                  ),
-                  const Gap(20),
-                  SizedBox(
-                    child: ButtonFilled(
-                      text: "Kirim Kode OTP",
-                      onPressed: _verifyOTP,
-                    ),
-                  ),
-                  const Gap(15),
-                  ButtonText(
-                    text: 'Kembali Login ?',
-                    fontSize: size.width * 0.045,
-                    onPressed: () {
-                      Navigator.of(context).pushReplacement(
-                        MaterialPageRoute(builder: (context) => const Login()),
-                      );
-                    },
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         ],

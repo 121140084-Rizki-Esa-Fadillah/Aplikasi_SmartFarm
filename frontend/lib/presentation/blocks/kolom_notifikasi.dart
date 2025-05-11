@@ -143,6 +143,7 @@ class _KolomNotifikasiState extends State<KolomNotifikasi> {
                         ? const Center(child: CircularProgressIndicator())
                         : ListView.separated(
                       itemCount: currentNotifikasi.length,
+                      physics: const NeverScrollableScrollPhysics(),
                       separatorBuilder: (context, index) => const Divider(color: Colors.white, height: 1),
                       itemBuilder: (context, index) {
                         final notif = currentNotifikasi[index];
@@ -182,7 +183,7 @@ class _KolomNotifikasiState extends State<KolomNotifikasi> {
                 Expanded(
                   flex: 3,
                   child: Container(
-                    padding: const EdgeInsets.only(top: 7),
+                    padding: const EdgeInsets.only(top: 3),
                     decoration: const BoxDecoration(
                       color: Colors.transparent,
                       border: Border(bottom: BorderSide(color: Colors.white)),

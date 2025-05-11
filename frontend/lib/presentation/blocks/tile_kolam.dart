@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:frontend_app/presentation/pages/monitoring/monitoirng_sensor/monitoring.dart';
 import 'package:frontend_app/presentation/widget/button/button_outlined.dart';
 import 'package:frontend_app/presentation/widget/pop_up/popup_menu_kolam.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+import '../widget/pop_up/custom_dialog.dart';
 
 class TileKolam extends StatefulWidget {
   final String pondId;
@@ -32,6 +35,21 @@ class TileKolam extends StatefulWidget {
 class _TileKolamState extends State<TileKolam> {
   final GlobalKey _menuKey = GlobalKey();
   OverlayEntry? _overlayEntry;
+  bool isAdmin = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadRole();
+  }
+
+  Future<void> _loadRole() async {
+    final prefs = await SharedPreferences.getInstance();
+    final role = prefs.getString('role');
+    setState(() {
+      isAdmin = role == "Admin";
+    });
+  }
 
   void _showMenu() {
     final RenderBox renderBox = _menuKey.currentContext!.findRenderObject() as RenderBox;
@@ -105,22 +123,22 @@ class _TileKolamState extends State<TileKolam> {
                   child: Text(
                     widget.pondName,
                     style: const TextStyle(
-                      fontSize: 16,
+                      fontSize: 14,
                       fontWeight: FontWeight.w600,
                       color: Colors.black87,
                     ),
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
-                GestureDetector(
-                  key: _menuKey,
-                  onTap: _showMenu,
-                  child: const Icon(Icons.more_vert, color: Colors.black54),
-                ),
+                if (isAdmin)
+                  GestureDetector(
+                    key: _menuKey,
+                    onTap: _showMenu,
+                    child: const Icon(Icons.more_vert, color: Colors.black54),
+                  ),
               ],
             ),
             const SizedBox(height: 2),
-
             Text(
               widget.status,
               style: const TextStyle(
@@ -130,7 +148,6 @@ class _TileKolamState extends State<TileKolam> {
               ),
             ),
             const SizedBox(height: 1),
-
             Text(
               widget.date,
               style: const TextStyle(
@@ -139,17 +156,27 @@ class _TileKolamState extends State<TileKolam> {
               ),
             ),
             const SizedBox(height: 2),
-
             Center(
               child: ButtonOutlined(
                 text: "Monitoring",
                 onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => Monitoring(pondId: widget.pondId, namePond: widget.pondName, ), // ✅ Tambahkan pondId
-                    ),
-                  );
+                  if (widget.status.toLowerCase() == "non-aktif") {
+                    CustomDialog.show(
+                      context: context,
+                      isSuccess: false,
+                      message: "Monitoring untuk kolam ini dinonaktifkan karena status kolam adalah Non-Aktif.",
+                    );
+                  } else {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => Monitoring(
+                          pondId: widget.pondId,
+                          namePond: widget.pondName,
+                        ),
+                      ),
+                    );
+                  }
                 },
               ),
             ),

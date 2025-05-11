@@ -35,11 +35,14 @@ const lupaPasswordRoutes = require("./routes/lupaPassword");
 const resetPasswordRoutes = require("./routes/resetPassword");
 const profileRoutes = require("./routes/profile");
 const manajemenUserRoutes = require("./routes/manajemenUsers");
-const manajemenKolamRoutes = require("./routes/manajemenKolam");
+const manajemenKolamRoutes = require("./routes/kolam");
 const historyRoutes = require("./routes/history");
 const notificationRoutes = require("./routes/notifikasi");
 const monitoringRoutes = require("./routes/monitoring");
-const konfigurasiRoutes = require("./routes/konfigurasi");
+const aeratorRoutes = require("./routes/aerator");
+const feederRoutes = require("./routes/feeder");
+const thresholdRoutes = require("./routes/thresholds");
+const checkDataRouter = require("./routes/checkData");
 
 // 🔹 Routes
 app.use("/api/auth", authRoutes);
@@ -51,7 +54,10 @@ app.use("/api", manajemenKolamRoutes);
 app.use("/api", historyRoutes);
 app.use("/api/notifikasi", notificationRoutes);
 app.use("/api/monitoring", monitoringRoutes);
-app.use("/api/konfigurasi", konfigurasiRoutes);
+app.use("/api/konfigurasi/aerator", aeratorRoutes);
+app.use("/api/konfigurasi/feeding", feederRoutes);
+app.use("/api/konfigurasi/thresholds", thresholdRoutes);
+app.use("/api/check", checkDataRouter);
 
 // 🔹 Jalankan Server
 const PORT = process.env.PORT || 5000;

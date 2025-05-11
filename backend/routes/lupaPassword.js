@@ -1,7 +1,7 @@
 const express = require("express");
 const {
-	sendOTP,
-	verifyOTP
+	kirimOTP,
+	verifikasiOTP
 } = require("../services/lupaPassword");
 
 const router = express.Router();
@@ -11,7 +11,7 @@ router.post("/send-otp", async (req, res) => {
 		email
 	} = req.body;
 	try {
-		const message = await sendOTP(email);
+		const message = await kirimOTP(email);
 		res.json({
 			message
 		});
@@ -28,7 +28,7 @@ router.post("/verify-otp", (req, res) => {
 		otp
 	} = req.body;
 	try {
-		const result = verifyOTP(email, otp);
+		const result = verifikasiOTP(email, otp);
 
 		if (result === "expired") {
 			return res.status(401).json({

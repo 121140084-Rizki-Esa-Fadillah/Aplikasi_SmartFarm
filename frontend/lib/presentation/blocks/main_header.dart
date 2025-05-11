@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'dart:async';
+import '../../server/api_service.dart';
 import 'tile_profile.dart';
 
 class MainHeader extends StatefulWidget {
@@ -12,16 +13,21 @@ class MainHeader extends StatefulWidget {
 }
 
 class _MainHeaderState extends State<MainHeader> {
-  late String _currentTime;
-  late String _currentDate;
+  late String _currentTime = '';
+  late String _currentDate = '';
   late Timer _timer;
+
+  String? username;  // Nullable String untuk username
+  String? role;      // Nullable String untuk role
 
   @override
   void initState() {
     super.initState();
     _initializeDateFormatting();
+    _loadUserProfile();
   }
 
+  // Fungsi untuk format waktu
   void _initializeDateFormatting() async {
     await initializeDateFormatting('id_ID', null);
     _updateTime();
@@ -36,6 +42,23 @@ class _MainHeaderState extends State<MainHeader> {
       _currentTime = DateFormat.Hms().format(now);
       _currentDate = DateFormat('EEEE, dd MMMM yyyy', 'id_ID').format(now);
     });
+  }
+
+  // Fungsi untuk memuat profil pengguna
+  Future<void> _loadUserProfile() async {
+    final profile = await ApiService.getProfile();
+    if (profile != null) {
+      setState(() {
+        username = profile['username'] ?? 'Pengguna';
+        role = profile['role'] ?? 'User';
+      });
+    } else {
+      // Jika gagal mengambil data, beri nilai default
+      setState(() {
+        username = 'Unknown';
+        role = 'User';
+      });
+    }
   }
 
   @override
@@ -58,6 +81,7 @@ class _MainHeaderState extends State<MainHeader> {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // Menampilkan waktu saat ini
                   Text(
                     _currentTime,
                     style: TextStyle(
@@ -66,6 +90,7 @@ class _MainHeaderState extends State<MainHeader> {
                       color: Colors.white,
                     ),
                   ),
+                  // Menampilkan tanggal saat ini
                   Text(
                     _currentDate,
                     style: TextStyle(
@@ -75,9 +100,10 @@ class _MainHeaderState extends State<MainHeader> {
                   ),
                 ],
               ),
+              // Menampilkan TileProfile dengan nilai default jika username dan role null
               TileProfile(
-                username: "OwnerTambak",
-                role: "Admin",
+                username: username ?? ' ',  // Gunakan 'Pengguna' jika username null
+                role: role ?? ' ',              // Gunakan 'User' jika role null
               ),
             ],
           ),

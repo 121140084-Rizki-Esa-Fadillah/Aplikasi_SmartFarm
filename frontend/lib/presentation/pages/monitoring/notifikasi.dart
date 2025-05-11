@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../widget/navigation/navigasi_monitoring.dart';
 import '../../widget/background_widget.dart';
+import '../beranda/beranda.dart';
 import 'riwayat_kualitas_air/riwayat_kualitas_air.dart';
 import 'kontrol_pakan_aerator.dart';
 import 'monitoirng_sensor/monitoring.dart';
@@ -22,7 +23,9 @@ class Notifikasi extends StatelessWidget {
       appBar: AppBarWidget(
         title: "Notifikasi",
         onBackPress: () {
-          Navigator.pop(context);
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (_) => const Beranda()),
+          );
         },
       ),
       resizeToAvoidBottomInset: false,

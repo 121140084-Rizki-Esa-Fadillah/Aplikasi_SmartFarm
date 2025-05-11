@@ -8,7 +8,7 @@ import '../../../widget/input/input_status.dart';
 import '../../../widget/pop_up/custom_dialog.dart';
 
 class EditKolam extends StatefulWidget {
-  final String id; // ✅ Tambahkan id
+  final String id;
   final String pondId;
   final String pondName;
   final String status;
@@ -47,16 +47,50 @@ class _EditKolamState extends State<EditKolam> {
     String newName = nameController.text.trim();
     String newStatus = selectedStatus ?? "Aktif";
 
+    // Validasi nama kolam
     if (newName.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Nama kolam tidak boleh kosong")),
+      CustomDialog.show(
+        context: context,
+        isSuccess: false,
+        message: "Nama kolam tidak boleh kosong",
+      );
+      return;
+    }
+
+    if (newName.length < 4 || newName.length > 12) {
+      CustomDialog.show(
+        context: context,
+        isSuccess: false,
+        message: "Nama kolam harus antara 4 hingga 12 karakter",
+      );
+      return;
+    }
+
+    // Pengecekan apakah nama kolam sudah ada menggunakan API checkIdPondNamePond
+    final result = await ApiService.checkIdPondNamePond(widget.pondId, newName);
+
+    if (result == null) {
+      CustomDialog.show(
+        context: context,
+        isSuccess: false,
+        message: "Gagal memeriksa nama kolam, coba lagi.",
+      );
+      return;
+    }
+
+    // Jika nama kolam sudah ada pada kolam lain
+    if (result["namePondExists"] == true) {
+      CustomDialog.show(
+        context: context,
+        isSuccess: false,
+        message: "Nama kolam sudah digunakan, harap gunakan nama kolam yang lain.",
       );
       return;
     }
 
     setState(() => _isLoading = true);
 
-    // ✅ Kirim id ke API
+    // Kirim permintaan pembaruan kolam ke API
     var updatedKolam = await ApiService.editKolam(widget.id, widget.pondId, newName, newStatus);
 
     if (!mounted) return;

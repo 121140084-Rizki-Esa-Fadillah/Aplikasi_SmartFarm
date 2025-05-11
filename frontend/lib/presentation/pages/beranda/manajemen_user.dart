@@ -46,7 +46,7 @@ class _ManajemenUserState extends State<ManajemenUser> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       const Text(
-                        "Manajemen User",
+                        "Daftar User",
                         style: TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.w600,

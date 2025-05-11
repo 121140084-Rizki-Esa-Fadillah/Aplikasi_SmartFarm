@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:frontend_app/presentation/pages/beranda/beranda.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:gap/gap.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../../server/api_service.dart';
 import '../../widget/background_widget.dart';
 import '../../widget/button/button_filled.dart';
 import '../../widget/input/input_placeholder.dart';
 import '../../widget/button/button_text.dart';
 import '../../widget/pop_up/custom_dialog.dart';
+import '../beranda/beranda_user.dart';
 import 'lupa_password.dart';
 
 class Login extends StatefulWidget {
@@ -31,8 +33,10 @@ class _LoginState extends State<Login> {
     String password = passwordController.text.trim();
 
     if (username.isEmpty || password.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Username dan password tidak boleh kosong")),
+      CustomDialog.show(
+        context: context,
+        isSuccess: false,
+        message: "Username dan password tidak boleh kosong",
       );
       return;
     }
@@ -46,17 +50,25 @@ class _LoginState extends State<Login> {
     setState(() => isLoading = false);
 
     if (success) {
-      CustomDialog.show(
-        context: context,
-        isSuccess: true,
-        message: "Login berhasil!",
-        onComplete: () {
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (context) => const Beranda()),
-          );
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      String? role = prefs.getString("role");
+        CustomDialog.show(
+            context: context,
+            isSuccess: true,
+            message: "Login berhasil!",
+            onComplete: ()
+        {
+          if (role == "Admin") {
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(builder: (context) => const Beranda()),
+            );
+          } else {
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(builder: (context) => const BerandaUser()),
+            );
+          }
         },
       );
-
     } else {
       CustomDialog.show(
         context: context,

@@ -35,7 +35,7 @@ class _TileProfileState extends State<TileProfile> {
       showDialog(
         context: context,
         builder: (context) => PopupMenuProfile(
-          leftPosition: buttonPosition.dx,
+          leftPosition: buttonPosition.dx - 5,
           topPosition: buttonPosition.dy + box.size.height + 5,
           buttonWidth: buttonWidth,
         ),
@@ -61,7 +61,7 @@ class _TileProfileState extends State<TileProfile> {
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
         decoration: BoxDecoration(
           color: isPressed ? const Color(0xFF316B94) : Colors.transparent,
-          borderRadius: BorderRadius.circular(15),
+          borderRadius: BorderRadius.circular(30),
           border: Border.all(color: Colors.white, width: 1),
         ),
         child: Row(

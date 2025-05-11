@@ -3,6 +3,7 @@ import '../../../blocks/kolom_riwayat.dart';
 import '../../../widget/navigation/app_bar_widget.dart';
 import '../../../widget/navigation/navigasi_monitoring.dart';
 import '../../../widget/background_widget.dart';
+import '../../beranda/beranda.dart';
 import '../kontrol_pakan_aerator.dart';
 import '../monitoirng_sensor/monitoring.dart';
 import '../notifikasi.dart';
@@ -13,7 +14,6 @@ class RiwayatKualitasAir extends StatelessWidget {
 
   const RiwayatKualitasAir({super.key, required this.pondId, required this.namePond});
 
-
   @override
   Widget build(BuildContext context) {
     final double screenHeight = MediaQuery.of(context).size.height;
@@ -23,7 +23,9 @@ class RiwayatKualitasAir extends StatelessWidget {
       appBar: AppBarWidget(
         title: "Riwayat Kualitas Air",
         onBackPress: () {
-          Navigator.pop(context);
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (_) => const Beranda()),
+          );
         },
       ),
       resizeToAvoidBottomInset: false,

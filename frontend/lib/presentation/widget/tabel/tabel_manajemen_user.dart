@@ -1,30 +1,31 @@
 import 'package:flutter/material.dart';
-import 'package:frontend_app/color/color_constant.dart';
 import 'package:intl/intl.dart';
 import '../../../server/api_service.dart';
 import '../../pages/manajemen/user/edit_user.dart';
 import '../pop_up/custom_dialog.dart';
 import '../pop_up/custom_dialog_button.dart';
+import '../../../color/color_constant.dart'; // pastikan path ini benar
 
 class UserManagementTable extends StatefulWidget {
   const UserManagementTable({super.key});
 
   @override
-  UserManagementTableState createState() => UserManagementTableState();
+  State<UserManagementTable> createState() => UserManagementTableState();
 }
 
 class UserManagementTableState extends State<UserManagementTable> {
-  final ScrollController _horizontalScrollController = ScrollController();
-  final ScrollController _verticalScrollController = ScrollController();
+  final ScrollController _horizontalController = ScrollController();
+  final ScrollController _verticalController = ScrollController();
+
+  void refreshData() {
+    _fetchUsers();
+  }
+
   List<Map<String, dynamic>> _users = [];
 
   @override
   void initState() {
     super.initState();
-    _fetchUsers();
-  }
-
-  void refreshData() {
     _fetchUsers();
   }
 
@@ -46,98 +47,91 @@ class UserManagementTableState extends State<UserManagementTable> {
 
   @override
   Widget build(BuildContext context) {
-    double screenWidth = MediaQuery.of(context).size.width;
+    return SizedBox(
+      height: 500,
+      child: Scrollbar(
+        controller: _horizontalController,
+        thumbVisibility: true,
+        child: SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          controller: _horizontalController,
+          child: SizedBox(
+            width: 600, // Total lebar tabel, bisa diatur sesuai kebutuhan
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Header
+                Container(
+                  color: ColorConstant.primary,
+                  child: Table(
+                    border: TableBorder.all(color: Colors.grey.shade400),
+                    defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+                    columnWidths: const {
+                      0: FlexColumnWidth(2),
+                      1: FlexColumnWidth(3),
+                      2: FlexColumnWidth(1),
+                      3: FlexColumnWidth(1.5),
+                      4: FlexColumnWidth(2),
+                    },
+                    children: [
+                      TableRow(
+                        children: [
+                          _buildHeaderCell("Username"),
+                          _buildHeaderCell("Email"),
+                          _buildHeaderCell("Role"),
+                          _buildHeaderCell("Tanggal Buat"),
+                          _buildHeaderCell("Action"),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
 
-    // Tentukan lebar kolom agar header & data sama
-    double usernameWidth = screenWidth * 0.3;
-    double emailWidth = screenWidth * 0.5;
-    double roleWidth = screenWidth * 0.15;
-    double createdAtWidth = screenWidth * 0.2;
-    double actionColumnWidth = screenWidth * 0.3;
-    double tableWidth =
-        usernameWidth + emailWidth + roleWidth + createdAtWidth + actionColumnWidth;
+                const SizedBox(height: 2),
 
-    return Column(
-      children: [
-        Expanded(
-          child: SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            controller: _horizontalScrollController,
-            child: ConstrainedBox(
-              constraints: BoxConstraints(minWidth: tableWidth),
-              child: Column(
-                children: [
-                  _buildTableHeader(usernameWidth, emailWidth, roleWidth, createdAtWidth, actionColumnWidth),
-                  Expanded(
+                // Body
+                Expanded(
+                  child: Scrollbar(
+                    controller: _verticalController,
+                    thumbVisibility: true,
                     child: SingleChildScrollView(
-                      scrollDirection: Axis.vertical,
-                      controller: _verticalScrollController,
-                      child: _buildTableBody(usernameWidth, emailWidth, roleWidth, createdAtWidth, actionColumnWidth),
+                      controller: _verticalController,
+                      child: Table(
+                        border: TableBorder.all(color: Colors.grey.shade400),
+                        defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+                        columnWidths: const {
+                          0: FlexColumnWidth(2),
+                          1: FlexColumnWidth(3),
+                          2: FlexColumnWidth(1),
+                          3: FlexColumnWidth(1.5),
+                          4: FlexColumnWidth(2),
+                        },
+                        children: _users.isNotEmpty
+                            ? _users.map((user) {
+                          return TableRow(
+                            decoration: const BoxDecoration(color: Colors.white),
+                            children: [
+                              _buildDataCell(user['username'] ?? "-"),
+                              _buildDataCell(user['email'] ?? "-"),
+                              _buildDataCell(user['role'] ?? "-"),
+                              _buildDataCell(formatTanggal(user['createdAt'] ?? "")),
+                              _buildActionCell(user),
+                            ],
+                          );
+                        }).toList()
+                            : [
+                          TableRow(
+                            children: [
+                              for (int i = 0; i < 5; i++)
+                                _buildDataCell("Belum ada data"),
+                            ],
+                          ),
+                        ],
+                      ),
                     ),
                   ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  /// 🔹 **Header tabel dengan ukuran tetap**
-  Widget _buildTableHeader(double usernameW, double emailW, double roleW, double createdAtW, double actionW) {
-    return Container(
-      color: ColorConstant.primary,
-      child: DataTable(
-        border: TableBorder.all(color: Colors.grey.shade400),
-        headingRowHeight: 40,
-        columns: [
-          _buildHeaderCell("Username", usernameW),
-          _buildHeaderCell("Email", emailW),
-          _buildHeaderCell("Role", roleW),
-          _buildHeaderCell("Tanggal Buat", createdAtW),
-          _buildHeaderCell("Action", actionW),
-        ],
-        rows: const [],
-      ),
-    );
-  }
-
-  /// 🔹 **Isi tabel dengan ukuran tetap**
-  Widget _buildTableBody(double usernameW, double emailW, double roleW, double createdAtW, double actionW) {
-    return DataTable(
-      border: TableBorder.all(color: Colors.grey.shade400),
-      showCheckboxColumn: false,
-      headingRowHeight: 0,
-      columns: List.generate(5, (_) => const DataColumn(label: Text(''))),
-      rows: _users.map((user) {
-        return DataRow(
-          color: WidgetStateColor.resolveWith((states) => Colors.white),
-          cells: [
-            _buildDataCell(user['username'], usernameW),
-            _buildDataCell(user['email'], emailW),
-            _buildDataCell(user['role'], roleW),
-            _buildDataCell(formatTanggal(user['createdAt']), createdAtW),
-            DataCell(_buildActionButtons(user, actionW)),
-          ],
-        );
-      }).toList(),
-    );
-  }
-
-  /// 🔹 **Header cell dengan ukuran tetap**
-  DataColumn _buildHeaderCell(String label, double width) {
-    return DataColumn(
-      label: SizedBox(
-        width: width,
-        child: Center(
-          child: Text(
-            label,
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 14,
-              fontWeight: FontWeight.bold,
+                ),
+              ],
             ),
           ),
         ),
@@ -145,27 +139,41 @@ class UserManagementTableState extends State<UserManagementTable> {
     );
   }
 
-  /// 🔹 **Data cell dengan ukuran tetap**
-  DataCell _buildDataCell(String data, double width) {
-    return DataCell(
-      SizedBox(
-        width: width,
-        child: Center(
-          child: Text(
-            data,
-            textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 12),
-            overflow: TextOverflow.ellipsis,
+  Widget _buildHeaderCell(String text) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 12.0),
+      child: Center(
+        child: Text(
+          text,
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+            fontSize: 14,
           ),
+          textAlign: TextAlign.center,
         ),
       ),
     );
   }
 
-  /// 🔹 **Tombol aksi (edit & delete)**
-  Widget _buildActionButtons(Map<String, dynamic> user, double width) {
-    return SizedBox(
-      width: width,
+  Widget _buildDataCell(String text) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 12.0),
+      child: Center(
+        child: Text(
+          text,
+          style: const TextStyle(
+            fontSize: 12,
+          ),
+          textAlign: TextAlign.center,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildActionCell(Map<String, dynamic> user) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 10.0),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
@@ -182,7 +190,7 @@ class UserManagementTableState extends State<UserManagementTable> {
               ),
             );
           }),
-          const SizedBox(width: 10),
+          const SizedBox(width: 24),
           _buildActionButton(Icons.delete, Colors.red, () {
             _deleteUser(user);
           }),
@@ -193,23 +201,20 @@ class UserManagementTableState extends State<UserManagementTable> {
 
   Widget _buildActionButton(IconData icon, Color color, VoidCallback onTap) {
     return SizedBox(
-      width: 40,
-      height: 32,
+      width: 30,
+      height: 30,
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
           padding: EdgeInsets.zero,
           backgroundColor: color,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(4),
-          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
         ),
         onPressed: onTap,
-        child: Icon(icon, color: Colors.white, size: 14),
+        child: Icon(icon, size: 14, color: Colors.white),
       ),
     );
   }
 
-  /// 🔹 **Fungsi hapus user**
   void _deleteUser(Map<String, dynamic> user) {
     CustomDialogButton.show(
       context: context,
@@ -220,11 +225,7 @@ class UserManagementTableState extends State<UserManagementTable> {
       isWarning: true,
       onConfirm: () async {
         bool success = await ApiService.deleteUser(user['_id']);
-
-        if (success) {
-          _fetchUsers();
-        }
-
+        if (success) _fetchUsers();
         CustomDialog.show(
           context: context,
           isSuccess: success,
@@ -232,5 +233,12 @@ class UserManagementTableState extends State<UserManagementTable> {
         );
       },
     );
+  }
+
+  @override
+  void dispose() {
+    _horizontalController.dispose();
+    _verticalController.dispose();
+    super.dispose();
   }
 }

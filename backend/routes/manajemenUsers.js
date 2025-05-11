@@ -4,10 +4,10 @@ const {
 	isAdmin
 } = require("../middleware/auth");
 const {
-	getAllUsers,
-	deleteUserById,
-	updateUserById,
-	createUser
+	ambilDataUser,
+      hapusUserById,
+      editUserById,
+      buatUser
 } = require("../services/manajemenUsers");
 
 const router = express.Router();
@@ -15,7 +15,7 @@ const router = express.Router();
 // ✅ Get semua user
 router.get("/manajemenUsers", verifyToken, async (req, res) => {
 	try {
-		const users = await getAllUsers();
+		const users = await ambilDataUser();
 		res.json(users);
 	} catch (error) {
 		res.status(500).json({
@@ -28,7 +28,7 @@ router.get("/manajemenUsers", verifyToken, async (req, res) => {
 // ✅ Hapus user berdasarkan ID
 router.delete("/manajemenUsers/:id", verifyToken, isAdmin, async (req, res) => {
 	try {
-		const username = await deleteUserById(req.params.id);
+		const username = await hapusUserById(req.params.id);
 		res.json({
 			message: `User ${username} berhasil dihapus`
 		});
@@ -54,7 +54,7 @@ router.put("/manajemenUsers/:id", verifyToken, isAdmin, async (req, res) => {
 			});
 		}
 
-		const updatedUser = await updateUserById(req.params.id, {
+		const updatedUser = await editUserById(req.params.id, {
 			username,
 			email,
 			role
@@ -73,7 +73,7 @@ router.put("/manajemenUsers/:id", verifyToken, isAdmin, async (req, res) => {
 // ✅ Tambah user baru
 router.post("/manajemenUsers", async (req, res) => {
 	try {
-		const newUser = await createUser(req.body);
+		const newUser = await buatUser(req.body);
 		res.status(201).json({
 			message: "User berhasil ditambahkan!",
 			user: newUser

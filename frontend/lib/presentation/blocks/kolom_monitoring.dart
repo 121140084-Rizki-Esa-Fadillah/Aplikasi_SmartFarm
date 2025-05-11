@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../color/color_constant.dart';
-import '../../server/api_service.dart';
 import '../pages/monitoring/monitoirng_sensor/pengaturan_sensor.dart';
+import '../widget/button/button_text.dart';
 import '../widget/chart/chart_sensor.dart';
 
 class KolomMonitoring extends StatefulWidget {
@@ -9,7 +9,7 @@ class KolomMonitoring extends StatefulWidget {
   final String namePond;
   final String sensorName;
   final String sensorType;
-  final List<Map<String, dynamic>> sensorData; // Realtime data (1 data point)
+  final List<Map<String, dynamic>> sensorData;
 
   const KolomMonitoring({
     super.key,
@@ -57,11 +57,25 @@ class _KolomMonitoringState extends State<KolomMonitoring> {
       case 'temperature':
         return '$formattedValue °C';
       case 'salinity':
-        return '$formattedValue ppt';
+        return '$formattedValue PPT';
       case 'turbidity':
         return '$formattedValue NTU';
       default:
         return formattedValue; // pH
+    }
+  }
+
+  /// 🔹 Get the correct button text based on the sensor type
+  String getButtonText(String sensorType) {
+    switch (sensorType) {
+      case 'temperature':
+        return "Pengaturan Sensor Suhu >>";
+      case 'salinity':
+        return "Pengaturan Sensor Salinitas >>";
+      case 'turbidity':
+        return "Pengaturan Sensor Kekeruhan >>";
+      default:
+        return "Pengaturan Sensor pH >>";
     }
   }
 
@@ -74,7 +88,7 @@ class _KolomMonitoringState extends State<KolomMonitoring> {
 
     return Container(
       width: screenWidth * 0.9,
-      height: screenHeight * 0.3,
+      height: screenHeight * 0.35, // 🔥 Tinggikan sedikit karena ada tombol baru
       decoration: BoxDecoration(
         color: const Color(0x80D9DCD6),
         borderRadius: BorderRadius.circular(10),
@@ -88,55 +102,34 @@ class _KolomMonitoringState extends State<KolomMonitoring> {
       ),
       child: Stack(
         children: [
-          // 🔹 Nama Sensor
+          // 🔹 Nama Sensor (sekarang hanya tampil, tidak bisa klik)
           Positioned(
             top: 0,
             left: 0,
-            child: GestureDetector(
-              onTapDown: (_) => setState(() => isPressed = true),
-              onTapUp: (_) {
-                setState(() => isPressed = false);
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => PengaturanSensor(
-                      pondId: widget.pondId,
-                      sensorName: widget.sensorName,
-                      currentValue: sensorValue,
-                      namePond: widget.namePond,
-                    ),
-                  ),
-                );
-              },
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 100),
-                width: screenWidth * 0.5,
-                height: screenHeight * 0.05,
-                decoration: BoxDecoration(
-                  color: isPressed
-                      ? ColorConstant.primary
-                      : const Color(0xFFD9DCD6),
-                  borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(5),
-                    bottomRight: Radius.circular(5),
-                  ),
+            child: Container(
+              width: screenWidth * 0.5,
+              height: screenHeight * 0.05,
+              decoration: const BoxDecoration(
+                color: Color(0xFFD9DCD6),
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(5),
+                  bottomRight: Radius.circular(5),
                 ),
-                padding: EdgeInsets.symmetric(horizontal: paddingValue),
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  widget.sensorName,
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: fontSize,
-                    color:
-                    isPressed ? Colors.white : ColorConstant.primary,
-                  ),
+              ),
+              padding: EdgeInsets.symmetric(horizontal: paddingValue),
+              alignment: Alignment.centerLeft,
+              child: Text(
+                widget.sensorName,
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: fontSize,
+                  color: ColorConstant.primary,
                 ),
               ),
             ),
           ),
 
-          // 🔹 Nilai Sensor (auto update now!)
+          // 🔹 Nilai Sensor
           Positioned(
             right: paddingValue,
             top: screenHeight * 0.01,
@@ -155,8 +148,44 @@ class _KolomMonitoringState extends State<KolomMonitoring> {
             top: screenHeight * 0.08,
             left: paddingValue,
             right: paddingValue,
-            bottom: screenHeight * 0.02,
+            bottom: screenHeight * 0.07, // Adjust the bottom to make space for the divider
             child: ChartSensor(sensorData: widget.sensorData),
+          ),
+
+          // 🔹 Divider - placed between the chart and button
+          Positioned(
+            left: paddingValue,
+            right: paddingValue,
+            bottom: screenHeight * 0.05, // Increased space between the divider and button
+            child: Divider(
+              color: Colors.white,
+              thickness: 1,
+            ),
+          ),
+
+          // 🔹 Tombol "Pengaturan Sensor"
+          Positioned(
+            left: paddingValue,
+            right: paddingValue,
+            bottom: screenHeight * 0,
+            child: Center(
+              child: ButtonText(
+                text: getButtonText(widget.sensorType),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => PengaturanSensor(
+                        pondId: widget.pondId,
+                        sensorName: widget.sensorName,
+                        currentValue: sensorValue,
+                        namePond: widget.namePond,
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
           ),
         ],
       ),

@@ -1,34 +1,23 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:frontend_app/presentation/pages/autentikasi/splash_screen.dart';
+import 'package:frontend_app/presentation/pages/beranda/beranda.dart';
+import 'package:frontend_app/presentation/pages/monitoring/kontrol_pakan_aerator.dart';
+import 'package:frontend_app/presentation/pages/monitoring/monitoirng_sensor/monitoring.dart';
 
-// 🔹 Inisialisasi Firebase Messaging
 FirebaseMessaging messaging = FirebaseMessaging.instance;
 FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
 String? fcmDeviceToken;
-
-Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  await Firebase.initializeApp();
-  String title = message.notification?.title ?? "";
-  String body = message.notification?.body ?? "";
-
-  if (title.isNotEmpty && body.isNotEmpty) {
-    print("📩 Notifikasi diterima di background: $title - $body");
-  } else {
-    print("⚠️ Notifikasi kosong diabaikan.");
-  }
-}
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
 
-  // 🔹 Setup Firebase Cloud Messaging
-  await setupFirebaseMessaging();
+  await setupFirebaseMessaging(subscribe: false);
 
-  // 🔹 Setup Notifikasi Lokal
   setupLocalNotifications();
 
   runApp(const MyApp());
@@ -46,14 +35,10 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       navigatorKey: navigatorKey,
       scaffoldMessengerKey: scaffoldMessengerKey,
-      theme: ThemeData(
-        scaffoldBackgroundColor: Colors.white,
-      ),
+      theme: ThemeData(scaffoldBackgroundColor: Colors.white),
       builder: (context, child) {
         return GestureDetector(
-          onTap: () {
-            FocusManager.instance.primaryFocus?.unfocus();
-          },
+          onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
           child: child ?? const SizedBox.shrink(),
         );
       },
@@ -62,8 +47,8 @@ class MyApp extends StatelessWidget {
   }
 }
 
-// ✅ Setup Firebase Messaging (Cegah Notifikasi Kosong)
-Future<void> setupFirebaseMessaging() async {
+// ✅ Setup Firebase Messaging
+Future<void> setupFirebaseMessaging({required bool subscribe}) async {
   NotificationSettings settings = await messaging.requestPermission(
     alert: true,
     badge: true,
@@ -74,54 +59,60 @@ Future<void> setupFirebaseMessaging() async {
     fcmDeviceToken = await messaging.getToken();
     print("🔑 Firebase Token: $fcmDeviceToken");
 
-    if (fcmDeviceToken == null) {
-      print("❌ Gagal mendapatkan device token");
+    if (subscribe) {
+      await messaging.subscribeToTopic('global_notifications');
+      print("📡 Subscribed to global_notifications");
     }
 
-    // (Opsional) handle token refresh
     FirebaseMessaging.instance.onTokenRefresh.listen((newToken) {
       fcmDeviceToken = newToken;
       print("🔁 Device token diperbarui: $fcmDeviceToken");
     });
 
+    // ✅ Notifikasi saat app aktif
+    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+      print("📥 FCM diterima (foreground): ${message.notification?.title}, ${message.notification?.body}, ${message.data}");
+
+      String? type = message.data['type'];
+      String title = message.notification?.title ?? "";
+      String body = message.notification?.body ?? "";
+
+      if (title.isNotEmpty && body.isNotEmpty) {
+        Map<String, dynamic> payload = {
+          'type': type,
+          'pondId': message.data['pondId'],
+          'namePond': message.data['namePond'],
+        };
+
+        showLocalNotification(title, body, data: payload);
+      }
+    });
+
+    // ✅ Notifikasi dibuka dari background
+    FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
+      print("📬 Dibuka dari notifikasi (background): ${message.data}");
+      handleNotificationClick(jsonEncode(message.data));
+    });
   } else {
     print("❌ Izin notifikasi ditolak.");
   }
-
-  // Listener notifikasi
-  FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-    String? type = message.data['type'];
-    String title = message.notification?.title ?? "";
-    String body = message.notification?.body ?? "";
-
-    if (title.isNotEmpty && body.isNotEmpty) {
-      switch (type) {
-        case 'feed_alert':
-        case 'water_quality_alert':
-        case 'threshold_update':
-        case 'feed_schedule_update':
-        case 'aerator_control_update':
-          showLocalNotification(title, body);
-          break;
-        default:
-          print("⚠️ Notifikasi dengan tipe tidak dikenali: $type");
-      }
-    } else {
-      print("⚠️ Notifikasi kosong diabaikan.");
-    }
-  });
-
-  FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 }
 
-
-// ✅ Setup Lokal Notifikasi
+// ✅ Notifikasi lokal (manual)
 void setupLocalNotifications() {
   var androidSettings = const AndroidInitializationSettings('@drawable/logo_app');
   var initializationSettings = InitializationSettings(android: androidSettings);
-  flutterLocalNotificationsPlugin.initialize(initializationSettings);
 
-  // 🔹 Konfigurasi Channel Notifikasi untuk Android 13+
+  flutterLocalNotificationsPlugin.initialize(
+    initializationSettings,
+    onDidReceiveNotificationResponse: (NotificationResponse response) async {
+      if (response.payload != null) {
+        handleNotificationClick(response.payload!);
+        print("🔔 Klik notifikasi: ${response.payload}");
+      }
+    },
+  );
+
   var androidChannel = const AndroidNotificationChannel(
     'high_importance_channel',
     'General Notifications',
@@ -132,26 +123,53 @@ void setupLocalNotifications() {
   flutterLocalNotificationsPlugin
       .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
       ?.createNotificationChannel(androidChannel);
-  print("🚨 Notification channel created: ${androidChannel.id}");
 
+  print("🚨 Notification channel created: ${androidChannel.id}");
 }
 
-
-// ✅ Tampilkan Popup Notifikasi di Foreground (Cegah Notifikasi Kosong)
-void showLocalNotification(String title, String body) {
-  if (title.isEmpty || body.isEmpty) {
-    print("⚠️ Notifikasi lokal kosong diabaikan.");
-    return;
-  }
+// ✅ Tampilkan notifikasi lokal manual
+void showLocalNotification(String title, String body, {Map<String, dynamic>? data}) {
+  if (title.isEmpty || body.isEmpty) return;
 
   var androidDetails = const AndroidNotificationDetails(
     'high_importance_channel',
     'General Notifications',
     importance: Importance.high,
     priority: Priority.high,
+    icon: '@drawable/logo_app',
   );
 
-  var notificationDetails = NotificationDetails(android: androidDetails);
-  print("🚨 Menampilkan popup notifikasi lokal");
-  flutterLocalNotificationsPlugin.show(0, title, body, notificationDetails);
+  flutterLocalNotificationsPlugin.show(
+    0,
+    title,
+    body,
+    NotificationDetails(android: androidDetails),
+    payload: data != null ? jsonEncode(data) : null,
+  );
+}
+
+// ✅ Navigasi berdasarkan tipe notifikasi
+void handleNotificationClick(String payload) {
+  final data = jsonDecode(payload);
+  final type = data['type'];
+  final pondId = data['pondId'];
+  final namePond = data['namePond'];
+
+  print("🚨 Navigasi berdasarkan tipe: $type");
+
+  switch (type) {
+    case 'feed_alert':
+      MyApp.navigatorKey.currentState?.push(MaterialPageRoute(builder: (_) => Beranda()));
+      break;
+    case 'water_quality_alert':
+    case 'threshold_update':
+      MyApp.navigatorKey.currentState?.push(MaterialPageRoute(builder: (_) => Monitoring(pondId: pondId, namePond: namePond)));
+      break;
+    case 'feed_schedule_update':
+    case 'aerator_control_update':
+      MyApp.navigatorKey.currentState?.push(MaterialPageRoute(builder: (_) => KontrolPakanAerator(pondId: pondId, namePond: namePond)));
+      break;
+    default:
+      print("⚠️ Tipe tidak dikenali: $type");
+  }
 }

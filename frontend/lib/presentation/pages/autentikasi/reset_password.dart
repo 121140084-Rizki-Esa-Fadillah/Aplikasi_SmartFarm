@@ -51,13 +51,13 @@ class _ResetPasswordState extends State<ResetPassword> {
     }
 
     // 🔒 Validasi password kuat
-    final passwordRegex = RegExp(r'^(?=.*[0-9])(?=.*[!@#\$&*~]).{8,20}$');
+    final passwordRegex = RegExp(r'^(?=.*[0-9])(?=.*[!@#\$&*~_-]).{8,20}$');
 
     if (!passwordRegex.hasMatch(password)) {
       CustomDialog.show(
         context: context,
         isSuccess: false,
-        message: "Password harus 8-20 karakter, mengandung angka dan simbol.\nContoh: Tambak@123",
+        message: "Password harus 8-16 karakter, mengandung angka dan simbol (seperti : !@#\$&*~-_).\nContoh: Tambak@123",
       );
       return;
     }
@@ -122,14 +122,14 @@ class _ResetPasswordState extends State<ResetPassword> {
                       color: Colors.white,
                     ),
                   ),
-                  Gap(gapSize * 1.5),
+                  Gap(gapSize * 2),
                   InputPlaceholder(
                     label: "Password",
                     iconPath: "assets/icons/icon-password.png",
                     isPassword: true,
                     controller: passwordController,
                   ),
-                  Gap(gapSize),
+                  Gap(gapSize * 0.5),
                   InputPlaceholder(
                     label: "Confirm Password",
                     iconPath: "assets/icons/icon-password.png",

@@ -12,7 +12,7 @@ class EditUser extends StatefulWidget {
   final String username;
   final String email;
   final String role;
-  final Function onUpdateSuccess; // Callback untuk update tabel
+  final Function onUpdateSuccess;
 
   const EditUser({
     super.key,
@@ -47,15 +47,65 @@ class _EditUserState extends State<EditUser> {
     String role = _selectedRole ?? widget.role;
 
     if (username.isEmpty || email.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Username dan email tidak boleh kosong")),
+      CustomDialog.show(
+        context: context,
+        isSuccess: false,
+        message: "Username dan email tidak boleh kosong",
       );
       return;
     }
 
-    if (!email.contains("@")) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Email harus mengandung '@'")),
+    if (username.length < 4 || username.length > 16) {
+      CustomDialog.show(
+        context: context,
+        isSuccess: false,
+        message: "Username harus antara 4 hingga 16 karakter",
+      );
+      return;
+    }
+
+    final emailRegex = RegExp(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$");
+
+    if (!emailRegex.hasMatch(email)) {
+      CustomDialog.show(
+        context: context,
+        isSuccess: false,
+        message: "Format email tidak valid. Pastikan email mengandung '@' dan domain yang benar.",
+      );
+      return;
+    }
+
+    // 🔍 Cek apakah username/email sudah dipakai user lain
+    final checkResult = await ApiService.checkUsernameEmail(username, email);
+
+    if (checkResult == null) {
+      CustomDialog.show(
+        context: context,
+        isSuccess: false,
+        message: "Gagal memeriksa ketersediaan username/email.",
+      );
+      return;
+    }
+
+    // ⚡ Cek hanya kalau username/email baru beda dari data lama
+    bool usernameConflict = (checkResult["usernameExists"] == true && username != widget.username);
+    bool emailConflict = (checkResult["emailExists"] == true && email != widget.email);
+
+    if (usernameConflict || emailConflict) {
+      String message = "";
+
+      if (usernameConflict && emailConflict) {
+        message = "Username dan Email sudah digunakan, harap gunakan username dan email yang lain.";
+      } else if (usernameConflict) {
+        message = "Username sudah digunakan, harap gunakan username yang lain.";
+      } else if (emailConflict) {
+        message = "Email sudah digunakan, harap gunakan email yang lain.";
+      }
+
+      CustomDialog.show(
+        context: context,
+        isSuccess: false,
+        message: message,
       );
       return;
     }
@@ -74,7 +124,7 @@ class _EditUserState extends State<EditUser> {
         isSuccess: true,
         message: "Data pengguna berhasil diperbarui!",
         onComplete: () {
-          widget.onUpdateSuccess(); // Refresh data tabel
+          widget.onUpdateSuccess();
           Navigator.pop(context);
         },
       );
@@ -89,9 +139,10 @@ class _EditUserState extends State<EditUser> {
 
   @override
   Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
     return Scaffold(
       appBar: AppBarWidget(
-        title: "Edit ${widget.username}",
+        title: "Edit User",
         onBackPress: () {
           Navigator.pop(context);
         },
@@ -101,9 +152,10 @@ class _EditUserState extends State<EditUser> {
         children: [
           const BackgroundWidget(),
           Padding(
-            padding: const EdgeInsets.all(30.0),
+            padding: EdgeInsets.symmetric(horizontal: size.width * 0.08),
             child: Column(
               children: [
+                const SizedBox(height: 20),
                 Expanded(
                   child: SingleChildScrollView(
                     child: Column(
@@ -117,6 +169,7 @@ class _EditUserState extends State<EditUser> {
                         InputStandart(
                           label: "Email",
                           controller: _emailController,
+                          isEmail: true,
                         ),
                         const SizedBox(height: 12),
                         InputRoleStandart(

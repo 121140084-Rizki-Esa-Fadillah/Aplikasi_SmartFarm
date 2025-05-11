@@ -6,15 +6,9 @@ const cron = require("node-cron");
 
 const dailyHistoryBuffer = {};
 
-const getHistoryByPond = async (idPond) => {
+const ambilHistoryByPond = async (idPond) => {
 	try {
-		// Ambil semua riwayat berdasarkan idPond
-		const history = await History.find({
-			idPond
-		}).sort({
-			date: -1
-		}); // Urutkan dari terbaru
-
+		const history = await History.ambilHistoryByPond(idPond);
 		return history.length > 0 ? history : null;
 	} catch (error) {
 		console.error("❌ Gagal mengambil riwayat:", error.message);
@@ -22,10 +16,9 @@ const getHistoryByPond = async (idPond) => {
 	}
 };
 
-// ✅ Fungsi untuk mengambil riwayat berdasarkan _id MongoDB
-const getHistoryById = async (id) => {
+const ambilHistoryById = async (id) => {
 	try {
-		const history = await History.findById(id);
+		const history = await History.ambilHistoryById(id);
 		return history || null;
 	} catch (error) {
 		console.error("❌ Gagal mengambil riwayat berdasarkan ID:", error.message);
@@ -33,7 +26,6 @@ const getHistoryById = async (id) => {
 	}
 };
 
-// ✅ Fungsi untuk mengambil data dari Firebase setiap 15 menit
 const collectDataFromFirebase = async () => {
 	try {
 		console.log("🔄 Mengambil data monitoring dari Firebase...");
@@ -54,10 +46,8 @@ const collectDataFromFirebase = async () => {
 
 		for (const pondId in pondsData) {
 			const pond = pondsData[pondId];
-
 			if (!pond.sensor_data) continue;
 
-			// ✅ Hanya mengambil data sensor yang diperlukan
 			const {
 				temperature,
 				ph,
@@ -72,16 +62,11 @@ const collectDataFromFirebase = async () => {
 				ph,
 				salinity,
 				turbidity,
-				rain_status, // ✅ Menyimpan status hujan
+				rain_status,
 			};
 
-			// Simpan ke buffer sementara
-			if (!dailyHistoryBuffer[pondId]) {
-				dailyHistoryBuffer[pondId] = {};
-			}
-			if (!dailyHistoryBuffer[pondId][date]) {
-				dailyHistoryBuffer[pondId][date] = [];
-			}
+			if (!dailyHistoryBuffer[pondId]) dailyHistoryBuffer[pondId] = {};
+			if (!dailyHistoryBuffer[pondId][date]) dailyHistoryBuffer[pondId][date] = [];
 
 			dailyHistoryBuffer[pondId][date].push(historyData);
 			console.log(`✅ Data ditambahkan ke buffer untuk ${pondId} pada ${time}`);
@@ -91,57 +76,43 @@ const collectDataFromFirebase = async () => {
 	}
 };
 
-// ✅ Fungsi untuk menyimpan laporan harian ke MongoDB
-const saveDailyHistory = async () => {
+const simpanHistory = async () => {
 	try {
 		console.log("📁 Menyimpan laporan harian ke database...");
-
 		const date = new Date().toISOString().split("T")[0];
 
 		for (const pondId in dailyHistoryBuffer) {
 			if (!dailyHistoryBuffer[pondId][date]) continue;
 
 			try {
-				const newHistory = new History({
-					idPond: pondId,
-					date,
-					data: dailyHistoryBuffer[pondId][date],
-				});
-				await newHistory.save();
+				await History.simpanHistory(pondId, date, dailyHistoryBuffer[pondId][date]);
 				console.log(`✅ Laporan harian untuk ${pondId} pada ${date} berhasil disimpan.`);
 			} catch (error) {
 				console.log(`⚠️ Tidak dapat menyimpan laporan untuk ${pondId}: ${error.message}`);
 			}
 		}
 
-		// Reset buffer setelah data disimpan
 		delete dailyHistoryBuffer[date];
 	} catch (error) {
 		console.error("❌ Gagal menyimpan laporan harian:", error.message);
 	}
 };
 
-const deleteOldHistory = async () => {
+const hapusHistory = async () => {
 	try {
 		const now = new Date();
-		const oneMonthAgo = new Date(now.setMonth(now.getMonth() - 1)); // ✅ Perbaiki cara menghitung
+		const oneMonthAgo = new Date(now.setMonth(now.getMonth() - 1));
 
 		console.log(`🗑️ Menghapus riwayat sebelum: ${oneMonthAgo.toISOString()}`);
 
-		const result = await History.deleteMany({
-			created_at: {
-				$lt: oneMonthAgo
-			} // ✅ Pastikan format benar
-		});
-
+		const result = await History.hapusHistory(oneMonthAgo);
 		console.log(`✅ Riwayat lama yang dihapus: ${result.deletedCount}`);
 	} catch (error) {
 		console.error("❌ Gagal menghapus riwayat lama:", error.message);
 	}
 };
 
-
-// ✅ Cron job untuk mengambil data dari Firebase setiap 15 menit
+// ⏰ Jadwal Cron
 cron.schedule("*/15 * * * *", async () => {
 	console.log("⏳ Mengambil data setiap 15 menit...");
 	await collectDataFromFirebase();
@@ -149,15 +120,12 @@ cron.schedule("*/15 * * * *", async () => {
 	scheduled: true,
 	timezone: "Asia/Jakarta",
 });
+
 cron.schedule("0 0 * * *", async () => {
 	console.log("⏳ Menyimpan laporan harian dan menghapus riwayat lama...");
-
 	try {
-		await saveDailyHistory(); // ✅ Simpan laporan harian dulu
-		console.log("✅ Laporan harian berhasil disimpan.");
-
-		await deleteOldHistory(); // ✅ Hapus riwayat lebih dari 1 bulan
-		console.log("✅ Riwayat lama berhasil dihapus.");
+		await simpanHistory();
+		await hapusHistory();
 	} catch (error) {
 		console.error("❌ Terjadi kesalahan dalam proses cron job:", error.message);
 	}
@@ -166,8 +134,9 @@ cron.schedule("0 0 * * *", async () => {
 	timezone: "Asia/Jakarta",
 });
 
-
 module.exports = {
-	getHistoryByPond,
-	getHistoryById
+	ambilHistoryByPond,
+	ambilHistoryById,
+	simpanHistory,
+	hapusHistory
 };

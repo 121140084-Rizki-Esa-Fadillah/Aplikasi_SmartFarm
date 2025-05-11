@@ -1,14 +1,20 @@
 const express = require("express");
-const router = express.Router();
-const notificationService = require("../services/notifikasi"); // ✅ Perbaikan path
 const {
       verifyToken
 } = require("../middleware/auth");
+const {
+      buatNotifikasi,
+      ambilNotifikasiById,
+      ambilNotifikasiByPond,
+      tandaiNotifikasi
+} = require("../services/notifikasi");
 
-// 🔹 API: Ambil Notifikasi Berdasarkan ID (GET)
-router.get("/:id", verifyToken, async (req, res) => { // ✅ Tambahkan autentikasi
+const router = express.Router();
+
+// ✅ Ambil notifikasi berdasarkan ID
+router.get("/:id", verifyToken, async (req, res) => {
       try {
-            const notification = await notificationService.getNotificationById(req.params.id);
+            const notification = await ambilNotifikasiById(req.params.id);
             if (!notification) {
                   return res.status(404).json({
                         error: "Notifikasi tidak ditemukan"
@@ -16,7 +22,6 @@ router.get("/:id", verifyToken, async (req, res) => { // ✅ Tambahkan autentika
             }
             res.status(200).json(notification);
       } catch (error) {
-            console.error("❌ Error saat mengambil notifikasi:", error);
             res.status(500).json({
                   error: "Gagal mengambil notifikasi",
                   details: error.message
@@ -24,18 +29,17 @@ router.get("/:id", verifyToken, async (req, res) => { // ✅ Tambahkan autentika
       }
 });
 
-// 🔹 API: Ambil Notifikasi Berdasarkan idPond (GET)
+// ✅ Ambil notifikasi berdasarkan idPond
 router.get("/pond/:idPond", verifyToken, async (req, res) => {
       try {
-            const notifications = await notificationService.getNotificationsByPondId(req.params.idPond);
-            if (!notifications || notifications.length === 0) {
+            const notifications = await ambilNotifikasiByPond(req.params.idPond);
+            if (!notifications || !notifications.length) {
                   return res.status(404).json({
-                        error: "Tidak ada notifikasi untuk kolam ini"
+                        error: "Tidak ada notifikasi ditemukan"
                   });
             }
             res.status(200).json(notifications);
       } catch (error) {
-            console.error("❌ Error saat mengambil notifikasi berdasarkan idPond:", error);
             res.status(500).json({
                   error: "Gagal mengambil notifikasi",
                   details: error.message
@@ -43,22 +47,20 @@ router.get("/pond/:idPond", verifyToken, async (req, res) => {
       }
 });
 
-
-// 🔹 API: Tandai Notifikasi sebagai "Read" (PATCH)
-router.patch("/:id/read", verifyToken, async (req, res) => { // ✅ Tambahkan autentikasi
+// ✅ Tandai notifikasi sebagai dibaca
+router.patch("/:id/read", verifyToken, async (req, res) => {
       try {
-            const updatedNotification = await notificationService.markNotificationAsRead(req.params.id);
-            if (!updatedNotification) {
+            const updated = await tandaiNotifikasi(req.params.id);
+            if (!updated) {
                   return res.status(404).json({
                         error: "Notifikasi tidak ditemukan"
                   });
             }
             res.status(200).json({
-                  message: "✅ Notifikasi ditandai sebagai dibaca",
-                  notification: updatedNotification
+                  message: "✅ Notifikasi berhasil ditandai sebagai dibaca",
+                  notification: updated
             });
       } catch (error) {
-            console.error("❌ Error saat memperbarui notifikasi:", error);
             res.status(500).json({
                   error: "Gagal memperbarui notifikasi",
                   details: error.message

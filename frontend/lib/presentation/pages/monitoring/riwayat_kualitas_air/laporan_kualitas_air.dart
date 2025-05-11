@@ -44,34 +44,28 @@ class LaporanKualitasAir extends StatelessWidget {
             left: screenWidth * 0.06,
             right: screenWidth * 0.06,
             bottom: screenHeight * 0.10, // Menyesuaikan batas bawah
-            child: SingleChildScrollView(
-              child: Padding(
-                padding: const EdgeInsets.only(bottom: 20.0), // Agar tidak bertabrakan dengan navigasi
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // **Title Tanggal di Atas Tabel**
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 20.0),
-                      child: Text(
-                        '$namePond $date',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // **Title Tanggal (Tetap)**
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 20.0),
+                  child: Text(
+                    '$namePond $date',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
                     ),
-
-                    // **Tabel Laporan**
-                    LaporanTable(id: historyId),
-                  ],
+                  ),
                 ),
-              ),
+                // **Tabel Laporan**
+                LaporanTable(id: historyId),
+              ],
             ),
           ),
 
-          // **Navigasi Monitoring dalam Stack**
+          // **Navigasi Monitoring di Bawah**
           Positioned(
             left: 0,
             right: 0,

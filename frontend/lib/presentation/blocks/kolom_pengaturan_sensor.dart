@@ -17,7 +17,8 @@ class KolomPengaturanSensor extends StatefulWidget {
     super.key,
     required this.pondId,
     required this.sensorName,
-    required this.sensorType, required this.namePond,
+    required this.sensorType,
+    required this.namePond,
   });
 
   @override
@@ -31,77 +32,98 @@ class _KolomPengaturanSensorState extends State<KolomPengaturanSensor> {
   double? tempLowValue;
   double? currentSensorValue;
 
-  late double recommendedHighValue;
-  late double recommendedLowValue;
-
   @override
   void initState() {
     super.initState();
-    setRecommendedValues();
     fetchSensorConfig();
   }
 
-  void setRecommendedValues() {
-    switch (widget.sensorType.toLowerCase()) {
-      case "ph":
-        recommendedHighValue = 9;
-        recommendedLowValue = 7;
-        break;
-      case "salinity":
-        recommendedHighValue = 35;
-        recommendedLowValue = 15;
-        break;
-      case "turbidity":
-        recommendedHighValue = 40;
-        recommendedLowValue = 0;
-        break;
-      case "temperature":
-      default:
-        recommendedHighValue = 32;
-        recommendedLowValue = 26;
-        break;
+  Future<void> fetchSensorConfig() async {
+    String sensorType = widget.sensorType.toLowerCase();
+
+    try {
+      final thresholds = await ApiService.getThresholds(widget.pondId);
+      final sensorValueData = await ApiService.getMonitoringData(widget.pondId);
+
+      // Buat key berdasarkan sensorType, misalnya "pHHigh" atau "pHLow"
+      final highKey = '${sensorType}High';
+      final lowKey = '${sensorType}Low';
+
+      // Ambil nilai tertinggi dan terendah dari thresholds
+      final highest = thresholds?[highKey];
+      final lowest = thresholds?[lowKey];
+
+      setState(() {
+        highestValue = highest?.toDouble();
+        lowestValue = lowest?.toDouble();
+
+        // Tentukan nilai sementara untuk tertinggi dan terendah
+        tempHighValue = highestValue;
+        tempLowValue = lowestValue;
+
+        final type = widget.sensorType.toLowerCase();
+        currentSensorValue = (sensorValueData[type])?.toDouble();
+      });
+    } catch (e) {
+      print("Error fetching threshold: $e");
     }
   }
 
-  Future<void> fetchSensorConfig() async {
-    String basePath = "thresholds/${widget.sensorType.toLowerCase()}";
-    String sensorType = widget.sensorType.toLowerCase();
-
-    Map<String, dynamic>? highestData = await ApiService.getDeviceConfig(widget.pondId, "$basePath/high");
-    Map<String, dynamic>? lowestData = await ApiService.getDeviceConfig(widget.pondId, "$basePath/low");
-    Map<String, dynamic>? sensorValueData = await ApiService.getMonitoringData(widget.pondId, sensorType);
-
-    setState(() {
-      highestValue = highestData?["data"]?.toDouble();
-      lowestValue = lowestData?["data"]?.toDouble();
-      tempHighValue = highestValue ?? recommendedHighValue;
-      tempLowValue = lowestValue ?? recommendedLowValue;
-      currentSensorValue = sensorValueData?["sensor_data"]?.toDouble();
-    });
-  }
-
   Future<void> saveThresholdValues() async {
-    if (tempHighValue != null && tempLowValue != null) {
-      String basePath = "thresholds/${widget.sensorType.toLowerCase()}";
-      await ApiService.updateDeviceConfig(widget.pondId, "$basePath/high", tempHighValue);
-      await ApiService.updateDeviceConfig(widget.pondId, "$basePath/low", tempLowValue);
+    if (tempHighValue == null || tempLowValue == null) return;
+
+    if (tempLowValue! >= tempHighValue!) {
+      CustomDialog.show(
+        context: context,
+        isSuccess: false,
+        message: "Batas bawah harus lebih kecil dari batas atas.",
+      );
+      return;
+    }
+
+    if (tempHighValue == highestValue && tempLowValue == lowestValue) {
+      CustomDialog.show(
+        context: context,
+        isSuccess: false,
+        message: "Tidak ada perubahan pada batasan sensor.",
+      );
+      return;
+    }
+
+    try {
+      final sensorType = widget.sensorType.toLowerCase();
+      // Membatasi nilai ke 1 angka di belakang koma untuk memastikan akurasi
+      final highValueFormatted = tempHighValue?.toStringAsFixed(1);
+      final lowValueFormatted = tempLowValue?.toStringAsFixed(1);
+
+      await ApiService.updateThresholds(widget.pondId, {
+        sensorType: {
+          "high": double.parse(highValueFormatted!),
+          "low": double.parse(lowValueFormatted!),
+        }
+      });
 
       setState(() {
         highestValue = tempHighValue;
         lowestValue = tempLowValue;
       });
 
-      String readableSensorName = getReadableSensorName(widget.sensorType);
-
       CustomDialog.show(
         context: context,
         isSuccess: true,
-        message: "Batasan sensor $readableSensorName berhasil diperbarui.",
+        message: "Batasan sensor ${getReadableSensorName(widget.sensorType)} berhasil diperbarui.",
+      );
+    } catch (e) {
+      CustomDialog.show(
+        context: context,
+        isSuccess: false,
+        message: "Gagal menyimpan data: ${e.toString()}",
       );
     }
   }
 
-// 🔹 Fungsi mapping sensorType ke nama yang ditampilkan
+
+
   String getReadableSensorName(String sensorType) {
     switch (sensorType.toLowerCase()) {
       case 'temperature':
@@ -116,7 +138,6 @@ class _KolomPengaturanSensorState extends State<KolomPengaturanSensor> {
         return sensorType; // fallback ke original jika tidak ditemukan
     }
   }
-
 
   String formatNumber(double? number) {
     if (number == null) return "--";
@@ -141,7 +162,7 @@ class _KolomPengaturanSensorState extends State<KolomPengaturanSensor> {
         step = 0.01;
         break;
       case "salinity":
-        unit = "ppt";
+        unit = "PPT";
         label = "Salinitas";
         minValue = 0;
         maxValue = 100;
@@ -158,7 +179,7 @@ class _KolomPengaturanSensorState extends State<KolomPengaturanSensor> {
 
     return Container(
       width: screenWidth * 0.9,
-      height: screenHeight * 0.7,
+      height: screenHeight * 0.725,
       padding: EdgeInsets.only(
         left: screenWidth * 0.05,
         right: screenWidth * 0.05,
@@ -173,7 +194,7 @@ class _KolomPengaturanSensorState extends State<KolomPengaturanSensor> {
         children: [
           // Header
           _buildHeader(screenWidth),
-          SizedBox(height: screenHeight * 0.04),
+          SizedBox(height: screenHeight * 0.03),
 
           // Data Sensor
           Row(
@@ -188,27 +209,26 @@ class _KolomPengaturanSensorState extends State<KolomPengaturanSensor> {
           SizedBox(height: screenHeight * 0.05),
 
           if (tempHighValue != null && tempLowValue != null) ...[
-            _buildSettingBox("Tertinggi", tempHighValue!, minValue, maxValue, unit, recommendedHighValue, screenWidth, screenHeight, (value) {
+            _buildSettingBox("Tertinggi", tempHighValue!, minValue, maxValue, unit, screenWidth, screenHeight, (value) {
               setState(() {
                 tempHighValue = value;
               });
             }),
             SizedBox(height: screenHeight * 0.01),
-            _buildSettingBox("Terendah", tempLowValue!, minValue, maxValue, unit, recommendedLowValue, screenWidth, screenHeight, (value) {
+            _buildSettingBox("Terendah", tempLowValue!, minValue, maxValue, unit, screenWidth, screenHeight, (value) {
               setState(() {
                 tempLowValue = value;
               });
             }),
           ] else
 
-          SizedBox(height: screenHeight * 0.02),
+            SizedBox(height: screenHeight * 0.02),
           _buildSaveButton(),
 
           SizedBox(height: screenHeight * 0.015),
           Divider(
             color: Colors.white,
             thickness: 1,
-
           ),
 
           _buildInfoButton(context),
@@ -250,7 +270,16 @@ class _KolomPengaturanSensorState extends State<KolomPengaturanSensor> {
     );
   }
 
-  Widget _buildSettingBox(String label, double value, double minValue, double maxValue, String unit, double recommendedValue, double screenWidth, double screenHeight, Function(double) onChanged) {
+  Widget _buildSettingBox(
+      String type,
+      double value,
+      double minValue,
+      double maxValue,
+      String unit,
+      double screenWidth,
+      double screenHeight,
+      Function(double) onChanged,
+      ) {
     double step = 1.0; // Default step value
 
     // Menentukan step sesuai tipe sensor
@@ -259,11 +288,7 @@ class _KolomPengaturanSensorState extends State<KolomPengaturanSensor> {
         step = 0.1;
         break;
       case "salinity":
-        step = 1;
-        break;
       case "turbidity":
-        step = 1;
-        break;
       case "temperature":
         step = 1;
         break;
@@ -273,27 +298,43 @@ class _KolomPengaturanSensorState extends State<KolomPengaturanSensor> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          "$label",
+          "${getReadableSensorName(widget.sensorType)} $type",
           style: TextStyle(
             fontSize: screenWidth * 0.05,
             fontWeight: FontWeight.bold,
             color: Colors.white,
           ),
         ),
-        SizedBox(height: screenHeight * 0.005),
+        SizedBox(height: screenHeight * 0.01),
 
         Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Text Kiri
             Expanded(
-              child: Text(
-                "Atur batasan $label \nNilai rekomendasi : ${_getFixedRecommendation(label)} $unit",
-                style: TextStyle(
-                  fontSize: screenWidth * 0.036,
-                  color: Colors.white,
-                ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    "Atur batasan $type",
+                    style: TextStyle(
+                      fontSize: screenWidth * 0.036,
+                      color: Colors.white,
+                    ),
+                  ),
+                  SizedBox(height: 2),
+                  Text(
+                    "Nilai Rekomendasi : ${_getFixedRecommendation(type)} $unit",
+                    style: TextStyle(
+                      fontSize: screenWidth * 0.036,
+                      color: Colors.white,
+                    ),
+                  ),
+                ],
               ),
             ),
+            SizedBox(width: 10, height: 10),
+            // Input Kanan
             InputTresholds(
               initialValue: value,
               minValue: minValue,
@@ -309,7 +350,8 @@ class _KolomPengaturanSensorState extends State<KolomPengaturanSensor> {
     );
   }
 
-  String _getFixedRecommendation(String label) {
+
+  String _getFixedRecommendation(String batasan) {
     String sensor = widget.sensorType.toLowerCase();
 
     Map<String, Map<String, String>> recommendations = {
@@ -331,7 +373,12 @@ class _KolomPengaturanSensorState extends State<KolomPengaturanSensor> {
       },
     };
 
-    return "${recommendations[sensor]?[label] ?? '--'}";
+    final sensorRecommendations = recommendations[sensor];
+    if (sensorRecommendations == null) {
+      return '--'; // Fallback ke '--' jika sensor tidak dikenali
+    }
+
+    return sensorRecommendations[batasan] ?? '--'; // Mengambil rekomendasi sesuai batasan
   }
 
   Widget _buildSaveButton() {

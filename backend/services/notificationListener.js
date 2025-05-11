@@ -2,7 +2,7 @@ const {
       db
 } = require("../config/firebaseConfig");
 const {
-      createNotification
+      buatNotifikasi
 } = require("./notifikasi");
 const Kolam = require("../models/kolam");
 const Notification = require("../models/notifikasi"); // Import model notifikasi
@@ -11,19 +11,21 @@ const Notification = require("../models/notifikasi"); // Import model notifikasi
 const isDuplicateNotification = async (idPond, type) => {
       // Hanya periksa duplikasi untuk jenis 'feed_alert'
       if (type !== "feed_alert") return false;
-    
+
       const checkTime = new Date();
       checkTime.setMinutes(checkTime.getMinutes() - 5);
-    
-      const existingNotification = await Notification.findOne({
-        idPond,
-        type,
-        time: { $gte: checkTime }
+
+      const existingNotification = await Notification.model.findOne({
+            idPond,
+            type,
+            time: {
+                  $gte: checkTime
+            }
       });
-    
+
       return !!existingNotification;
-    };
-    
+};
+
 
 const previousValues = {};
 
@@ -54,6 +56,22 @@ initializePreviousValues();
 
 const feedUpdateCache = {};
 
+function displayName(key) {
+      switch (key.toLowerCase()) {
+            case "ph":
+                  return "pH";
+            case "salinity":
+                  return "Salinitas";
+            case "temperature":
+                  return "Suhu";
+            case "turbidity":
+                  return "Kekeruhan";
+            default:
+                  return key.charAt(0).toUpperCase() + key.slice(1).toLowerCase();
+      }
+}
+
+
 // 🔹 Pemantauan Firebase Realtime Database
 db.ref("Sadewa_SmartFarm/ponds").on("child_changed", async (snapshot) => {
       const pondId = snapshot.key;
@@ -61,7 +79,7 @@ db.ref("Sadewa_SmartFarm/ponds").on("child_changed", async (snapshot) => {
       if (!pondData) return;
 
       // 🔹 Ambil namePond dari MongoDB
-      const kolam = await Kolam.findOne({
+      const kolam = await Kolam.model.findOne({
             idPond: pondId
       });
       const namePond = kolam ? kolam.namePond : pondId; // Jika tidak ditemukan, gunakan pondId
@@ -82,16 +100,16 @@ db.ref("Sadewa_SmartFarm/ponds").on("child_changed", async (snapshot) => {
                         const newVal = newThresholds[key];
                         if (JSON.stringify(oldVal) !== JSON.stringify(newVal)) {
                               changes.push(
-                                    `${key.toUpperCase()}: ${oldVal.low}–${oldVal.high} ➡️ ${newVal.low}–${newVal.high}`
+                                    `${displayName(key)}: ${oldVal.low}–${oldVal.high} => ${newVal.low}–${newVal.high}`
                               );
                         }
                   }
 
-                  await createNotification({
+                  await buatNotifikasi({
                         idPond: pondId,
                         type: "threshold_update",
                         title: "Perubahan Batas Parameter Sensor",
-                        message: `Batas Parameter pada ${namePond} telah diubah :\n${changes.join(", ")}`,
+                        message: `Batas Parameter pada ${namePond} telah diubah :\n\n${changes.join(", ")}`,
                         time: new Date(),
                         status: "unread",
                         metadata: {
@@ -146,25 +164,25 @@ db.ref("Sadewa_SmartFarm/ponds").on("child_changed", async (snapshot) => {
 
                               if (scheduleChanged && amountChanged) {
                                     title = "Jadwal & Jumlah Pakan Diperbarui";
-                                    message += `🕒 Jadwal: ${prevSchedule?.join(", ")} ➡️ ${newSchedule.join(", ")}\n`;
-                                    message += `🍽️ Jumlah: ${prevAmount} ➡️ ${newAmount} gram`;
+                                    message += `Jadwal: \n${prevSchedule?.join(", ")} \n => ${newSchedule.join(", ")}\n`;
+                                    message += `Jumlah: \n${prevAmount} => ${newAmount} gram`;
                                     metadata.previous_schedule = prevSchedule;
                                     metadata.new_schedule = newSchedule;
                                     metadata.previous_amount = prevAmount;
                                     metadata.new_amount = newAmount;
                               } else if (scheduleChanged) {
                                     title = "Jadwal Pakan Diperbarui";
-                                    message += `🕒 Jadwal: ${prevSchedule?.join(", ")} ➡️ ${newSchedule.join(", ")}`;
+                                    message += `Jadwal: \n${prevSchedule?.join(", ")} \n => ${newSchedule.join(", ")}\n`;
                                     metadata.previous_schedule = prevSchedule;
                                     metadata.new_schedule = newSchedule;
                               } else if (amountChanged) {
                                     title = "Jumlah Pakan Diperbarui";
-                                    message += `🍽️ Jumlah: ${prevAmount} ➡️ ${newAmount} gram`;
+                                    message += `Jumlah: \n${prevAmount} => ${newAmount} gram`;
                                     metadata.previous_amount = prevAmount;
                                     metadata.new_amount = newAmount;
                               }
 
-                              await createNotification({
+                              await buatNotifikasi({
                                     idPond: pondId,
                                     type: "feed_schedule_update",
                                     title,
@@ -191,11 +209,11 @@ db.ref("Sadewa_SmartFarm/ponds").on("child_changed", async (snapshot) => {
             const prevAerator = previousValues[pondId].aerator_delay;
 
             if (prevAerator !== undefined && newAerator !== undefined && prevAerator !== newAerator) {
-                  console.log(`💨 Aerator control updated for ${namePond}`);
+                  console.log(`Aerator control updated for ${namePond}`);
 
-                  const message = `Delay aerator untuk ${namePond} telah diubah dari ${prevAerator} menit menjadi ${newAerator} menit`;
+                  const message = `Delay aerator untuk ${namePond} telah diubah dari ${prevAerator} menit => ${newAerator} menit`;
 
-                  await createNotification({
+                  await buatNotifikasi({
                         idPond: pondId,
                         type: "aerator_control_update",
                         title: "Delay Aerator Diperbarui",
@@ -218,96 +236,110 @@ const cron = require("node-cron");
 
 // 🔁 Cek Feed Alert setiap 15 menit
 cron.schedule("*/15 * * * *", async () => {
-    console.log("🔁 [CRON] Mengecek kondisi feed_alert...");
+      console.log("🔁 [CRON] Mengecek kondisi feed_alert...");
 
-    const pondsSnapshot = await db.ref("Sadewa_SmartFarm/ponds").once("value");
-    const pondsData = pondsSnapshot.val();
+      const pondsSnapshot = await db.ref("Sadewa_SmartFarm/ponds").once("value");
+      const pondsData = pondsSnapshot.val();
 
-    if (!pondsData) return;
+      if (!pondsData) return;
 
-    for (const pondId of Object.keys(pondsData)) {
-        const pondData = pondsData[pondId];
-        const kolam = await Kolam.findOne({ idPond: pondId });
-        const namePond = kolam ? kolam.namePond : pondId;
-
-        if (pondData.isi_pakan === true) {
-            console.log(`📢 [CRON] Feed alert untuk ${namePond}`);
-
-            await createNotification({
-                idPond: pondId,
-                type: "feed_alert",
-                title: "Pakan Hampir Habis",
-                message: `Pakan pada kolam ${namePond} hampir habis, harap segera isi ulang`,
-                time: new Date(),
-                status: "unread",
-                metadata: {
-                    isi_pakan: true
-                }
+      for (const pondId of Object.keys(pondsData)) {
+            const pondData = pondsData[pondId];
+            const kolam = await Kolam.model.findOne({
+                  idPond: pondId
             });
-        }
-    }
+            const namePond = kolam ? kolam.namePond : pondId;
+
+            if (pondData.isi_pakan === true) {
+                  console.log(`[CRON] Feed alert untuk ${namePond}`);
+
+                  await buatNotifikasi({
+                        idPond: pondId,
+                        type: "feed_alert",
+                        title: "Pakan Hampir Habis",
+                        message: `Pakan udang pada ${namePond} hampir habis, harap untuk segera mengisi ulang pakan sebelum waktu pemberian pakan.`,
+                        time: new Date(),
+                        status: "unread",
+                        metadata: {
+                              isi_pakan: true
+                        }
+                  });
+            }
+      }
 });
 
 // 🔁 Cek Water Quality setiap 1 menit
 cron.schedule("* * * * *", async () => {
-    console.log("🔁 [CRON] Mengecek kualitas air...");
+      console.log("🔁 [CRON] Mengecek kualitas air...");
 
-    const pondsSnapshot = await db.ref("Sadewa_SmartFarm/ponds").once("value");
-    const pondsData = pondsSnapshot.val();
+      const pondsSnapshot = await db.ref("Sadewa_SmartFarm/ponds").once("value");
+      const pondsData = pondsSnapshot.val();
 
-    if (!pondsData) return;
+      if (!pondsData) return;
 
-    for (const pondId of Object.keys(pondsData)) {
-        const pondData = pondsData[pondId];
-        const kolam = await Kolam.findOne({ idPond: pondId });
-        const namePond = kolam ? kolam.namePond : pondId;
+      for (const pondId of Object.keys(pondsData)) {
+            const pondData = pondsData[pondId];
+            const kolam = await Kolam.model.findOne({
+                  idPond: pondId
+            });
+            const namePond = kolam ? kolam.namePond : pondId;
 
-        if (pondData.sensor_data && pondData.device_config?.thresholds) {
-            const {
-                ph,
-                salinity,
-                temperature,
-                turbidity
-            } = pondData.sensor_data;
+            if (pondData.sensor_data && pondData.device_config?.thresholds) {
+                  const {
+                        ph,
+                        salinity,
+                        temperature,
+                        turbidity
+                  } = pondData.sensor_data;
 
-            const {
-                thresholds
-            } = pondData.device_config;
+                  const {
+                        thresholds
+                  } = pondData.device_config;
 
-            const alerts = [];
-            if (ph < thresholds.ph.low || ph > thresholds.ph.high) alerts.push("pH");
-            if (salinity < thresholds.salinity.low || salinity > thresholds.salinity.high) alerts.push("Salinitas");
-            if (temperature < thresholds.temperature.low || temperature > thresholds.temperature.high) alerts.push("Suhu");
-            if (turbidity < thresholds.turbidity.low || turbidity > thresholds.turbidity.high) alerts.push("Kekeruhan");
+                  const alerts = [];
+                  if (ph < thresholds.ph.low || ph > thresholds.ph.high) alerts.push("pH");
+                  if (salinity < thresholds.salinity.low || salinity > thresholds.salinity.high) alerts.push("Salinitas");
+                  if (temperature < thresholds.temperature.low || temperature > thresholds.temperature.high) alerts.push("Suhu");
+                  if (turbidity < thresholds.turbidity.low || turbidity > thresholds.turbidity.high) alerts.push("Kekeruhan");
 
-            if (alerts.length > 0 && !(await isDuplicateNotification(pondId, "water_quality_alert"))) {
-                console.log(`🚨 [CRON] Water quality alert untuk ${namePond}: ${alerts.join(", ")}`);
+                  if (alerts.length > 0 && !(await isDuplicateNotification(pondId, "water_quality_alert"))) {
+                        console.log(`🚨 [CRON] Water quality alert untuk ${namePond}: ${alerts.join(", ")}`);
 
-                const alertDetails = alerts.map((param) => {
-                    switch (param) {
-                        case "pH": return `pH = ${ph}`;
-                        case "Salinitas": return `Salinitas = ${salinity} ppt`;
-                        case "Suhu": return `Suhu = ${temperature}°C`;
-                        case "Kekeruhan": return `Kekeruhan = ${turbidity} NTU`;
-                        default: return param;
-                    }
-                });
+                        const alertDetails = alerts.map((param) => {
+                              switch (param) {
+                                    case "pH":
+                                          return `pH = ${ph}`;
+                                    case "Salinitas":
+                                          return `Salinitas = ${salinity} PPT`;
+                                    case "Suhu":
+                                          return `Suhu = ${temperature}°C`;
+                                    case "Kekeruhan":
+                                          return `Kekeruhan = ${turbidity} NTU`;
+                                    default:
+                                          return param;
+                              }
+                        });
 
-                await createNotification({
-                    idPond: pondId,
-                    type: "water_quality_alert",
-                    title: "Peringatan Kualitas Air",
-                    message: `Kualitas ${alerts.join(", ")} air pada ${namePond} berada di luar batas normal.\n${alertDetails.join(", ")}`,
-                    time: new Date(),
-                    status: "unread",
-                    metadata: {
-                        alerts,
-                        sensor_values: { ph, salinity, temperature, turbidity },
-                    },
-                });
+                        await buatNotifikasi({
+                              idPond: pondId,
+                              type: "water_quality_alert",
+                              title: "Kualitas Air",
+                              message: `Kualitas ${alerts.join(", ")} air pada ${namePond} berada di luar batas normal.\nNilai ${alertDetails.join(", ")}`,
+                              time: new Date(),
+                              status: "unread",
+                              metadata: {
+                                    alerts,
+                                    sensor_values: {
+                                          ph,
+                                          salinity,
+                                          temperature,
+                                          turbidity
+                                    },
+                              },
+                        });
+                  }
             }
-        }
-    }
+      }
 });
 
 

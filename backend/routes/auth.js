@@ -1,17 +1,21 @@
 const express = require("express");
-const AuthService = require("../services/auth");
+const {
+      login,
+      logout
+} = require("../services/auth");
 
 const router = express.Router();
 
-// ✅ Login Route
+// ✅ Login
 router.post("/login", async (req, res) => {
       const {
             username,
             password,
             deviceToken
       } = req.body;
+
       try {
-            const result = await AuthService.login(username, password, deviceToken);
+            const result = await login(username, password, deviceToken);
             res.json(result);
       } catch (error) {
             res.status(400).json({
@@ -20,18 +24,19 @@ router.post("/login", async (req, res) => {
       }
 });
 
-
-// ✅ Logout Route
+// ✅ Logout
 router.post("/logout", async (req, res) => {
       const authHeader = req.headers.authorization;
       const token = authHeader && authHeader.split(" ")[1];
 
-      if (!token) return res.status(400).json({
-            message: "Token tidak ditemukan!"
-      });
+      if (!token) {
+            return res.status(400).json({
+                  message: "Token tidak ditemukan!"
+            });
+      }
 
       try {
-            const result = await AuthService.logout(token);
+            const result = await logout(token);
             res.json(result);
       } catch (error) {
             res.status(400).json({

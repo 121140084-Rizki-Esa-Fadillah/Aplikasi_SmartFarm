@@ -52,22 +52,41 @@ class _TambahUserState extends State<TambahUser> {
       return;
     }
 
-    if (password != confirmPassword) {
+    if (username.length < 4 || username.length > 16) {
       CustomDialog.show(
         context: context,
         isSuccess: false,
-        message: "Password tidak cocok",
+        message: "Username harus 4-16 karakter",
       );
       return;
     }
 
-    // 🔐 Validasi ketentuan password
-    final passwordRegex = RegExp(r'^(?=.*[0-9])(?=.*[!@#\$&*~]).{8,20}$');
+    final emailRegex = RegExp(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$");
+
+    if (!emailRegex.hasMatch(email)) {
+      CustomDialog.show(
+        context: context,
+        isSuccess: false,
+        message: "Format email tidak valid. Pastikan email mengandung '@' dan domain yang benar.",
+      );
+      return;
+    }
+
+    if (password != confirmPassword) {
+      CustomDialog.show(
+        context: context,
+        isSuccess: false,
+        message: "Password tidak cocok dengan confirm password",
+      );
+      return;
+    }
+
+    final passwordRegex = RegExp(r'^(?=.*[0-9])(?=.*[!@#\$&*~_-]).{8,16}$');
     if (!passwordRegex.hasMatch(password)) {
       CustomDialog.show(
         context: context,
         isSuccess: false,
-        message: "Password harus 8-20 karakter, mengandung angka dan simbol.\nContoh: Tambak@123",
+        message: "Password harus 8-16 karakter, mengandung angka dan simbol (seperti : !@#\$&*~-_).\nContoh: Tambak@123",
       );
       return;
     }
@@ -76,6 +95,48 @@ class _TambahUserState extends State<TambahUser> {
       isLoading = true;
     });
 
+    // 🔎 Cek username/email dulu
+    final checkResult = await ApiService.checkUsernameEmail(username, email);
+
+    if (checkResult == null) {
+      setState(() {
+        isLoading = false;
+      });
+      CustomDialog.show(
+        context: context,
+        isSuccess: false,
+        message: "Gagal mengecek data pengguna",
+      );
+      return;
+    }
+
+    bool usernameConflict = checkResult["usernameExists"] == true;
+    bool emailConflict = checkResult["emailExists"] == true;
+
+    if (usernameConflict || emailConflict) {
+      setState(() {
+        isLoading = false;
+      });
+
+      String message = "";
+
+      if (usernameConflict && emailConflict) {
+        message = "Username dan Email sudah digunakan, harap gunakan username dan email yang lain.";
+      } else if (usernameConflict) {
+        message = "Username sudah digunakan, harap gunakan username yang lain.";
+      } else if (emailConflict) {
+        message = "Email sudah digunakan, harap gunakan email yang lain.";
+      }
+
+      CustomDialog.show(
+        context: context,
+        isSuccess: false,
+        message: message,
+      );
+      return;
+    }
+
+    // ✅ Lanjut tambah user
     bool success = await ApiService.addUser(
       username,
       email,
@@ -100,7 +161,6 @@ class _TambahUserState extends State<TambahUser> {
     );
   }
 
-
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
@@ -112,67 +172,77 @@ class _TambahUserState extends State<TambahUser> {
           Navigator.pop(context);
         },
       ),
-      resizeToAvoidBottomInset: false,
-      body: Stack(
-        children: [
-          const BackgroundWidget(),
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: size.width * 0.08),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(height: 40),
-                Expanded(
-                  child: SingleChildScrollView(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        InputPlaceholder(
-                          label: "Username",
-                          iconPath: "assets/icons/icon-username.png",
-                          controller: usernameController,
-                        ),
-                        InputPlaceholder(
-                          label: "Email",
-                          iconPath: "assets/icons/icon-email.png",
-                          controller: emailController,
-                        ),
-                        InputRolePlaceholder(
-                          onRoleSelected: (role) {
-                            setState(() {
-                              selectedRole = role;
-                            });
-                          },
-                        ),
-                        InputPlaceholder(
-                          label: "Password",
-                          isPassword: true,
-                          iconPath: "assets/icons/icon-password.png",
-                          controller: passwordController,
-                        ),
-                        InputPlaceholder(
-                          label: "Confirm Password",
-                          isPassword: true,
-                          iconPath: "assets/icons/icon-password.png",
-                          controller: confirmPasswordController,
-                        ),
-                        const SizedBox(height: 20),
-                      ],
+      resizeToAvoidBottomInset: true,
+      body: SafeArea(
+        child: Stack(
+          children: [
+            const BackgroundWidget(),
+            LayoutBuilder(
+              builder: (context, constraints) {
+                return SingleChildScrollView(
+                  padding: EdgeInsets.only(
+                    left: size.width * 0.08,
+                    right: size.width * 0.08,
+                    bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+                  ),
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      minHeight: constraints.maxHeight,
+                    ),
+                    child: IntrinsicHeight(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const SizedBox(height: 20),
+                          InputPlaceholder(
+                            label: "Username",
+                            iconPath: "assets/icons/icon-username.png",
+                            controller: usernameController,
+                          ),
+                          InputPlaceholder(
+                            label: "Email",
+                            iconPath: "assets/icons/icon-email.png",
+                            controller: emailController,
+                            isEmail: true,
+                          ),
+                          InputRolePlaceholder(
+                            onRoleSelected: (role) {
+                              setState(() {
+                                selectedRole = role;
+                              });
+                            },
+                          ),
+                          InputPlaceholder(
+                            label: "Password",
+                            isPassword: true,
+                            iconPath: "assets/icons/icon-password.png",
+                            controller: passwordController,
+                          ),
+                          InputPlaceholder(
+                            label: "Confirm Password",
+                            isPassword: true,
+                            iconPath: "assets/icons/icon-password.png",
+                            controller: confirmPasswordController,
+                          ),
+                          const SizedBox(height: 20),
+                          const Spacer(), //
+                          SizedBox(
+                            width: double.infinity,
+                            child: ButtonFilled(
+                              text: "Simpan",
+                              onPressed: isLoading ? () {} : _simpanUser,
+                            ),
+                          ),
+                          const SizedBox(height: 20),
+                        ],
+                      ),
                     ),
                   ),
-                ),
-                SizedBox(
-                  width: double.infinity,
-                  child: ButtonFilled(
-                    text: "Simpan",
-                    onPressed: isLoading ? () {} : _simpanUser,
-                  ),
-                ),
-                const SizedBox(height: 20),
-              ],
+                );
+              },
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

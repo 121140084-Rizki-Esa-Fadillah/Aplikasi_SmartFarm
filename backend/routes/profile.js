@@ -1,7 +1,7 @@
 const express = require("express");
 const {
-	getProfile,
-	updateProfile
+	ambilDataProfile,
+      editDataProfile
 } = require("../services/profile");
 
 const router = express.Router();
@@ -12,7 +12,7 @@ router.get("/profile", async (req, res) => {
 		const authHeader = req.headers.authorization;
 		const token = authHeader && authHeader.split(" ")[1];
 
-		const user = await getProfile(token);
+		const user = await ambilDataProfile(token);
 		res.json(user);
 	} catch (error) {
 		res.status(401).json({
@@ -31,7 +31,7 @@ router.put("/profile", async (req, res) => {
 			username,
 			email
 		} = req.body;
-		const result = await updateProfile(token, {
+		const result = await editDataProfile(token, {
 			username,
 			email
 		});

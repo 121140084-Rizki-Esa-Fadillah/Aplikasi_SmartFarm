@@ -26,40 +26,28 @@ class _KontrolAeratorState extends State<KontrolAerator> {
     _fetchAeratorConfig();
   }
 
+  // Mengambil status aerator dan delay menggunakan ApiService.getAerator()
   Future<void> _fetchAeratorConfig() async {
     setState(() => isLoading = true);
 
     try {
-      print("📩 GET Request API: http://192.168.1.38:5000/api/konfigurasi/${widget.pondId}/aerator/status");
-      final statusData = await ApiService.getDeviceConfig(widget.pondId, "aerator/status");
-      print("📥 Response (200): $statusData");
-
-      print("📩 GET Request API: http://192.168.1.38:5000/api/konfigurasi/${widget.pondId}/aerator/aerator_delay");
-      final delayData = await ApiService.getDeviceConfig(widget.pondId, "aerator/aerator_delay");
-      print("📥 Response (200): $delayData");
+      // Mengambil status dan delay aerator menggunakan API Service
+      final aeratorData = await ApiService.getAerator(widget.pondId);
+      print("📥 Response (200): $aeratorData");
 
       setState(() {
-        // Cek apakah statusData memiliki format yang benar
-        if (statusData != null && statusData['data'] != null && statusData['data']['on'] is bool) {
-          isAeratorOn = statusData['data']['on'];
-          print("✅ isAeratorOn set to: $isAeratorOn");
-        } else if (statusData != null && statusData['on'] is bool) {
-          // Handle format case without 'data'
-          isAeratorOn = statusData['on'];
-          print("✅ isAeratorOn set to: $isAeratorOn");
-        } else {
-          print("⚠️ Invalid status data format");
-        }
+        if (aeratorData != null) {
+          // Ambil status on/off
+          if (aeratorData.containsKey('statusAerator') && aeratorData['statusAerator'] is bool) {
+            isAeratorOn = aeratorData['statusAerator'];
+            print("✅ isAeratorOn set to: $isAeratorOn");
+          }
 
-        // Cek apakah delayData memiliki format yang benar
-        if (delayData != null && delayData['data'] is num) {
-          aeratorDelay = delayData['data'].toDouble();
-          print("✅ aeratorDelay set to: $aeratorDelay");
-        } else if (delayData != null && delayData['data'] is num) {
-          aeratorDelay = delayData['data'].toDouble();
-          print("✅ aeratorDelay set to: $aeratorDelay");
-        } else {
-          print("⚠️ Invalid delay data format");
+          // Ambil delay
+          if (aeratorData.containsKey('aeratorOnMinuteAfter') && aeratorData['aeratorOnMinuteAfter'] is num) {
+            aeratorDelay = aeratorData['aeratorOnMinuteAfter'].toDouble();
+            print("✅ aeratorDelay set to: $aeratorDelay");
+          }
         }
       });
     } catch (e) {
@@ -69,41 +57,29 @@ class _KontrolAeratorState extends State<KontrolAerator> {
     setState(() => isLoading = false);
   }
 
+  // Fungsi untuk update status aerator dan delay
   Future<void> _updateAeratorConfig() async {
     setState(() => isSaving = true);
 
     try {
-      // Log untuk status aerator
-      print("📩 PUT Request API: http://192.168.1.38:5000/api/konfigurasi/${widget.pondId}/aerator/status with data: {\"on\": $isAeratorOn}");
-      final statusUpdated = await ApiService.updateDeviceConfig(
+      await ApiService.updateAerator(
         widget.pondId,
-        "aerator/status",
-        {"on": isAeratorOn},
+        {
+          "aerator_delay": aeratorDelay?.toInt(),
+        },
       );
-      print("📥 Response (200): $statusUpdated");
-
-      // Log untuk delay aerator
-      print("📩 PUT Request API: http://192.168.1.38:5000/api/konfigurasi/${widget.pondId}/aerator/aerator_delay with data: {\"delay\": $aeratorDelay}");
-      final delayUpdated = await ApiService.updateDeviceConfig(
-        widget.pondId,
-        "aerator/aerator_delay",
-        aeratorDelay!.toInt(),
-      );
-      print("📥 Response (200): $delayUpdated");
 
       CustomDialog.show(
         context: context,
-        isSuccess: statusUpdated && delayUpdated,
-        message: statusUpdated && delayUpdated
-            ? "Konfigurasi aerator berhasil disimpan"
-            : "Gagal menyimpan konfigurasi aerator",
+        isSuccess: true,
+        message: "Waktu delay aerator berhasil diperbarui",
       );
     } catch (e) {
-      print("❌ Error saat memperbarui aerator: $e");
+      print("❌ Error saat memperbarui delay aerator: $e");
       CustomDialog.show(
         context: context,
         isSuccess: false,
-        message: "Terjadi kesalahan saat menyimpan data",
+        message: "Terjadi kesalahan saat menyimpan delay aerator",
       );
     }
 
@@ -161,33 +137,36 @@ class _KontrolAeratorState extends State<KontrolAerator> {
                 ),
                 ButtonSwitch(
                   value: isAeratorOn,
-                  onChanged: (value) async {
-                    setState(() {
-                      isAeratorOn = value;
-                      print("✅ isAeratorOn changed to: $isAeratorOn");
-                    });
+                    onChanged: (value) async {
+                      setState(() {
+                        isAeratorOn = value;
+                      });
 
-                    try {
-                      print("📩 PUT Request API: http://192.168.1.38:5000/api/konfigurasi/${widget.pondId}/aerator/status with data: {\"on\": $isAeratorOn}");
-                      final statusUpdated = await ApiService.updateDeviceConfig(
-                        widget.pondId,
-                        "aerator/status",
-                        {"on": isAeratorOn},
-                      );
-                      print("📥 Response (200): $statusUpdated");
+                      try {
+                        await ApiService.updateAerator(
+                          widget.pondId,
+                          {
+                            "status": {"on": isAeratorOn},
+                          },
+                        );
 
-                      // Log info tanpa menampilkan dialog
-                      if (isAeratorOn) {
-                        print("✅ Aerator berhasil diaktifkan");
-                      } else {
-                        print("⚠️ Aerator berhasil dinonaktifkan");
+                        CustomDialog.show(
+                          context: context,
+                          isSuccess: true,
+                          message: isAeratorOn
+                              ? "Aerator berhasil diaktifkan"
+                              : "Aerator berhasil dinonaktifkan",
+                        );
+                      } catch (e) {
+                        print("❌ Error saat memperbarui aerator: $e");
+                        CustomDialog.show(
+                          context: context,
+                          isSuccess: false,
+                          message: "Gagal memperbarui status aerator",
+                        );
                       }
-
-                    } catch (e) {
-                      print("❌ Error saat memperbarui aerator: $e");
                     }
-                  },
-                )
+                ),
               ],
             ),
           ),
@@ -226,7 +205,7 @@ class _KontrolAeratorState extends State<KontrolAerator> {
                       const SizedBox(width: 8),
                       if (aeratorDelay != null)
                         InputValue(
-                          initialValue: aeratorDelay!,
+                          initialValue:  aeratorDelay ?? 5,
                           minValue: 5,
                           maxValue: 60,
                           step: 5,
@@ -242,7 +221,7 @@ class _KontrolAeratorState extends State<KontrolAerator> {
                   ),
                 ),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: 16),
               ButtonOutlined(
                 text: "Simpan",
                 onPressed: _updateAeratorConfig,

@@ -1,26 +1,26 @@
-const User = require("../models/users");
 const mongoose = require("mongoose");
+const User = require("../models/user");
 
-const getAllUsers = async () => {
-      return await User.find({}, "id username email role createdAt");
+const ambilDataUser = async () => {
+      return await User.model.find({}, "id username email role createdAt");
 };
 
-const deleteUserById = async (id) => {
+const hapusUserById = async (id) => {
       if (!mongoose.Types.ObjectId.isValid(id)) {
             throw new Error("ID tidak valid");
       }
 
-      const user = await User.findById(id);
+      const user = await User.model.findById(id);
       if (!user) {
             throw new Error("User tidak ditemukan");
       }
 
       console.log(`Menghapus user: ${user.username}`);
-      await User.findByIdAndDelete(id);
+      await User.model.findByIdAndDelete(id);
       return user.username;
 };
 
-const updateUserById = async (id, {
+const editUserById = async (id, {
       username,
       email,
       role
@@ -29,7 +29,7 @@ const updateUserById = async (id, {
             throw new Error("ID tidak valid");
       }
 
-      const user = await User.findById(id);
+      const user = await User.model.findById(id);
       if (!user) {
             throw new Error("User tidak ditemukan");
       }
@@ -43,7 +43,7 @@ const updateUserById = async (id, {
       return user;
 };
 
-const createUser = async ({
+const buatUser = async ({
       username,
       email,
       password,
@@ -53,27 +53,28 @@ const createUser = async ({
             throw new Error("Semua field harus diisi!");
       }
 
-      const existingUser = await User.findOne({
+      const existingUser = await User.model.findOne({
             email
       });
       if (existingUser) {
             throw new Error("Email sudah digunakan!");
       }
 
-      const newUser = new User({
+      const newUser = new User.model({
             username,
             email,
             password,
             role
       });
+
       await newUser.save();
 
       return newUser;
 };
 
 module.exports = {
-      getAllUsers,
-      deleteUserById,
-      updateUserById,
-      createUser
+      ambilDataUser,
+      hapusUserById,
+      editUserById,
+      buatUser
 };

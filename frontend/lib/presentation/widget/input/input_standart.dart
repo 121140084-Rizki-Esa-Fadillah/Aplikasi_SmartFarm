@@ -5,13 +5,15 @@ import 'package:google_fonts/google_fonts.dart';
 class InputStandart extends StatelessWidget {
   final String label;
   final bool isPassword;
-  final TextEditingController? controller; // Tambahkan controller
+  final bool isEmail;
+  final TextEditingController? controller;
 
   const InputStandart({
     super.key,
     required this.label,
     this.isPassword = false,
-    this.controller, // Parameter controller
+    this.isEmail = false, // Tambahkan flag ini
+    this.controller,
   });
 
   @override
@@ -33,12 +35,21 @@ class InputStandart extends StatelessWidget {
         SizedBox(
           height: size.height * 0.05 < 40 ? 40 : size.height * 0.05,
           child: TextField(
-            controller: controller, // Gunakan controller di sini
+            controller: controller,
             style: GoogleFonts.poppins(
               fontSize: size.width * 0.04,
               color: Colors.white,
             ),
             obscureText: isPassword,
+            keyboardType: isEmail ? TextInputType.emailAddress : TextInputType.text,
+            textCapitalization: isEmail ? TextCapitalization.none : TextCapitalization.sentences,
+            onChanged: (value) {
+              if (isEmail && controller != null) {
+                final cursorPos = controller!.selection;
+                controller!.text = value.toLowerCase();
+                controller!.selection = cursorPos; // menjaga posisi kursor
+              }
+            },
             decoration: InputDecoration(
               contentPadding: EdgeInsets.symmetric(
                 vertical: size.height * 0.012,
@@ -63,3 +74,4 @@ class InputStandart extends StatelessWidget {
     );
   }
 }
+

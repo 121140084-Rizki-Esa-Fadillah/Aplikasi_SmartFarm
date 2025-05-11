@@ -41,7 +41,7 @@ class PengaturanSensor extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBarWidget(
-        title: "Pengaturan - $sensorName",
+        title: "Pengaturan",
         onBackPress: () => Navigator.pop(context),
       ),
       resizeToAvoidBottomInset: false,

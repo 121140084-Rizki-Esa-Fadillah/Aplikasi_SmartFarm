@@ -1,51 +1,41 @@
-const User = require("../models/users");
+const User = require("../models/user");
 const jwt = require("jsonwebtoken");
 
 const SECRET_KEY = process.env.JWT_SECRET;
 
-const getProfile = async (token) => {
-      if (!token) {
-            throw new Error("Unauthorized");
-      }
+const ambilDataProfile = async (token) => {
+      if (!token) throw new Error("Unauthorized");
 
-      // Verifikasi token JWT
       const decoded = jwt.verify(token, SECRET_KEY);
-      const user = await User.findById(decoded.id).select("-password"); // Jangan kirim password
+      const user = await User.model.findById(decoded.id).select("-password");
 
-      if (!user) {
-            throw new Error("User tidak ditemukan");
-      }
+      if (!user) throw new Error("User tidak ditemukan");
 
       return user;
 };
 
-const updateProfile = async (token, {
+const editDataProfile = async (token, {
       username,
       email
 }) => {
-      if (!token) {
-            throw new Error("Unauthorized");
-      }
+      if (!token) throw new Error("Unauthorized");
 
       const decoded = jwt.verify(token, SECRET_KEY);
-      const user = await User.findById(decoded.id);
+      const user = await User.model.findById(decoded.id);
 
-      if (!user) {
-            throw new Error("User tidak ditemukan");
-      }
+      if (!user) throw new Error("User tidak ditemukan");
 
-      // Perbarui data user
       user.username = username || user.username;
       user.email = email || user.email;
       await user.save();
 
       return {
             message: "Profil berhasil diperbarui",
-            user
+            user,
       };
 };
 
 module.exports = {
-      getProfile,
-      updateProfile,
+      ambilDataProfile,
+      editDataProfile
 };

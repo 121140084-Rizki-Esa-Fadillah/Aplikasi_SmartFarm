@@ -24,7 +24,7 @@ class ButtonSwitch extends StatelessWidget {
               value: value,
               onChanged: onChanged,
               activeColor: ColorConstant.primary,
-              inactiveTrackColor: Colors.white,
+              inactiveTrackColor: Colors.grey.shade300,
             ),
           ),
         ),

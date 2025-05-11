@@ -4,6 +4,7 @@ import '../../blocks/kontrol_pakan.dart';
 import '../../widget/navigation/app_bar_widget.dart';
 import '../../widget/navigation/navigasi_monitoring.dart';
 import '../../widget/background_widget.dart';
+import '../beranda/beranda.dart';
 import 'riwayat_kualitas_air/riwayat_kualitas_air.dart';
 import 'monitoirng_sensor/monitoring.dart';
 import 'notifikasi.dart';
@@ -20,7 +21,9 @@ class KontrolPakanAerator extends StatelessWidget {
       appBar: AppBarWidget(
         title: "Kontrol Pakan & Aerator",
         onBackPress: () {
-          Navigator.pop(context);
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (_) => const Beranda()),
+          );
         },
       ),
       resizeToAvoidBottomInset: false,
