@@ -47,7 +47,6 @@ class Notifikasi {
                   }
             });
 
-            // Add indexing for optimized querying
             NotifikasiSchema.index({
                   idPond: 1,
                   type: 1,

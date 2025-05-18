@@ -12,7 +12,6 @@ const {
 
 const router = express.Router();
 
-// ✅ Ambil semua kolam
 router.get("/kolam", verifyToken, async (req, res) => {
       try {
             const response = await ambilDataKolam();
@@ -24,7 +23,6 @@ router.get("/kolam", verifyToken, async (req, res) => {
       }
 });
 
-// ✅ Tambah kolam
 router.post("/kolam", verifyToken, isAdmin, async (req, res) => {
       const {
             idPond,
@@ -44,7 +42,6 @@ router.post("/kolam", verifyToken, isAdmin, async (req, res) => {
       }
 });
 
-// ✅ Update kolam
 router.put("/kolam/:id", verifyToken, isAdmin, async (req, res) => {
       const {
             pond_id,
@@ -62,14 +59,13 @@ router.put("/kolam/:id", verifyToken, isAdmin, async (req, res) => {
 
             res.status(response.status).json(response);
       } catch (error) {
-            console.error("❌ Error updating kolam:", error);
+            console.error("Error update kolam:", error);
             res.status(500).json({
                   message: "Terjadi kesalahan server."
             });
       }
 });
 
-// ✅ Hapus kolam
 router.delete("/kolam/:id", verifyToken, isAdmin, async (req, res) => {
       try {
             const response = await hapusKolam(req.params.id);

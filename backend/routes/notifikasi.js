@@ -11,7 +11,6 @@ const {
 
 const router = express.Router();
 
-// ✅ Ambil notifikasi berdasarkan ID
 router.get("/:id", verifyToken, async (req, res) => {
       try {
             const notification = await ambilNotifikasiById(req.params.id);
@@ -29,7 +28,6 @@ router.get("/:id", verifyToken, async (req, res) => {
       }
 });
 
-// ✅ Ambil notifikasi berdasarkan idPond
 router.get("/pond/:idPond", verifyToken, async (req, res) => {
       try {
             const notifications = await ambilNotifikasiByPond(req.params.idPond);
@@ -47,7 +45,6 @@ router.get("/pond/:idPond", verifyToken, async (req, res) => {
       }
 });
 
-// ✅ Tandai notifikasi sebagai dibaca
 router.patch("/:id/read", verifyToken, async (req, res) => {
       try {
             const updated = await tandaiNotifikasi(req.params.id);
@@ -57,7 +54,7 @@ router.patch("/:id/read", verifyToken, async (req, res) => {
                   });
             }
             res.status(200).json({
-                  message: "✅ Notifikasi berhasil ditandai sebagai dibaca",
+                  message: "Notifikasi berhasil ditandai sebagai dibaca",
                   notification: updated
             });
       } catch (error) {

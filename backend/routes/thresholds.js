@@ -5,7 +5,6 @@ const {
 	editDataThreshold
 } = require("../services/thresholds");
 
-// GET Thresholds
 router.get("/:pondId", async (req, res) => {
       try {
             const data = await ambilDataThreshold(req.params.pondId);
@@ -17,7 +16,6 @@ router.get("/:pondId", async (req, res) => {
       }
 });
 
-// UPDATE Thresholds
 router.put("/:pondId", async (req, res) => {
       try {
             const result = await editDataThreshold(req.params.pondId, req.body);

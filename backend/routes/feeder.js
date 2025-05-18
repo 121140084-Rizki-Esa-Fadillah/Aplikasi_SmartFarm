@@ -5,7 +5,6 @@ const {
       editDataFeeder
 } = require("../services/feeder");
 
-// GET Feeding Schedule
 router.get("/:pondId", async (req, res) => {
       try {
             const data = await ambilDataFeeder(req.params.pondId);
@@ -17,7 +16,6 @@ router.get("/:pondId", async (req, res) => {
       }
 });
 
-// UPDATE Feeding Schedule
 router.put("/:pondId", async (req, res) => {
       try {
             const result = await editDataFeeder(req.params.pondId, req.body);

@@ -2,20 +2,14 @@ const {
       db
 } = require("../config/firebaseConfig");
 
-// 🔹 Ambil data sensor berdasarkan pondId
+// Ambil data sensor berdasarkan pondId
 const getMonitoringData = async (pondId) => {
       try {
-            // Path untuk mengambil data sensor
             const firebasePath = `Sadewa_SmartFarm/ponds/${pondId}/sensor_data`;
-
-            // Mengambil data dari Firebase
             const snapshot = await db.ref(firebasePath).once("value");
-
-            // Jika data tidak ada
             if (!snapshot.exists()) {
                   throw new Error(`Data sensor untuk pondId ${pondId} tidak ditemukan.`);
             }
-
             // Mengembalikan data yang ditemukan
             return snapshot.val();
       } catch (error) {
@@ -23,7 +17,7 @@ const getMonitoringData = async (pondId) => {
       }
 };
 
-// 🔹 Ambil konfigurasi device
+// Ambil konfigurasi device
 const getDeviceConfig = async (pondId, keyPath = "") => {
       try {
             let fullPath = `Sadewa_SmartFarm/ponds/${pondId}/device_config`;
@@ -42,7 +36,7 @@ const getDeviceConfig = async (pondId, keyPath = "") => {
       }
 };
 
-// 🔹 Update konfigurasi device
+// Update konfigurasi device
 const updateDeviceConfig = async (pondId, keyPath, newValue) => {
       try {
             if (!keyPath) {

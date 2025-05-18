@@ -8,13 +8,11 @@ class Feeder {
             this.feedStatus = status??false;
       }
 
-      // Static method to fetch feeding data
       static async ambilDataFeeder(pondId, getDeviceConfig) {
             const data = await getDeviceConfig(pondId, "feeding_schedule");
             return new Feeder(data.amount, data.schedule, data.status);
       }
 
-      // Static method to edit feeding data
       static async editDataFeeder(pondId, feedingData, updateDeviceConfig) {
             return await updateDeviceConfig(pondId, "feeding_schedule", feedingData);
       }

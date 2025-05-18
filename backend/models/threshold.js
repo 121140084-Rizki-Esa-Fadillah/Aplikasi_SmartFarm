@@ -10,13 +10,11 @@ class Threshold {
 		this.turbidityLow = data.turbidity.low;
 	}
 
-	// Method to fetch threshold data
 	static async ambilDataThreshold(pondId, getDeviceConfig) {
 		const data = await getDeviceConfig(pondId, "thresholds");
 		return new Threshold(data);
 	}
 
-	// Method to edit thresholds
 	static async editDataThreshold(pondId, thresholdData, updateDeviceConfig) {
 		return await updateDeviceConfig(pondId, "thresholds", thresholdData);
 	}

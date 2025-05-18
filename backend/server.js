@@ -7,13 +7,11 @@ const {
 	connectDB
 } = require("./config/database");
 
-dotenv.config({
-	path: path.resolve(__dirname, "../.env")
-});
+dotenv.config();
 
 const app = express();
 
-// 🔹 Middleware
+// Middleware
 app.use(express.urlencoded({
 	extended: true
 }));
@@ -21,15 +19,15 @@ app.use(express.json({ strict: false }));
 app.use(cors());
 app.use(helmet());
 
-// 🔹 Koneksi Database
+//  Koneksi Database
 connectDB();
 
-// 🔹 Pastikan Cron Job History Berjalan ✅
+// Cron Job History
 require("./services/history");
 require("./services/notifikasi");
 require("./services/notificationListener");
 
-// 🔹 Import Routes
+// Routes
 const authRoutes = require("./routes/auth");
 const lupaPasswordRoutes = require("./routes/lupaPassword");
 const resetPasswordRoutes = require("./routes/resetPassword");
@@ -45,7 +43,7 @@ const thresholdRoutes = require("./routes/thresholds");
 const checkDataRouter = require("./routes/checkData");
 const emailCheckRoute = require('./routes/checkEmail');
 
-// 🔹 Routes
+// Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/password", lupaPasswordRoutes);
 app.use("/api/password", resetPasswordRoutes);
@@ -61,11 +59,11 @@ app.use("/api/konfigurasi/thresholds", thresholdRoutes);
 app.use("/api/check", checkDataRouter);
 app.use('/api', emailCheckRoute);
 
-// 🔹 Jalankan Server
+// Jalankan Server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, "0.0.0.0", () => {
 	console.log("====================================");
-	console.log(`🚀 Server berjalan di port ${PORT}`);
-	console.log("🔄 Cron Jobs untuk History & Notifikasi Aktif ✅");
+	console.log(`Server berjalan di port ${PORT}`);
+	console.log("Cron Jobs untuk History & Notifikasi Aktif ");
 	console.log("====================================");
 });

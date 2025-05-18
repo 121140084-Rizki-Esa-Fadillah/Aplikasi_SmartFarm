@@ -28,7 +28,7 @@ router.get("/history/pond", async (req, res) => {
 
 		res.status(200).json(history);
 	} catch (error) {
-		console.error("❌ Error saat mengambil riwayat:", error.message);
+		console.error("Error saat mengambil riwayat:", error.message);
 		res.status(500).json({
 			message: "Server error",
 			error: error.message
@@ -58,7 +58,7 @@ router.get("/history/id", async (req, res) => {
 
 		res.status(200).json(history);
 	} catch (error) {
-		console.error("❌ Error saat mengambil riwayat:", error.message);
+		console.error("Error saat mengambil riwayat:", error.message);
 		res.status(500).json({
 			message: "Server error",
 			error: error.message

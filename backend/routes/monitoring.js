@@ -4,7 +4,6 @@ const {
       ambilDataMonitoring
 } = require("../services/monitoring");
 
-// 🔹 GET Monitoring Sensor Data
 router.get("/:pondId", async (req, res) => {
       try {
             const data = await ambilDataMonitoring(req.params.pondId);

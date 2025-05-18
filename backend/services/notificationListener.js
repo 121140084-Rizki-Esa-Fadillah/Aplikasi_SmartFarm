@@ -5,11 +5,10 @@ const {
       buatNotifikasi
 } = require("./notifikasi");
 const Kolam = require("../models/kolam");
-const Notification = require("../models/notifikasi"); // Import model notifikasi
+const Notification = require("../models/notifikasi"); 
 
-// 🔹 Fungsi untuk mencegah notifikasi duplikat dalam 5 menit terakhir
+// Fungsi untuk mencegah notifikasi duplikat dalam 5 menit terakhir
 const isDuplicateNotification = async (idPond, type) => {
-      // Hanya periksa duplikasi untuk jenis 'feed_alert'
       if (type !== "feed_alert") return false;
 
       const checkTime = new Date();
@@ -29,7 +28,7 @@ const isDuplicateNotification = async (idPond, type) => {
 
 const previousValues = {};
 
-// 🔹 Fungsi untuk mengambil nilai awal dari Firebase
+// Fungsi untuk mengambil nilai awal dari Firebase
 const initializePreviousValues = async () => {
       const pondsRef = db.ref("Sadewa_SmartFarm/ponds");
       const pondsSnapshot = await pondsRef.once("value");
@@ -47,11 +46,8 @@ const initializePreviousValues = async () => {
                   };
             });
       }
-
-      console.log("✅ Previous values initialized from Firebase.");
 };
 
-// 🔹 Panggil fungsi inisialisasi saat aplikasi dijalankan
 initializePreviousValues();
 
 const feedUpdateCache = {};
@@ -72,27 +68,24 @@ function displayName(key) {
 }
 
 
-// 🔹 Pemantauan Firebase Realtime Database
+// Pemantauan Firebase Realtime Database
 db.ref("Sadewa_SmartFarm/ponds").on("child_changed", async (snapshot) => {
       const pondId = snapshot.key;
       const pondData = snapshot.val();
       if (!pondData) return;
 
-      // 🔹 Ambil namePond dari MongoDB
       const kolam = await Kolam.model.findOne({
             idPond: pondId
       });
-      const namePond = kolam ? kolam.namePond : pondId; // Jika tidak ditemukan, gunakan pondId
+      const namePond = kolam ? kolam.namePond : pondId;
 
-      console.log(`📡 Data Changed for ${namePond} (Pond ID: ${pondId})`);
-
-      // 🔹 Notifikasi Perubahan Ambang Batas Sensor (threshold_update)
+      // Notifikasi Perubahan Ambang Batas Sensor (threshold_update)
       if (pondData.device_config && pondData.device_config.thresholds) {
             const newThresholds = pondData.device_config.thresholds;
             const prevThresholds = previousValues[pondId].thresholds;
 
             if (prevThresholds && JSON.stringify(prevThresholds) !== JSON.stringify(newThresholds)) {
-                  console.log(`🔧 Threshold updated for ${namePond}`);
+                  console.log(` Threshold diperbarui untuk ${namePond}`);
 
                   const changes = [];
                   for (const key in newThresholds) {
@@ -118,12 +111,11 @@ db.ref("Sadewa_SmartFarm/ponds").on("child_changed", async (snapshot) => {
                         }
                   });
             }
-
-            // Perbarui nilai sebelumnya
+            // Update nilai sebelumnya
             previousValues[pondId].thresholds = newThresholds;
       }
 
-      // 🔹 Notifikasi Perubahan Jadwal & Jumlah Pakan (feed_schedule_update)
+      // Notifikasi Perubahan Jadwal & Jumlah Pakan (feed_schedule_update)
       if (pondData.device_config && pondData.device_config.feeding_schedule) {
             const newSchedule = pondData.device_config.feeding_schedule.schedule;
             const newAmount = pondData.device_config.feeding_schedule.amount;
@@ -133,9 +125,9 @@ db.ref("Sadewa_SmartFarm/ponds").on("child_changed", async (snapshot) => {
 
             const scheduleChanged = prevSchedule && JSON.stringify(prevSchedule) !== JSON.stringify(newSchedule);
             const amountChanged = prevAmount !== undefined && prevAmount !== newAmount;
+            console.log(` Jadwal dan/atau jumlah pakan diperbarui untuk ${namePond}`);
 
             if (scheduleChanged || amountChanged) {
-                  // Jika sudah ada timeout sebelumnya, batalkan dulu
                   if (feedUpdateCache[pondId]?.timeout) {
                         clearTimeout(feedUpdateCache[pondId].timeout);
                   }
@@ -191,25 +183,24 @@ db.ref("Sadewa_SmartFarm/ponds").on("child_changed", async (snapshot) => {
                                     status: "unread",
                                     metadata
                               });
-
                               // Update nilai sebelumnya
                               previousValues[pondId].feeding_schedule = newSchedule;
                               previousValues[pondId].feeding_amount = newAmount;
 
                               // Bersihkan cache
                               delete feedUpdateCache[pondId];
-                        }, 1500) // Delay untuk hindari double-notif
+                        }, 1500)
                   };
             }
       }
 
-      // 🔹 Notifikasi Perubahan Kontrol Aerator (aerator_control_update)
+      // Notifikasi Perubahan Kontrol Aerator (aerator_control_update)
       if (pondData.device_config && pondData.device_config.aerator) {
             const newAerator = pondData.device_config.aerator.aerator_delay;
             const prevAerator = previousValues[pondId].aerator_delay;
 
             if (prevAerator !== undefined && newAerator !== undefined && prevAerator !== newAerator) {
-                  console.log(`Aerator control updated for ${namePond}`);
+                  console.log(`Delay aerator diperbarui untuk ${namePond}`);
 
                   const message = `Delay aerator untuk ${namePond} telah diubah dari ${prevAerator} menit => ${newAerator} menit`;
 
@@ -226,17 +217,16 @@ db.ref("Sadewa_SmartFarm/ponds").on("child_changed", async (snapshot) => {
                         },
                   });
             }
-
-            // Perbarui nilai sebelumnya
+           // Update nilai sebelumnya
             previousValues[pondId].aerator_delay = newAerator;
       }
 });
 
 const cron = require("node-cron");
 
-// 🔁 Cek Feed Alert setiap 15 menit
+// Cek Feed Alert setiap 15 menit
 cron.schedule("*/15 * * * *", async () => {
-      console.log("🔁 [CRON] Mengecek kondisi feed_alert...");
+      console.log("[CRON] Mengecek kondisi feed_alert...");
 
       const pondsSnapshot = await db.ref("Sadewa_SmartFarm/ponds").once("value");
       const pondsData = pondsSnapshot.val();
@@ -251,7 +241,7 @@ cron.schedule("*/15 * * * *", async () => {
             const namePond = kolam ? kolam.namePond : pondId;
 
             if (pondData.isi_pakan === true) {
-                  console.log(`[CRON] Feed alert untuk ${namePond}`);
+                  console.log(`Pakan hampir habis untuk ${namePond}`);
 
                   await buatNotifikasi({
                         idPond: pondId,
@@ -268,9 +258,9 @@ cron.schedule("*/15 * * * *", async () => {
       }
 });
 
-// 🔁 Cek Water Quality setiap 1 menit
+// Cek Water Quality setiap 1 menit
 cron.schedule("*/15 * * * *", async () => {
-      console.log("🔁 [CRON] Mengecek kualitas air...");
+      console.log("[CRON] Mengecek kualitas air...");
 
       const pondsSnapshot = await db.ref("Sadewa_SmartFarm/ponds").once("value");
       const pondsData = pondsSnapshot.val();
@@ -303,7 +293,7 @@ cron.schedule("*/15 * * * *", async () => {
                   if (turbidity < thresholds.turbidity.low || turbidity > thresholds.turbidity.high) alerts.push("Kekeruhan");
 
                   if (alerts.length > 0 && !(await isDuplicateNotification(pondId, "water_quality_alert"))) {
-                        console.log(`🚨 [CRON] Water quality alert untuk ${namePond}: ${alerts.join(", ")}`);
+                        console.log(`[CRON] Peringatan kualitas air untuk ${namePond}: ${alerts.join(", ")}`);
 
                         const alertDetails = alerts.map((param) => {
                               switch (param) {
@@ -343,4 +333,4 @@ cron.schedule("*/15 * * * *", async () => {
 });
 
 
-console.log("🔄 Firebase notification listener aktif...");
+console.log("Firebase notification listener aktif...");

@@ -37,7 +37,6 @@ class User {
                   }
             });
 
-            // 🔐 Middleware: Hash password
             userSchema.pre("save", async function (next) {
                   if (!this.isModified("password")) return next();
                   try {
@@ -77,7 +76,7 @@ class User {
             return {
                   message: "Login berhasil!",
                   token,
-                  role: user.role, // ⬅️ Tambahkan ini
+                  role: user.role, 
             };
       }
 

@@ -3,7 +3,6 @@ const { checkUserExistence, checkKolamExistence } = require("../services/checkDa
 
 const router = express.Router();
 
-// 🔍 Cek ketersediaan username dan email untuk User
 router.post("/user", async (req, res) => {
     const { username, email } = req.body;
 
@@ -20,7 +19,6 @@ router.post("/user", async (req, res) => {
     }
 });
 
-// 🔍 Cek ketersediaan idPond dan namePond untuk Kolam
 router.post("/kolam", async (req, res) => {
     const { idPond, namePond } = req.body;
 

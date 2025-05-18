@@ -6,7 +6,6 @@ const {
 
 const router = express.Router();
 
-// ✅ Ambil profil user
 router.get("/profile", async (req, res) => {
 	try {
 		const authHeader = req.headers.authorization;
@@ -21,7 +20,6 @@ router.get("/profile", async (req, res) => {
 	}
 });
 
-// ✅ Edit profil user
 router.put("/profile", async (req, res) => {
 	try {
 		const authHeader = req.headers.authorization;

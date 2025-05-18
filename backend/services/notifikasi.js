@@ -48,10 +48,9 @@ const kirimNotifikasi = async (title, message, metadata = {}) => {
 
       try {
             await messaging.send(payload);
-            console.log("📦 Payload :", payload);
-            console.log(`✅ Push notification sent: ${title}`);
+            console.log(`Notifikasi berhasil dikirim: ${title}`);
       } catch (error) {
-            console.error("❌ Error sending push notification:", error);
+            console.error("Gagal mengirim notifikasi:", error);
       }
 };
 
@@ -62,7 +61,7 @@ const buatNotifikasi = async (data) => {
                   idPond: data.idPond
             });
             if (!kolam) {
-                  console.warn(`❌ idPond ${data.idPond} tidak ditemukan`);
+                  console.warn(`idPond ${data.idPond} tidak ditemukan`);
                   return null;
             }
 
@@ -77,7 +76,7 @@ const buatNotifikasi = async (data) => {
 
             return newNotif;
       } catch (error) {
-            console.error("❌ Error creating notification:", error);
+            console.error("Gagal membuat notifikasi:", error);
             return null;
       }
 };
@@ -96,12 +95,12 @@ const tandaiNotifikasi = async (id) => {
 
 const hapusNotifikasi = async () => {
       await Notifikasi.hapusNotifikasi();
-      console.log("🧹 Notifikasi lama dihapus");
+      console.log("Notifikasi lama dihapus");
 };
 
-// 🔹 Jadwalkan Penghapusan Tiap Malam
+// Penghapusan notifikasi
 cron.schedule("0 0 * * *", async () => {
-      console.log("🕛 Cron job: hapus notifikasi lama...");
+      console.log("Cron job: hapus notifikasi lama...");
       await hapusNotifikasi();
 }, {
       scheduled: true,

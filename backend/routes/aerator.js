@@ -5,7 +5,6 @@ const {
       editDataAerator
 } = require("../services/aerator");
 
-// GET Aerator Config
 router.get("/:pondId", async (req, res) => {
       try {
             const data = await ambilDataAerator(req.params.pondId);
@@ -17,7 +16,6 @@ router.get("/:pondId", async (req, res) => {
       }
 });
 
-// UPDATE Aerator Config
 router.put("/:pondId", async (req, res) => {
       try {
             const result = await editDataAerator(req.params.pondId, req.body);

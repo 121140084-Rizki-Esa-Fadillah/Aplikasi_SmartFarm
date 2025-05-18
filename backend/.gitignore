@@ -1,6 +1,0 @@
-# Jangan upload file konfigurasi rahasia
-node_modules/
-.env
-firebase-admin.json
-
-

@@ -12,7 +12,6 @@ const {
 
 const router = express.Router();
 
-// ✅ Get semua user
 router.get("/manajemenUsers", verifyToken, async (req, res) => {
 	try {
 		const users = await ambilDataUser();
@@ -25,7 +24,6 @@ router.get("/manajemenUsers", verifyToken, async (req, res) => {
 	}
 });
 
-// ✅ Hapus user berdasarkan ID
 router.delete("/manajemenUsers/:id", verifyToken, isAdmin, async (req, res) => {
 	try {
 		const username = await hapusUserById(req.params.id);
@@ -39,7 +37,6 @@ router.delete("/manajemenUsers/:id", verifyToken, isAdmin, async (req, res) => {
 	}
 });
 
-// ✅ Edit user berdasarkan ID
 router.put("/manajemenUsers/:id", verifyToken, isAdmin, async (req, res) => {
 	try {
 		const {
@@ -70,7 +67,6 @@ router.put("/manajemenUsers/:id", verifyToken, isAdmin, async (req, res) => {
 	}
 });
 
-// ✅ Tambah user baru
 router.post("/manajemenUsers", async (req, res) => {
 	try {
 		const newUser = await buatUser(req.body);

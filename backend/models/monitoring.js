@@ -8,7 +8,6 @@ class Monitoring {
 		this.rainStatus = data.rain_status??false;
 	}
 
-	// 🔹 Static Method untuk mengambil data monitoring
 	static async ambilDataMonitoring(pondId, getMonitoringData) {
 		const data = await getMonitoringData(pondId);
 		return new Monitoring({

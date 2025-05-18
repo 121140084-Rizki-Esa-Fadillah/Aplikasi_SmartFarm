@@ -6,7 +6,6 @@ const {
 
 const router = express.Router();
 
-// ✅ Login
 router.post("/login", async (req, res) => {
       const {
             username,
@@ -24,7 +23,6 @@ router.post("/login", async (req, res) => {
       }
 });
 
-// ✅ Logout
 router.post("/logout", async (req, res) => {
       const authHeader = req.headers.authorization;
       const token = authHeader && authHeader.split(" ")[1];

@@ -33,7 +33,7 @@ router.post("/verify-otp", (req, res) => {
 		if (result === "expired") {
 			return res.status(401).json({
 				message: "expired"
-			}); // Status 401 untuk expired
+			}); 
 		}
 
 		res.json({

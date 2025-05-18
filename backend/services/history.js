@@ -11,8 +11,7 @@ const ambilHistoryByPond = async (idPond) => {
 		const history = await History.ambilHistoryByPond(idPond);
 		return history.length > 0 ? history : null;
 	} catch (error) {
-		console.error("❌ Gagal mengambil riwayat:", error.message);
-		throw new Error("Gagal mengambil data riwayat.");
+		throw new Error("Gagal mengambil riwayat:", error.message);
 	}
 };
 
@@ -21,21 +20,20 @@ const ambilHistoryById = async (id) => {
 		const history = await History.ambilHistoryById(id);
 		return history || null;
 	} catch (error) {
-		console.error("❌ Gagal mengambil riwayat berdasarkan ID:", error.message);
-		throw new Error("Gagal mengambil data riwayat berdasarkan ID.");
+		throw new Error("Gagal mengambil riwayat berdasarkan ID:", error.message);
 	}
 };
 
 const collectDataFromFirebase = async () => {
 	try {
-		console.log("🔄 Mengambil data monitoring dari Firebase...");
+		console.log("Mengambil data monitoring dari Firebase...");
 
 		const ref = db.ref("Sadewa_SmartFarm/ponds");
 		const snapshot = await ref.once("value");
 		const pondsData = snapshot.val();
 
 		if (!pondsData) {
-			console.log("⚠️ Tidak ada data kolam ditemukan.");
+			console.log("Tidak ada data kolam ditemukan.");
 			return;
 		}
 
@@ -69,16 +67,16 @@ const collectDataFromFirebase = async () => {
 			if (!dailyHistoryBuffer[pondId][date]) dailyHistoryBuffer[pondId][date] = [];
 
 			dailyHistoryBuffer[pondId][date].push(historyData);
-			console.log(`✅ Data ditambahkan ke buffer untuk ${pondId} pada ${time}`);
+			console.log(`Data ditambahkan ke buffer untuk ${pondId} pada ${time}`);
 		}
 	} catch (error) {
-		console.error("❌ Gagal mengambil data dari Firebase:", error.message);
+		console.error("Gagal mengambil data dari Firebase:", error.message);
 	}
 };
 
 const simpanHistory = async () => {
 	try {
-		console.log("📁 Menyimpan laporan harian ke database...");
+		console.log("Menyimpan laporan harian ke database...");
 		const date = new Date().toISOString().split("T")[0];
 
 		for (const pondId in dailyHistoryBuffer) {
@@ -86,15 +84,17 @@ const simpanHistory = async () => {
 
 			try {
 				await History.simpanHistory(pondId, date, dailyHistoryBuffer[pondId][date]);
-				console.log(`✅ Laporan harian untuk ${pondId} pada ${date} berhasil disimpan.`);
+				console.log(`Laporan harian untuk ${pondId} pada ${date} berhasil disimpan.`);
 			} catch (error) {
-				console.log(`⚠️ Tidak dapat menyimpan laporan untuk ${pondId}: ${error.message}`);
+				console.log(`Tidak dapat menyimpan laporan untuk ${pondId}: ${error.message}`);
 			}
 		}
+		for (const pondId in dailyHistoryBuffer) {
+			delete dailyHistoryBuffer[pondId][date];
+		}
 
-		delete dailyHistoryBuffer[date];
 	} catch (error) {
-		console.error("❌ Gagal menyimpan laporan harian:", error.message);
+		console.error("Gagal menyimpan laporan harian:", error.message);
 	}
 };
 
@@ -103,18 +103,18 @@ const hapusHistory = async () => {
 		const now = new Date();
 		const oneMonthAgo = new Date(now.setMonth(now.getMonth() - 1));
 
-		console.log(`🗑️ Menghapus riwayat sebelum: ${oneMonthAgo.toISOString()}`);
+		console.log(`Menghapus riwayat sebelum: ${oneMonthAgo.toISOString()}`);
 
 		const result = await History.hapusHistory(oneMonthAgo);
-		console.log(`✅ Riwayat lama yang dihapus: ${result.deletedCount}`);
+		console.log(`Riwayat lama yang dihapus: ${result.deletedCount}`);
 	} catch (error) {
-		console.error("❌ Gagal menghapus riwayat lama:", error.message);
+		console.error("Gagal menghapus riwayat lama:", error.message);
 	}
 };
 
-// ⏰ Jadwal Cron
+// Jadwal Cron
 cron.schedule("*/15 * * * *", async () => {
-	console.log("⏳ Mengambil data setiap 15 menit...");
+	console.log("Mengambil data setiap 15 menit...");
 	await collectDataFromFirebase();
 }, {
 	scheduled: true,
@@ -122,12 +122,12 @@ cron.schedule("*/15 * * * *", async () => {
 });
 
 cron.schedule("0 0 * * *", async () => {
-	console.log("⏳ Menyimpan laporan harian dan menghapus riwayat lama...");
+	console.log("Menyimpan laporan harian dan menghapus riwayat lama...");
 	try {
 		await simpanHistory();
 		await hapusHistory();
 	} catch (error) {
-		console.error("❌ Terjadi kesalahan dalam proses cron job:", error.message);
+		console.error("Terjadi kesalahan dalam proses cron job:", error.message);
 	}
 }, {
 	scheduled: true,
