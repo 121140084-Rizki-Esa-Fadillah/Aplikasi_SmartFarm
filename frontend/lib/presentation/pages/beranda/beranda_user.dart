@@ -45,7 +45,6 @@ class _BerandaUserState extends State<BerandaUser> {
             child: const MainHeader(),
           ),
 
-          // **Konten Utama**
           Positioned(
             top: screenHeight * 0.20,
             left: screenWidth * 0.06,
@@ -54,7 +53,6 @@ class _BerandaUserState extends State<BerandaUser> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // **Judul "Daftar Kolam"**
                 Text(
                   "Daftar Kolam",
                   style: const TextStyle(
@@ -65,7 +63,6 @@ class _BerandaUserState extends State<BerandaUser> {
                 ),
                 const SizedBox(height: 25),
 
-                // **GridView untuk TileKolam**
                 Expanded(
                   child: LayoutBuilder(
                     builder: (context, constraints) {
@@ -87,9 +84,9 @@ class _BerandaUserState extends State<BerandaUser> {
                             status: pond["statusPond"],
                             date: pond["createdAt"].toString().substring(0, 10),
                             pondData: pond,
-                            onEdit: (_) {}, // Tidak digunakan
-                            onDelete: () {}, // Tidak digunakan
-                            showMenu: false, // Tidak menampilkan menu edit/hapus
+                            onEdit: (_) {},
+                            onDelete: () {},
+                            showMenu: false,
                           );
                         },
                       );

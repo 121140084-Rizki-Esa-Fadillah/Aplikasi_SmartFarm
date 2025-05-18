@@ -41,59 +41,44 @@ class _EditUserState extends State<EditUser> {
     _selectedRole = widget.role;
   }
 
-  Future<void> _saveChanges() async {
+  Future<void> _EditUser() async {
     String username = _usernameController.text.trim();
     String email = _emailController.text.trim();
     String role = _selectedRole ?? widget.role;
 
     if (username.isEmpty || email.isEmpty) {
-      CustomDialog.show(
-        context: context,
-        isSuccess: false,
-        message: "Username dan email tidak boleh kosong",
-      );
+      _showDialog(false, "Username dan email tidak boleh kosong");
       return;
     }
 
     if (username.length < 4 || username.length > 16) {
-      CustomDialog.show(
-        context: context,
-        isSuccess: false,
-        message: "Username harus antara 4 hingga 16 karakter",
-      );
+      _showDialog(false, "Username harus antara 4 hingga 16 karakter");
       return;
     }
 
     final emailRegex = RegExp(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$");
-
     if (!emailRegex.hasMatch(email)) {
-      CustomDialog.show(
-        context: context,
-        isSuccess: false,
-        message: "Format email tidak valid. Pastikan email mengandung '@' dan domain yang benar.",
-      );
+      _showDialog(false, "Format email tidak valid. Harap gunakan format yang benar.");
       return;
     }
 
-    // 🔍 Cek apakah username/email sudah dipakai user lain
+    final isDomainValid = await ApiService.checkEmailDomain(email);
+    if (!isDomainValid) {
+      _showDialog(false, "Domain email tidak aktif atau tidak valid.");
+      return;
+    }
+
     final checkResult = await ApiService.checkUsernameEmail(username, email);
-
     if (checkResult == null) {
-      CustomDialog.show(
-        context: context,
-        isSuccess: false,
-        message: "Gagal memeriksa ketersediaan username/email.",
-      );
+      _showDialog(false, "Gagal memeriksa ketersediaan username/email.");
       return;
     }
 
-    // ⚡ Cek hanya kalau username/email baru beda dari data lama
     bool usernameConflict = (checkResult["usernameExists"] == true && username != widget.username);
     bool emailConflict = (checkResult["emailExists"] == true && email != widget.email);
 
     if (usernameConflict || emailConflict) {
       String message = "";
-
       if (usernameConflict && emailConflict) {
         message = "Username dan Email sudah digunakan, harap gunakan username dan email yang lain.";
       } else if (usernameConflict) {
@@ -101,40 +86,36 @@ class _EditUserState extends State<EditUser> {
       } else if (emailConflict) {
         message = "Email sudah digunakan, harap gunakan email yang lain.";
       }
-
-      CustomDialog.show(
-        context: context,
-        isSuccess: false,
-        message: message,
-      );
+      _showDialog(false, message);
       return;
     }
 
     setState(() => _isLoading = true);
-
     bool success = await ApiService.editUser(widget.userId, username, email, role);
-
     if (!mounted) return;
-
     setState(() => _isLoading = false);
 
     if (success) {
-      CustomDialog.show(
-        context: context,
-        isSuccess: true,
-        message: "Data pengguna berhasil diperbarui!",
+      _showDialog(
+        true,
+        "Data pengguna berhasil diperbarui!",
         onComplete: () {
           widget.onUpdateSuccess();
           Navigator.pop(context);
         },
       );
     } else {
-      CustomDialog.show(
-        context: context,
-        isSuccess: false,
-        message: "Gagal memperbarui data pengguna. Coba lagi.",
-      );
+      _showDialog(false, "Gagal memperbarui data pengguna. Coba lagi.");
     }
+  }
+
+  void _showDialog(bool isSuccess, String message, {VoidCallback? onComplete}) {
+    CustomDialog.show(
+      context: context,
+      isSuccess: isSuccess,
+      message: message,
+      onComplete: onComplete,
+    );
   }
 
   @override
@@ -190,7 +171,7 @@ class _EditUserState extends State<EditUser> {
                     width: double.infinity,
                     child: ButtonFilled(
                       text: "Simpan",
-                      onPressed: _isLoading ? () {} : _saveChanges,
+                      onPressed: _isLoading ? () {} : _EditUser,
                     ),
                   ),
                 ),

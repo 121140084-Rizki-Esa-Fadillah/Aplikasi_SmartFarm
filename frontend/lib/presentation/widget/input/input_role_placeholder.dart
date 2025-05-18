@@ -3,7 +3,7 @@ import 'package:gap/gap.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class InputRolePlaceholder extends StatefulWidget {
-  final Function(String) onRoleSelected; // Callback ketika role dipilih
+  final Function(String) onRoleSelected;
 
   const InputRolePlaceholder({super.key, required this.onRoleSelected});
 
@@ -25,7 +25,7 @@ class _InputRolePlaceholderState extends State<InputRolePlaceholder> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         SizedBox(
-          height: screenHeight * 0.06 < 50 ? 50 : screenHeight * 0.06, // Menyesuaikan tinggi
+          height: screenHeight * 0.06 < 50 ? 50 : screenHeight * 0.06,
           child: TextField(
             readOnly: true,
             controller: TextEditingController(text: selectedRole ?? ""),
@@ -83,7 +83,7 @@ class _InputRolePlaceholderState extends State<InputRolePlaceholder> {
 
         if (isDropdownOpened)
           Container(
-            width: screenWidth * 0.9, // Sesuaikan dengan lebar layar
+            width: screenWidth * 0.9,
             margin: EdgeInsets.only(top: screenHeight * 0.008),
             decoration: BoxDecoration(
               color: Colors.white,
@@ -100,12 +100,12 @@ class _InputRolePlaceholderState extends State<InputRolePlaceholder> {
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: ListTile(
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 20), // Mengurangi padding
-                    visualDensity: VisualDensity.compact, // Mengurangi tinggi ListTile
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 20),
+                    visualDensity: VisualDensity.compact,
                     title: Text(
                       role,
                       style: GoogleFonts.poppins(
-                        fontSize: size.width * 0.04, // Bisa dikurangi lagi jika perlu
+                        fontSize: size.width * 0.04,
                         fontWeight: FontWeight.w400,
                         color: Colors.black87,
                       ),
@@ -123,7 +123,7 @@ class _InputRolePlaceholderState extends State<InputRolePlaceholder> {
             ),
           ),
 
-        Gap(screenHeight * 0.02), // Jarak responsif setelah input field
+        Gap(screenHeight * 0.02),
       ],
     );
   }

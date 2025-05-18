@@ -31,10 +31,8 @@ class _InputOTPState extends State<InputOTP> {
 
   void _onChanged(int index, String value) {
     if (value.isNotEmpty) {
-      // Replace the current value with the latest entered character
       _controllers[index].text = value[value.length - 1];
 
-      // Move to the next input field if available
       if (index < 3) {
         FocusScope.of(context).requestFocus(_focusNodes[index + 1]);
       } else {

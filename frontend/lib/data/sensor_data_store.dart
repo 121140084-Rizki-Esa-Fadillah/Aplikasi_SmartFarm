@@ -1,5 +1,4 @@
 class SensorDataStore {
-  // Singleton instance
   static final SensorDataStore _instance = SensorDataStore._internal();
 
   factory SensorDataStore() {

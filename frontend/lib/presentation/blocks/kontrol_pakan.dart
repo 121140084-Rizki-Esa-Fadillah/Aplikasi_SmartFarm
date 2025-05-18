@@ -26,27 +26,21 @@ class _KontrolPakanState extends State<KontrolPakan> {
   @override
   void initState() {
     super.initState();
-    _loadInitialData();
+    _fetchFeederConfig();
   }
 
-  Future<void> _loadInitialData() async {
+  Future<void> _fetchFeederConfig() async {
     try {
       setState(() => isLoading = true);
-
-      // Ambil data dari API
       final feedingScheduleData = await ApiService.getFeeding(widget.pondId);
-
       final statusData = feedingScheduleData["feedStatus"];
       final amountData = feedingScheduleData["amountFeeder"];
-
-      // Proses jadwal pakan berdasarkan schedule_1..4
       final scheduleTimes = [
         feedingScheduleData["schedule_1"],
         feedingScheduleData["schedule_2"],
         feedingScheduleData["schedule_3"],
         feedingScheduleData["schedule_4"],
       ];
-
       setState(() {
         _feedingSchedule = scheduleTimes.map((timeStr) {
           if (timeStr != null && timeStr is String) {
@@ -62,14 +56,11 @@ class _KontrolPakanState extends State<KontrolPakan> {
         }).toList();
       });
 
-      // Proses status feeding
       if (statusData != null && statusData["on"] != null) {
         setState(() {
           isFeedingOn = statusData["on"];
         });
       }
-
-      // Proses jumlah pakan
       if (amountData != null) {
         setState(() {
           feedAmount = amountData.toDouble();
@@ -87,43 +78,36 @@ class _KontrolPakanState extends State<KontrolPakan> {
     }
   }
 
-  // Fungsi untuk menyimpan data ke server
-  Future<void> _saveData() async {
+  Future<void> _updateFeederConfig() async {
     setState(() => isSaving = true);
-
     try {
       final formattedSchedule = _feedingSchedule.map((time) {
         return time != null
             ? "${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}"
             : null;
       }).toList();
-
       final Map<String, dynamic> payload = {
         "amount": feedAmount.toInt(),
         "schedule": formattedSchedule,
       };
-
       await ApiService.updateFeeding(widget.pondId, payload);
-
-
-      // Dialog sukses
-      CustomDialog.show(
-        context: context,
-        isSuccess: true,
-        message: "Konfigurasi berhasil disimpan",
-      );
+      _showDialog(true, "Konfigurasi berhasil disimpan");
     } catch (e) {
-      print("❌ Error saving config: $e");
-      CustomDialog.show(
-        context: context,
-        isSuccess: false,
-        message: "Gagal menyimpan konfigurasi: ${e.toString()}",
-      );
+      print("Error saving config: $e");
+      _showDialog(false, "Gagal menyimpan konfigurasi: ${e.toString()}");
     } finally {
       setState(() => isSaving = false);
     }
   }
 
+  void _showDialog(bool isSuccess, String message, {VoidCallback? onComplete}) {
+    CustomDialog.show(
+      context: context,
+      isSuccess: isSuccess,
+      message: message,
+      onComplete: onComplete,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -158,7 +142,7 @@ class _KontrolPakanState extends State<KontrolPakan> {
           ),
           const SizedBox(height: 12),
 
-          // On/Off Pakan (seperti Aerator)
+          // On/Off Pakan
           Container(
             width: MediaQuery.of(context).size.width * 0.75,
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -197,7 +181,7 @@ class _KontrolPakanState extends State<KontrolPakan> {
                             : "Pakan berhasil dinonaktifkan",
                       );
                     } catch (e) {
-                      print("❌ Error saat memperbarui status pakan: $e");
+                      print("Error saat memperbarui status pakan: $e");
                       CustomDialog.show(
                         context: context,
                         isSuccess: false,
@@ -238,7 +222,7 @@ class _KontrolPakanState extends State<KontrolPakan> {
                   child: Column(
                     children: List.generate(4, (index) {
                       return Padding(
-                        padding: const EdgeInsets.only(left: 8),
+                        padding: const EdgeInsets.only(left: 4),
                         child: InputScheduleTime(
                           label: 'Waktu ${index + 1}',
                           initialTime: _feedingSchedule[index] ??
@@ -291,7 +275,7 @@ class _KontrolPakanState extends State<KontrolPakan> {
                     const SizedBox(height: 20),
                     ButtonOutlined(
                       text: "Simpan",
-                      onPressed: _saveData,
+                      onPressed: _updateFeederConfig,
                     ),
                   ],
                 ),

@@ -6,8 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:flutter/services.dart'; // Untuk MediaStore API
-
+import 'package:flutter/services.dart';
 import '../../server/api_service.dart';
 import '../pages/monitoring/riwayat_kualitas_air/laporan_kualitas_air.dart';
 import '../widget/button/button_detail.dart';
@@ -114,22 +113,20 @@ class _ListRiwayatTambakState extends State<ListRiwayatTambak> {
   }
 }
 
-/// 🔹 **Fungsi Download Laporan & Simpan di Folder Download**
 Future<void> downloadLaporanExcel(
     String historyId, String namePond, String date, BuildContext context) async {
   try {
-    debugPrint("🔹 Mulai mengunduh laporan: $namePond - $date");
+    debugPrint("Mulai mengunduh laporan: $namePond - $date");
 
     String safeDate = date.replaceAll("/", "-");
 
-    // 1️⃣ Cek & Minta Izin Penyimpanan
     if (Platform.isAndroid) {
       if (await isAndroid10OrAbove()) {
         var status = await Permission.manageExternalStorage.request();
         if (!status.isGranted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text("❌ Izin penyimpanan diperlukan untuk menyimpan laporan."),
+              content: Text("Izin penyimpanan diperlukan untuk menyimpan laporan."),
               backgroundColor: Colors.red,
             ),
           );
@@ -140,7 +137,7 @@ Future<void> downloadLaporanExcel(
         if (!status.isGranted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text("❌ Izin penyimpanan diperlukan untuk menyimpan laporan."),
+              content: Text("Izin penyimpanan diperlukan untuk menyimpan laporan."),
               backgroundColor: Colors.red,
             ),
           );
@@ -149,13 +146,12 @@ Future<void> downloadLaporanExcel(
       }
     }
 
-    // 2️⃣ Ambil data laporan dari API
     final response = await ApiService.getHistoryById(historyId);
     if (response == null || response["data"] == null) {
-      debugPrint("❌ Gagal mengambil data laporan dari API.");
+      debugPrint("Gagal mengambil data laporan dari API.");
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text("❌ Gagal mengambil data laporan."),
+          content: Text("Gagal mengambil data laporan."),
           backgroundColor: Colors.red,
         ),
       );
@@ -176,17 +172,15 @@ Future<void> downloadLaporanExcel(
     var excel = Excel.createExcel();
     Sheet sheet = excel['Laporan_Kualitas_Air'];
 
-    // 🔹 Tambahkan Header
     List<String> headers = laporanData.first.keys.toList();
     sheet.appendRow(headers);
 
-    // 🔹 Tambahkan Data
     for (var row in laporanData) {
       sheet.appendRow(row.values.toList());
     }
 
-    // 3️⃣ Simpan file ke folder Download menggunakan MediaStore API
-    debugPrint("🔹 Menyimpan file menggunakan MediaStore API...");
+    // Simpan file ke folder Download menggunakan MediaStore API
+    debugPrint("Menyimpan file menggunakan MediaStore API...");
     File? file = await saveFileToDownloadsWithMediaStore(excel, namePond, safeDate);
 
     if (file != null) {
@@ -195,7 +189,7 @@ Future<void> downloadLaporanExcel(
         isSuccess: true,
         message: "Laporan berhasil disimpan\n Lokasi file : ${file.path}",
       );
-      debugPrint("✅ Laporan berhasil disimpan di: ${file.path}");
+      debugPrint("Laporan berhasil disimpan di: ${file.path}");
     } else {
       CustomDialog.show(
         context: context,
@@ -205,28 +199,25 @@ Future<void> downloadLaporanExcel(
       debugPrint("File gagal disimpan.");
     }
   } catch (e) {
-    debugPrint("❌ Error saat mendownload laporan: $e");
+    debugPrint("Error saat mendownload laporan: $e");
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text("❌ Error saat mendownload laporan: $e"),
+        content: Text("Error saat mendownload laporan: $e"),
         backgroundColor: Colors.red,
       ),
     );
   }
 }
 
-/// **🔹 Simpan file di "Download" menggunakan MediaStore API**
 Future<File?> saveFileToDownloadsWithMediaStore(Excel excel, String namePond, String safeDate) async {
   try {
-    // 🔹 Encode Excel ke format Uint8List
     List<int>? excelBytes = excel.encode();
     if (excelBytes == null) {
-      debugPrint("❌ Gagal mengonversi Excel ke bytes.");
+      debugPrint("Gagal mengonversi Excel ke bytes.");
       return null;
     }
     Uint8List bytes = Uint8List.fromList(excelBytes);
 
-    // 🔹 Simpan file dengan MediaStore API
     final fileName = "Laporan_${namePond}_$safeDate.xlsx";
     final directory = Directory("/storage/emulated/0/Download");
 
@@ -238,15 +229,14 @@ Future<File?> saveFileToDownloadsWithMediaStore(Excel excel, String namePond, St
     final file = File(filePath);
     await file.writeAsBytes(bytes, flush: true);
 
-    debugPrint("✅ File berhasil disimpan dengan MediaStore: $filePath");
+    debugPrint("File berhasil disimpan dengan MediaStore: $filePath");
     return file;
   } catch (e) {
-    debugPrint("❌ Error saat menyimpan file dengan MediaStore: $e");
+    debugPrint("Error saat menyimpan file dengan MediaStore: $e");
     return null;
   }
 }
 
-/// **🔹 Cek apakah perangkat menggunakan Android 10 atau di atasnya**
 Future<bool> isAndroid10OrAbove() async {
   if (Platform.isAndroid) {
     final androidInfo = await DeviceInfoPlugin().androidInfo;

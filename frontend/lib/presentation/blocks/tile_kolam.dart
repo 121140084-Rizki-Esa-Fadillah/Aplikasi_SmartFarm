@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:frontend_app/presentation/pages/monitoring/monitoirng_sensor/monitoring.dart';
 import 'package:frontend_app/presentation/widget/button/button_outlined.dart';
-import 'package:frontend_app/presentation/widget/pop_up/popup_menu_kolam.dart';
+import 'package:frontend_app/presentation/widget/pop_up/popup_menu.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../widget/pop_up/custom_dialog.dart';
@@ -70,7 +70,7 @@ class _TileKolamState extends State<TileKolam> {
               top: offset.dy + renderBox.size.height + 5,
               child: Material(
                 color: Colors.transparent,
-                child: PopupMenuKolam(
+                child: PopupMenu(
                   onEdit: () {
                     _removeMenu();
                     widget.onEdit(widget.pondData);

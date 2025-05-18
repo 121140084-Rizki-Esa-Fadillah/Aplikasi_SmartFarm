@@ -39,14 +39,14 @@ class _InputRoleStandartState extends State<InputRoleStandart> {
           style: GoogleFonts.poppins(
             fontSize: size.width * 0.04,
             fontWeight: FontWeight.w600,
-            color: Colors.white, // Warna teks label
+            color: Colors.white,
           ),
         ),
-        const Gap(8), // Jarak antara label dan input
+        const Gap(8),
 
         // Input field
         SizedBox(
-          height: size.height * 0.05 < 40 ? 40 : size.height * 0.05, // Tinggi minimal 40px
+          height: size.height * 0.05 < 40 ? 40 : size.height * 0.05,
           child: TextField(
             readOnly: true,
             controller: TextEditingController(text: selectedRole ?? ""),
@@ -54,7 +54,7 @@ class _InputRoleStandartState extends State<InputRoleStandart> {
               fontSize: size.width * 0.04,
               color: Colors.white,
             ),
-            textAlignVertical: TextAlignVertical.center, // Teks di tengah vertikal
+            textAlignVertical: TextAlignVertical.center,
             decoration: InputDecoration(
               contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
               suffixIcon: GestureDetector(
@@ -132,7 +132,7 @@ class _InputRoleStandartState extends State<InputRoleStandart> {
             ),
           ),
 
-        Gap(size.height * 0.02), // Jarak setelah dropdown
+        Gap(size.height * 0.02),
       ],
     );
   }

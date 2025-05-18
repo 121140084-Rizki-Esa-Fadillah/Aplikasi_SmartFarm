@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:frontend_app/presentation/pages/monitoring/kontrol_pakan_aerator.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../server/api_service.dart';
 import '../../../widget/navigation/app_bar_widget.dart';
-import '../../beranda/beranda.dart';
+import '../../beranda/beranda_admin.dart';
+import '../../beranda/beranda_user.dart';
 import '../riwayat_kualitas_air/riwayat_kualitas_air.dart';
 import '../notifikasi.dart';
 import '../../../widget/navigation/navigasi_monitoring.dart';
@@ -31,7 +33,7 @@ class _MonitoringState extends State<Monitoring> {
   void initState() {
     super.initState();
     fetchSensorData();
-    _sensorFetchTimer = Timer.periodic(const Duration(seconds: 5), (timer) {
+    _sensorFetchTimer = Timer.periodic(const Duration(seconds: 10), (timer) {
       fetchSensorData();
     });
   }
@@ -42,7 +44,6 @@ class _MonitoringState extends State<Monitoring> {
     super.dispose();
   }
 
-  // Mengambil data dari API menggunakan ApiService
   void fetchSensorData() async {
     try {
       final data = await ApiService.getMonitoringData(widget.pondId);
@@ -58,7 +59,7 @@ class _MonitoringState extends State<Monitoring> {
         });
       }
     } catch (e) {
-      print("❌ Error: $e");
+      print("Error: $e");
       if (mounted) {
         setState(() => isLoading = false);
       }
@@ -80,10 +81,19 @@ class _MonitoringState extends State<Monitoring> {
     return Scaffold(
       appBar: AppBarWidget(
         title: "Monitoring",
-        onBackPress: () {
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (_) => const Beranda()),
-          );
+        onBackPress: () async {
+          final prefs = await SharedPreferences.getInstance();
+          final role = prefs.getString('role');
+
+          if (role == "Admin") {
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(builder: (_) => const BerandaAdmin()),
+            );
+          } else {
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(builder: (_) => const BerandaUser()),
+            );
+          }
         },
       ),
       resizeToAvoidBottomInset: false,

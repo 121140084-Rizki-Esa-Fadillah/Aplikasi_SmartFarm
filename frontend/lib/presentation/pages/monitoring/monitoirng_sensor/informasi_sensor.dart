@@ -19,7 +19,6 @@ class InformasiSensor extends StatelessWidget {
     final double screenHeight = MediaQuery.of(context).size.height;
     final double screenWidth = MediaQuery.of(context).size.width;
 
-    // 🔹 Data Sensor berdasarkan jenisnya
     final sensorData = getSensorData(sensorType);
 
     return Scaffold(
@@ -34,7 +33,6 @@ class InformasiSensor extends StatelessWidget {
         children: [
           const BackgroundWidget(),
 
-          // **Konten Utama dalam SingleChildScrollView**
           Positioned(
             top: screenHeight * 0.0,
             left: screenWidth * 0.06,
@@ -59,7 +57,6 @@ class InformasiSensor extends StatelessWidget {
             ),
           ),
 
-          // **Navigasi Monitoring dalam Stack**
           Positioned(
             left: 0,
             right: 0,
@@ -91,14 +88,13 @@ class InformasiSensor extends StatelessWidget {
     );
   }
 
-  // 🔹 Fungsi untuk mendapatkan data sensor berdasarkan sensorType
   Map<String, dynamic> getSensorData(String sensorType) {
     Map<String, Map<String, dynamic>> sensorInfo = {
       "temperature": {
         "title": "Sensor Suhu",
         "image": "assets/images/Sensor-Suhu.jpg",
         "description":
-        "DS18B20 adalah sensor berbentuk probe yang dirancang untuk mengukur suhu dalam air. Sensor ini memiliki fitur tahan air (waterproof), sehingga sangat ideal untuk digunakan dalam pemantauan suhu air secara akurat.",
+        "Sensor suhu digunakan untuk mengukur suhu dalam air. Jenis sensor yg digunakan pada perangkat ini adalah sensor suhu DS18B20. Sensor ini memiliki fitur tahan air (waterproof), sehingga sangat ideal untuk digunakan dalam pemantauan suhu air secara akurat.",
         "specifications": <String>[
           "Tegangan Operasi: 3 - 5.5VDC",
           "Jenis Sensor: Dallas DS18B20",
@@ -112,7 +108,7 @@ class InformasiSensor extends StatelessWidget {
         "title": "Sensor pH",
         "image": "assets/images/Sensor-pH.jpg",
         "description":
-        "Sensor pH digunakan untuk mengukur tingkat keasaman atau kebasaan dalam air. pH air sangat penting dalam budidaya perikanan untuk memastikan lingkungan yang sehat bagi organisme akuatik.",
+        "Sensor pH digunakan untuk mengukur tingkat keasaman atau kebasaan dalam air. pH air sangat penting dalam budidaya perikanan untuk memastikan lingkungan yang sehat bagi organisme akuatik. Jensi sensor pH yang digunakan pada perangkat ini adalah ",
         "specifications": <String>[
           "Tegangan Operasi: 5VDC",
           "Rentang pH: 0 - 14",

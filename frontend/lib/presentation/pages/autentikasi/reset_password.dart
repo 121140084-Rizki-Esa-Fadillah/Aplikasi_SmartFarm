@@ -33,58 +33,44 @@ class _ResetPasswordState extends State<ResetPassword> {
     String confirmPassword = confirmPasswordController.text;
 
     if (password.isEmpty || confirmPassword.isEmpty) {
-      CustomDialog.show(
-        context: context,
-        isSuccess: false,
-        message: "Password dan confirm password tidak boleh kosong",
-      );
+      _showDialog(false, "Password dan confirm password tidak boleh kosong");
       return;
     }
 
     if (password != confirmPassword) {
-      CustomDialog.show(
-        context: context,
-        isSuccess: false,
-        message: "Password tidak cocok dengan confirm password",
-      );
+      _showDialog(false, "Password tidak cocok dengan confirm password");
       return;
     }
 
-    // 🔒 Validasi password kuat
     final passwordRegex = RegExp(r'^(?=.*[0-9])(?=.*[!@#\$&*~_-]).{8,20}$');
 
     if (!passwordRegex.hasMatch(password)) {
-      CustomDialog.show(
-        context: context,
-        isSuccess: false,
-        message: "Password harus 8-16 karakter, mengandung angka dan simbol (seperti : !@#\$&*~-_).\nContoh: Tambak@123",
-      );
+      _showDialog(false,
+          "Password harus 8-16 karakter, mengandung angka dan simbol (seperti : !@#\$&*~-_).\nContoh: Tambak@123");
       return;
     }
 
     bool success = await ApiService.resetPassword(widget.token, password);
 
     if (success) {
-      CustomDialog.show(
-        context: context,
-        isSuccess: true,
-        message: "Password berhasil diperbarui. Silakan login dengan password baru.",
-        onComplete: () {
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (context) => const Login()),
-          );
-        },
-      );
+      _showDialog(true, "Password berhasil diperbarui. Silakan login dengan password baru.", onComplete: () {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (context) => const Login()),
+        );
+      });
     } else {
-      CustomDialog.show(
-        context: context,
-        isSuccess: false,
-        message: "Gagal memperbarui password. Silakan coba lagi.",
-      );
+      _showDialog(false, "Gagal memperbarui password. Silakan coba lagi.");
     }
   }
 
-
+  void _showDialog(bool isSuccess, String message, {VoidCallback? onComplete}) {
+    CustomDialog.show(
+      context: context,
+      isSuccess: isSuccess,
+      message: message,
+      onComplete: onComplete,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {

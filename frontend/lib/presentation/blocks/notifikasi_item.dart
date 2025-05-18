@@ -69,7 +69,7 @@ class NotifikasiItemState extends State<NotifikasiItem> {
       CustomDialog.show(
         context: context,
         isSuccess: true,
-        message: "Notifikasi berhasil diaktifkan",
+        message: "Notifikasi diaktifkan",
         onComplete: () async {
           await _savePreference(newValue);
           setState(() {

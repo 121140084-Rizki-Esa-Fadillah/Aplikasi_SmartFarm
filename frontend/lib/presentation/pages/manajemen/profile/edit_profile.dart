@@ -39,106 +39,78 @@ class _EditProfileState extends State<EditProfile> {
     }
   }
 
-  Future<void> _editProfile() async {
-    debugPrint("Username: '${_usernameController.text}'");
-    debugPrint("Email: '${_emailController.text}'");
-
+  Future<void> _EditProfile() async {
     String username = _usernameController.text.trim();
-    String email = _emailController.text.trim().toLowerCase();;
+    String email = _emailController.text.trim().toLowerCase();
 
     if (username.isEmpty || email.isEmpty) {
-      CustomDialog.show(
-        context: context,
-        isSuccess: false,
-        message: "Username dan email tidak boleh kosong",
-      );
+      _showDialog(false, "Username dan email tidak boleh kosong");
       return;
     }
 
     if (username.length < 4 || username.length > 16) {
-      CustomDialog.show(
-        context: context,
-        isSuccess: false,
-        message: "Username harus antara 4 hingga 16 karakter",
-      );
+      _showDialog(false, "Username harus antara 4 hingga 16 karakter");
       return;
     }
 
     final emailRegex = RegExp(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$");
-
     if (!emailRegex.hasMatch(email)) {
-      CustomDialog.show(
-        context: context,
-        isSuccess: false,
-        message: "Format email tidak valid. Pastikan email mengandung '@' dan domain yang benar",
-      );
+      _showDialog(false, "Format email tidak valid. Harap gunakan format yang benar.");
       return;
     }
 
-    // 🔍 Cek apakah username/email sudah dipakai orang lain
+    final isDomainValid = await ApiService.checkEmailDomain(email);
+    if (!isDomainValid) {
+      _showDialog(false, "Domain email tidak aktif atau tidak valid.");
+      return;
+    }
+
     final checkResult = await ApiService.checkUsernameEmail(username, email);
-
     if (checkResult == null) {
-      CustomDialog.show(
-        context: context,
-        isSuccess: false,
-        message: "Gagal memeriksa ketersediaan username/email.",
-      );
+      _showDialog(false, "Gagal memeriksa ketersediaan username/email.");
       return;
     }
 
-    // ⚡ Cek hanya kalau username/email baru BEDA dari user lama
-    if ((checkResult["usernameExists"] == true && username != _currentUsername) ||
-        (checkResult["emailExists"] == true && email != _currentEmail)) {
-      String message = "";
+    bool usernameConflict = checkResult["usernameExists"] == true && username != _currentUsername;
+    bool emailConflict = checkResult["emailExists"] == true && email != _currentEmail;
 
-      bool usernameConflict = (checkResult["usernameExists"] == true && username != _currentUsername);
-      bool emailConflict = (checkResult["emailExists"] == true && email != _currentEmail);
+    if (usernameConflict || emailConflict) {
+      String message = usernameConflict && emailConflict
+          ? "Username dan Email sudah digunakan, harap gunakan yang lain."
+          : usernameConflict
+          ? "Username sudah digunakan, harap gunakan username yang lain."
+          : "Email sudah digunakan, harap gunakan email yang lain.";
 
-      if (usernameConflict && emailConflict) {
-        message = "Username dan Email sudah digunakan, harap gunakan username dan email yang lain.";
-      } else if (usernameConflict) {
-        message = "Username sudah digunakan, harap gunakan username yang lain.";
-      } else if (emailConflict) {
-        message = "Email sudah digunakan, harap gunakan email yang lain.";
-      }
-
-      CustomDialog.show(
-        context: context,
-        isSuccess: false,
-        message: message,
-      );
+      _showDialog(false, message);
       return;
     }
 
-    // ✅ Lanjut update
     setState(() => _isLoading = true);
-
     bool success = await ApiService.editProfile(username, email);
-
     if (!mounted) return;
-
     setState(() => _isLoading = false);
 
     if (success) {
-      CustomDialog.show(
-        context: context,
-        isSuccess: true,
-        message: "Profil berhasil diperbarui!",
-        onComplete: () {
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (context) => const Profile()),
-          );
-        },
-      );
+      _showDialog(true, "Profil berhasil diperbarui!", onComplete: () {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (context) => const Profile()),
+        );
+      });
     } else {
-      CustomDialog.show(
-        context: context,
-        isSuccess: false,
-        message: "Gagal memperbarui profil. Coba lagi.",
-      );
+      _showDialog(false, "Gagal memperbarui profil. Coba lagi.");
     }
   }
+
+
+  void _showDialog(bool isSuccess, String message, {VoidCallback? onComplete}) {
+    CustomDialog.show(
+      context: context,
+      isSuccess: isSuccess,
+      message: message,
+      onComplete: onComplete,
+    );
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -178,7 +150,7 @@ class _EditProfileState extends State<EditProfile> {
                     width: double.infinity,
                     child: ButtonFilled(
                       text: "Simpan",
-                      onPressed: _isLoading ? () {} : _editProfile,
+                      onPressed: _isLoading ? () {} : _EditProfile,
                     ),
                   ),
                 ),

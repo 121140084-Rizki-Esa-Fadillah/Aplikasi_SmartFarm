@@ -18,22 +18,22 @@ class ButtonAdd extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      width: isFullWidth ? double.infinity : null, // Jika full width, lebar maksimal
+      width: isFullWidth ? double.infinity : null,
       child: ElevatedButton(
         onPressed: onPressed,
         style: ElevatedButton.styleFrom(
-          backgroundColor: ColorConstant.primary, // Warna tombol utama
-          foregroundColor: Colors.white, // Warna teks
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6), // Padding sama dengan FilledButtonWidget
+          backgroundColor: ColorConstant.primary,
+          foregroundColor: Colors.white,
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(4), // Border radius sama
+            borderRadius: BorderRadius.circular(4),
           ),
-          elevation: 1, // Efek shadow
+          elevation: 1,
           minimumSize: const Size(0, 0),
         ).copyWith(
           overlayColor: WidgetStateProperty.resolveWith<Color?>((Set<WidgetState> states) {
             if (states.contains(WidgetState.pressed)) {
-              return const Color(0xFF3A7CA5); // Warna saat tombol ditekan
+              return const Color(0xFF3A7CA5);
             }
             return null;
           }),
@@ -45,7 +45,7 @@ class ButtonAdd extends StatelessWidget {
               text,
               style: GoogleFonts.inter(
                 fontWeight: FontWeight.w600,
-                fontSize: 12, // Font size sama dengan FilledButtonWidget
+                fontSize: 12,
                 color: Colors.white,
               ),
             ),

@@ -34,28 +34,37 @@ class _PopupMenuProfileState extends State<PopupMenuProfile> {
     _checkNotificationStatus();
   }
 
-  // Ambil user ID dari API dan periksa status notifikasi
   Future<String?> _getCurrentUserId() async {
     final profile = await ApiService.getProfile();
     if (profile != null && profile.containsKey('_id')) {
-      return profile['_id']; // Ambil ID pengguna dari profile
+      return profile['_id'];
     }
-    return null; // Jika gagal ambil ID
+    return null;
   }
+
+  void _infoProfile() {
+    MyApp.navigatorKey.currentState?.push(
+      MaterialPageRoute(builder: (context) => const Profile()),
+    );
+  }
+
+  void _editProfile() {
+    MyApp.navigatorKey.currentState?.push(
+      MaterialPageRoute(builder: (context) => const EditProfile()),
+    );
+  }
+
 
   Future<void> _checkNotificationStatus() async {
     final userId = await _getCurrentUserId();
     if (userId == null) return;
 
     final prefs = await SharedPreferences.getInstance();
-    final status = prefs.getBool('notifications_enabled_$userId') ?? true; // Default ke true
+    final status = prefs.getBool('notifications_enabled_$userId') ?? true;
 
     setState(() {
       _notificationsEnabled = status;
     });
-
-    // Pastikan log muncul saat status diambil
-    print("📲 Status Notifikasi dari SharedPreferences: $_notificationsEnabled");
   }
 
   Future<void> _toggleNotifications(bool value) async {
@@ -67,17 +76,11 @@ class _PopupMenuProfileState extends State<PopupMenuProfile> {
       _notificationsEnabled = value;
     });
 
-    // Menyimpan status notifikasi di SharedPreferences
     await prefs.setBool('notifications_enabled_$userId', value);
-    print("📝 Status notifikasi disimpan: $value");
-
-    // Menambahkan atau menghapus langganan dari topik FirebaseMessaging
     if (value) {
       await FirebaseMessaging.instance.subscribeToTopic('global_notifications');
-      print("📡 Notifikasi diaktifkan");
     } else {
       await FirebaseMessaging.instance.unsubscribeFromTopic('global_notifications');
-      print("🔕 Notifikasi dimatikan");
     }
   }
 
@@ -135,9 +138,7 @@ class _PopupMenuProfileState extends State<PopupMenuProfile> {
                     color: Colors.blue,
                     onTap: () {
                       Navigator.pop(context);
-                      MyApp.navigatorKey.currentState?.push(
-                        MaterialPageRoute(builder: (context) => const Profile()),
-                      );
+                      _infoProfile();
                     },
                   ),
                   _buildDivider(),
@@ -147,9 +148,7 @@ class _PopupMenuProfileState extends State<PopupMenuProfile> {
                     color: Colors.green,
                     onTap: () {
                       Navigator.pop(context);
-                      MyApp.navigatorKey.currentState?.push(
-                        MaterialPageRoute(builder: (context) => const EditProfile()),
-                      );
+                      _editProfile();
                     },
                   ),
                   _buildDivider(),

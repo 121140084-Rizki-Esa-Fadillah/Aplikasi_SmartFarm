@@ -4,7 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 class InputScheduleTime extends StatefulWidget {
   final String label;
   final TimeOfDay initialTime;
-  final ValueChanged<TimeOfDay> onTimeSelected; // Callback untuk mengupdate waktu
+  final ValueChanged<TimeOfDay> onTimeSelected;
 
   const InputScheduleTime({
     super.key,
@@ -23,10 +23,9 @@ class _InputScheduleTimeState extends State<InputScheduleTime> {
   @override
   void initState() {
     super.initState();
-    _selectedTime = widget.initialTime; // Gunakan waktu awal dari parameter
+    _selectedTime = widget.initialTime;
   }
 
-  // Fungsi untuk menampilkan Time Picker
   Future<void> _pickTime(BuildContext context) async {
     final TimeOfDay? picked = await showTimePicker(
       context: context,
@@ -37,7 +36,7 @@ class _InputScheduleTimeState extends State<InputScheduleTime> {
       setState(() {
         _selectedTime = picked;
       });
-      widget.onTimeSelected(picked); // Kirim data waktu yang dipilih ke parent
+      widget.onTimeSelected(picked);
     }
   }
 
@@ -59,7 +58,6 @@ class _InputScheduleTimeState extends State<InputScheduleTime> {
           ),
           const SizedBox(width: 16),
 
-          // Waktu yang dapat diklik
           GestureDetector(
             onTap: () => _pickTime(context),
             child: Row(
@@ -74,7 +72,6 @@ class _InputScheduleTimeState extends State<InputScheduleTime> {
                   ),
                 ),
 
-                // Ikon jam
                 IconButton(
                   icon: const Icon(Icons.access_time, color: Colors.white, size: 18),
                   onPressed: () => _pickTime(context),

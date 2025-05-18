@@ -43,77 +43,64 @@ class _EditKolamState extends State<EditKolam> {
     super.dispose();
   }
 
-  Future<void> _updateKolam() async {
+  Future<void> _EditPond() async {
     String newName = nameController.text.trim();
     String newStatus = selectedStatus ?? "Aktif";
 
-    // Validasi nama kolam
     if (newName.isEmpty) {
-      CustomDialog.show(
-        context: context,
-        isSuccess: false,
-        message: "Nama kolam tidak boleh kosong",
-      );
+      _showDialog(false, "Nama kolam tidak boleh kosong");
       return;
     }
 
     if (newName.length < 4 || newName.length > 12) {
-      CustomDialog.show(
-        context: context,
-        isSuccess: false,
-        message: "Nama kolam harus antara 4 hingga 12 karakter",
-      );
+      _showDialog(false, "Nama kolam harus antara 4 hingga 12 karakter");
       return;
     }
 
-    // Pengecekan apakah nama kolam sudah ada menggunakan API checkIdPondNamePond
-    final result = await ApiService.checkIdPondNamePond(widget.pondId, newName);
-
-    if (result == null) {
-      CustomDialog.show(
-        context: context,
-        isSuccess: false,
-        message: "Gagal memeriksa nama kolam, coba lagi.",
-      );
+    if (newName == widget.pondName && newStatus == widget.status) {
+      _showDialog(true, "Kolam berhasil diperbarui!", onComplete: () {
+        Navigator.pop(context);
+      });
       return;
     }
 
-    // Jika nama kolam sudah ada pada kolam lain
-    if (result["namePondExists"] == true) {
-      CustomDialog.show(
-        context: context,
-        isSuccess: false,
-        message: "Nama kolam sudah digunakan, harap gunakan nama kolam yang lain.",
-      );
-      return;
+    if (newName != widget.pondName) {
+      final result = await ApiService.checkIdPondNamePond(widget.pondId, newName);
+
+      if (result == null) {
+        _showDialog(false, "Gagal memeriksa nama kolam, coba lagi.");
+        return;
+      }
+
+      if (result["namePondExists"] == true) {
+        _showDialog(false, "Nama kolam sudah digunakan, harap gunakan nama kolam yang lain.");
+        return;
+      }
     }
 
     setState(() => _isLoading = true);
-
-    // Kirim permintaan pembaruan kolam ke API
     var updatedKolam = await ApiService.editKolam(widget.id, widget.pondId, newName, newStatus);
-
     if (!mounted) return;
-
     setState(() => _isLoading = false);
 
     if (updatedKolam != null) {
-      CustomDialog.show(
-        context: context,
-        isSuccess: true,
-        message: "Kolam berhasil diperbarui!",
-        onComplete: () {
-          Navigator.pop(context, updatedKolam);
-        },
-      );
+      _showDialog(true, "Kolam berhasil diperbarui!", onComplete: () {
+        Navigator.pop(context, updatedKolam);
+      });
     } else {
-      CustomDialog.show(
-        context: context,
-        isSuccess: false,
-        message: "Gagal memperbarui kolam. Coba lagi.",
-      );
+      _showDialog(false, "Gagal memperbarui kolam. Coba lagi.");
     }
   }
+
+  void _showDialog(bool isSuccess, String message, {VoidCallback? onComplete}) {
+    CustomDialog.show(
+      context: context,
+      isSuccess: isSuccess,
+      message: message,
+      onComplete: onComplete,
+    );
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -163,7 +150,7 @@ class _EditKolamState extends State<EditKolam> {
                   child: ButtonFilled(
                     text: "Simpan",
                     isFullWidth: true,
-                    onPressed: _isLoading ? () {} : _updateKolam,
+                    onPressed: _isLoading ? () {} : _EditPond,
                   ),
                 ),
               ],

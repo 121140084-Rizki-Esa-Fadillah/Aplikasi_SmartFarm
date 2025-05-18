@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import '../../../color/color_constant.dart';
 
 class NavigasiMonitoring extends StatefulWidget {
-  final Function(int) onTap; // Callback untuk berpindah halaman
-  final int selectedIndex; // Indeks halaman aktif
+  final Function(int) onTap;
+  final int selectedIndex;
 
   const NavigasiMonitoring({
     super.key,
@@ -18,7 +18,7 @@ class NavigasiMonitoring extends StatefulWidget {
 class _NavigasiMonitoringState extends State<NavigasiMonitoring> {
   @override
   Widget build(BuildContext context) {
-    double iconSize = MediaQuery.of(context).size.width * 0.08; // Ukuran ikon responsif
+    double iconSize = MediaQuery.of(context).size.width * 0.08;
 
     return ClipRRect(
       borderRadius: const BorderRadius.only(
@@ -26,7 +26,7 @@ class _NavigasiMonitoringState extends State<NavigasiMonitoring> {
         topRight: Radius.circular(5),
       ),
       child: Container(
-        height: 60, // Tinggi navigasi tetap 60
+        height: 60,
         decoration: const BoxDecoration(
           color: Colors.transparent,
         ),

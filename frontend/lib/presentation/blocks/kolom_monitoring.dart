@@ -36,7 +36,6 @@ class _KolomMonitoringState extends State<KolomMonitoring> {
     }
   }
 
-  // ✅ Update nilai sensor jika sensorData baru diterima
   @override
   void didUpdateWidget(covariant KolomMonitoring oldWidget) {
     super.didUpdateWidget(oldWidget);
@@ -48,7 +47,6 @@ class _KolomMonitoringState extends State<KolomMonitoring> {
     }
   }
 
-  /// 🔹 Format nilai sensor
   String formatSensorValue(String value, String sensorType) {
     double parsedValue = double.tryParse(value) ?? 0.0;
     String formattedValue = parsedValue.toStringAsFixed(1);
@@ -65,7 +63,6 @@ class _KolomMonitoringState extends State<KolomMonitoring> {
     }
   }
 
-  /// 🔹 Get the correct button text based on the sensor type
   String getButtonText(String sensorType) {
     switch (sensorType) {
       case 'temperature':
@@ -88,7 +85,7 @@ class _KolomMonitoringState extends State<KolomMonitoring> {
 
     return Container(
       width: screenWidth * 0.9,
-      height: screenHeight * 0.35, // 🔥 Tinggikan sedikit karena ada tombol baru
+      height: screenHeight * 0.35,
       decoration: BoxDecoration(
         color: const Color(0x80D9DCD6),
         borderRadius: BorderRadius.circular(10),
@@ -102,7 +99,6 @@ class _KolomMonitoringState extends State<KolomMonitoring> {
       ),
       child: Stack(
         children: [
-          // 🔹 Nama Sensor (sekarang hanya tampil, tidak bisa klik)
           Positioned(
             top: 0,
             left: 0,
@@ -129,7 +125,6 @@ class _KolomMonitoringState extends State<KolomMonitoring> {
             ),
           ),
 
-          // 🔹 Nilai Sensor
           Positioned(
             right: paddingValue,
             top: screenHeight * 0.01,
@@ -143,34 +138,32 @@ class _KolomMonitoringState extends State<KolomMonitoring> {
             ),
           ),
 
-          // 🔹 Grafik
           Positioned(
             top: screenHeight * 0.08,
             left: paddingValue,
             right: paddingValue,
-            bottom: screenHeight * 0.07, // Adjust the bottom to make space for the divider
+            bottom: screenHeight * 0.07,
             child: ChartSensor(sensorData: widget.sensorData),
           ),
 
-          // 🔹 Divider - placed between the chart and button
           Positioned(
             left: paddingValue,
             right: paddingValue,
-            bottom: screenHeight * 0.05, // Increased space between the divider and button
+            bottom: screenHeight * 0.05,
             child: Divider(
               color: Colors.white,
               thickness: 1,
             ),
           ),
 
-          // 🔹 Tombol "Pengaturan Sensor"
           Positioned(
             left: paddingValue,
             right: paddingValue,
-            bottom: screenHeight * 0,
+            bottom: 0,
             child: Center(
               child: ButtonText(
                 text: getButtonText(widget.sensorType),
+                icon: Icons.settings,
                 onPressed: () {
                   Navigator.push(
                     context,
@@ -186,7 +179,7 @@ class _KolomMonitoringState extends State<KolomMonitoring> {
                 },
               ),
             ),
-          ),
+          )
         ],
       ),
     );

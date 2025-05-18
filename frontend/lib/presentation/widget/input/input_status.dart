@@ -3,13 +3,13 @@ import 'package:gap/gap.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class InputStatus extends StatefulWidget {
-  final String initialValue; // 🟢 Tambahkan parameter initialValue
-  final ValueChanged<String> onChanged; // 🟢 Callback ketika status berubah
+  final String initialValue;
+  final ValueChanged<String> onChanged;
 
   const InputStatus({
     super.key,
-    required this.initialValue, // 🟢 Wajib diisi
-    required this.onChanged, // 🟢 Wajib diisi
+    required this.initialValue,
+    required this.onChanged,
   });
 
   @override
@@ -17,12 +17,12 @@ class InputStatus extends StatefulWidget {
 }
 
 class _InputStatusState extends State<InputStatus> {
-  late String selectedRole; // 🟢 Gunakan late agar nilai awal bisa di-set
+  late String selectedRole;
 
   @override
   void initState() {
     super.initState();
-    selectedRole = widget.initialValue; // 🟢 Set nilai awal dari parameter
+    selectedRole = widget.initialValue;
   }
 
   bool isDropdownOpened = false;
@@ -50,7 +50,7 @@ class _InputStatusState extends State<InputStatus> {
           height: size.height * 0.05 < 40 ? 40 : size.height * 0.05,
           child: TextField(
             readOnly: true,
-            controller: TextEditingController(text: selectedRole), // 🟢 Tampilkan status yang dipilih
+            controller: TextEditingController(text: selectedRole),
             style: GoogleFonts.poppins(
               fontSize: size.width * 0.04,
               color: Colors.white,
@@ -125,7 +125,7 @@ class _InputStatusState extends State<InputStatus> {
                         selectedRole = role;
                         isDropdownOpened = false;
                       });
-                      widget.onChanged(role); // 🟢 Kirim status baru ke parent widget
+                      widget.onChanged(role);
                     },
                   ),
                 );

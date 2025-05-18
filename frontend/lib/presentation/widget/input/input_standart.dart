@@ -12,7 +12,7 @@ class InputStandart extends StatelessWidget {
     super.key,
     required this.label,
     this.isPassword = false,
-    this.isEmail = false, // Tambahkan flag ini
+    this.isEmail = false,
     this.controller,
   });
 
@@ -47,7 +47,7 @@ class InputStandart extends StatelessWidget {
               if (isEmail && controller != null) {
                 final cursorPos = controller!.selection;
                 controller!.text = value.toLowerCase();
-                controller!.selection = cursorPos; // menjaga posisi kursor
+                controller!.selection = cursorPos;
               }
             },
             decoration: InputDecoration(

@@ -25,8 +25,7 @@ class _KolomNotifikasiState extends State<KolomNotifikasi> {
     super.initState();
     _fetchNotifications();
 
-    // 🔄 Timer untuk auto-refresh
-    _refreshTimer = Timer.periodic(const Duration(seconds: 5), (timer) {
+    _refreshTimer = Timer.periodic(const Duration(seconds: 10), (timer) {
       _fetchNotifications();
     });
   }
@@ -52,7 +51,7 @@ class _KolomNotifikasiState extends State<KolomNotifikasi> {
             "waktu": _formatTime(notif["time"]),
             "message": notif["message"] ?? "Tidak ada pesan",
             "warna": warna,
-            "status": notif["status"] ?? "unread", // ✅ Tambahkan status read/unread dari API
+            "status": notif["status"] ?? "unread",
           };
         }).toList();
       });
@@ -64,9 +63,7 @@ class _KolomNotifikasiState extends State<KolomNotifikasi> {
     if (notifDetail != null) {
       String jenis = _getNotificationType(notifDetail["type"]);
       Color warna = jenis == "Peringatan" ? Colors.red : Colors.amber;
-
       int globalIndex = _currentPage * itemsPerPage + index;
-
       setState(() {
         selectedNotification = {
           "jenis": jenis,
@@ -76,15 +73,11 @@ class _KolomNotifikasiState extends State<KolomNotifikasi> {
         };
         _selectedIndex = globalIndex;
       });
-
-      // Memanggil fungsi untuk menandai notifikasi sebagai sudah dibaca
       bool success = await ApiService.markNotificationAsRead(id);
       if (success) {
         setState(() {
-          notifikasiList[globalIndex]["status"] = "read"; // ✅ Ubah status menjadi "read"
+          notifikasiList[globalIndex]["status"] = "read";
         });
-
-        // Memanggil ulang untuk memperbarui data
         await _fetchNotifications();
       }
     }
@@ -131,7 +124,6 @@ class _KolomNotifikasiState extends State<KolomNotifikasi> {
           Expanded(
             child: Row(
               children: [
-                // ✅ List Notifikasi
                 Expanded(
                   flex: 2,
                   child: Container(
@@ -148,7 +140,6 @@ class _KolomNotifikasiState extends State<KolomNotifikasi> {
                       itemBuilder: (context, index) {
                         final notif = currentNotifikasi[index];
 
-                        // ✅ Hitung index global
                         int globalIndex = _currentPage * itemsPerPage + index;
 
                         bool isSelected = _selectedIndex == globalIndex;
@@ -179,7 +170,6 @@ class _KolomNotifikasiState extends State<KolomNotifikasi> {
 
                 Container(width: 1, color: Colors.white),
 
-                // ✅ Detail Notifikasi (Dikembalikan ke Format Asli)
                 Expanded(
                   flex: 3,
                   child: Container(
@@ -252,7 +242,6 @@ class _KolomNotifikasiState extends State<KolomNotifikasi> {
             ),
           ),
 
-          // ✅ Pagination Controls
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -261,14 +250,14 @@ class _KolomNotifikasiState extends State<KolomNotifikasi> {
                 onPressed: _currentPage > 0 ? () => setState(() => _currentPage--) : null,
               ),
               Container(
-                width: 50, // ✅ Atur lebar agar lebih panjang
-                alignment: Alignment.center, // ✅ Pusatkan teks di dalam container
+                width: 50,
+                alignment: Alignment.center,
                 child: Text(
                   "${_currentPage + 1} / ${(notifikasiList.length / itemsPerPage).ceil()}",
                   style: const TextStyle(
-                    color: Colors.white, // ✅ Warna putih
-                    fontWeight: FontWeight.w600, // ✅ Font-weight 600
-                    fontSize: 14, // ✅ Ukuran font (opsional)
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14,
                   ),
                 ),
               ),

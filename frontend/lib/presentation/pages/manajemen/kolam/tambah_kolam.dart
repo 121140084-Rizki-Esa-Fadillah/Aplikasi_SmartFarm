@@ -27,101 +27,69 @@ class _TambahKolamState extends State<TambahKolam> {
     super.dispose();
   }
 
-  Future<void> _simpanKolam() async {
+  Future<void> _AddPond() async {
     String idPond = _idController.text.trim();
     String namePond = _nameController.text.trim();
 
     if (idPond.isEmpty || namePond.isEmpty) {
-      CustomDialog.show(
-        context: context,
-        isSuccess: false,
-        message: "ID dan Nama Kolam tidak boleh kosong!",
-      );
+      _showDialog(false, "ID dan Nama Kolam tidak boleh kosong!");
       return;
     }
 
     if (namePond.length < 4 || namePond.length > 12) {
-      CustomDialog.show(
-        context: context,
-        isSuccess: false,
-        message: "Nama Kolam harus antara 4 hingga 12 karakter!",
-      );
+      _showDialog(false, "Nama Kolam harus antara 4 hingga 12 karakter!");
       return;
     }
 
-    setState(() {
-      _isLoading = true;
-    });
+    setState(() => _isLoading = true);
 
-    // Pengecekan apakah idPond dan namePond sudah ada
     final checkResult = await ApiService.checkIdPondNamePond(idPond, namePond);
 
     if (checkResult == null) {
-      CustomDialog.show(
-        context: context,
-        isSuccess: false,
-        message: "Gagal memeriksa ketersediaan ID Kolam atau Nama Kolam.",
-      );
-      setState(() {
-        _isLoading = false;
-      });
+      setState(() => _isLoading = false);
+      _showDialog(false, "Gagal memeriksa ketersediaan ID Kolam atau Nama Kolam.");
       return;
     }
 
-    // Jika ID Kolam atau Nama Kolam sudah ada
     if (checkResult["idPondExists"] == true && checkResult["namePondExists"] == true) {
-      CustomDialog.show(
-        context: context,
-        isSuccess: false,
-        message: "ID Kolam dan Nama Kolam sudah digunakan, harap gunakan ID Kolam dan Nama Kolam yang lain.",
-      );
-      setState(() {
-        _isLoading = false;
-      });
+      setState(() => _isLoading = false);
+      _showDialog(false, "ID Kolam dan Nama Kolam sudah digunakan, harap gunakan ID Kolam dan Nama Kolam yang lain.");
       return;
     }
 
     if (checkResult["idPondExists"] == true) {
-      CustomDialog.show(
-        context: context,
-        isSuccess: false,
-        message: "ID Kolam sudah digunakan, harap gunakan ID Kolam yang lain.",
-      );
-      setState(() {
-        _isLoading = false;
-      });
+      setState(() => _isLoading = false);
+      _showDialog(false, "ID Kolam sudah digunakan, harap gunakan ID Kolam yang lain.");
       return;
     }
 
     if (checkResult["namePondExists"] == true) {
-      CustomDialog.show(
-        context: context,
-        isSuccess: false,
-        message: "Nama Kolam sudah digunakan, harap gunakan Nama Kolam yang lain.",
-      );
-      setState(() {
-        _isLoading = false;
-      });
+      setState(() => _isLoading = false);
+      _showDialog(false, "Nama Kolam sudah digunakan, harap gunakan Nama Kolam yang lain.");
       return;
     }
 
-    // Jika ID dan Nama Kolam belum digunakan, lanjutkan untuk menyimpan kolam
     bool success = await ApiService.addKolam(idPond, namePond);
+    setState(() => _isLoading = false);
 
-    setState(() {
-      _isLoading = false;
-    });
-
-    CustomDialog.show(
-      context: context,
-      isSuccess: success,
-      message: success ? "Kolam berhasil ditambahkan" : "Gagal menambahkan kolam. Coba lagi!",
+    _showDialog(
+      success,
+      success ? "Kolam berhasil ditambahkan" : "Gagal menambahkan kolam. Coba lagi!",
       onComplete: () {
         if (success) {
           widget.onKolamAdded();
           Navigator.pop(context);
         }
       },
+    );
+  }
+
+  void _showDialog(bool isSuccess, String message, {VoidCallback? onComplete}) {
+    CustomDialog.show(
+      context: context,
+      isSuccess: isSuccess,
+      message: message,
+      onComplete: onComplete,
     );
   }
 
@@ -163,7 +131,7 @@ class _TambahKolamState extends State<TambahKolam> {
                   width: double.infinity,
                   child: ButtonFilled(
                     text: "Simpan",
-                    onPressed: _isLoading ? () {} : _simpanKolam,
+                    onPressed: _isLoading ? () {} : _AddPond,
                   ),
                 ),
                 const SizedBox(height: 20),

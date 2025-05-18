@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:frontend_app/presentation/pages/beranda/beranda.dart';
+import 'package:frontend_app/presentation/pages/beranda/beranda_admin.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:gap/gap.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -25,19 +25,11 @@ class _LoginState extends State<Login> {
   bool isLoading = false;
 
   void _login() async {
-    debugPrint("Username: '${usernameController.text}'");
-    debugPrint("Password: '${passwordController.text}'");
-
-    // Pastikan input tidak kosong setelah trim
     String username = usernameController.text.trim();
     String password = passwordController.text.trim();
 
     if (username.isEmpty || password.isEmpty) {
-      CustomDialog.show(
-        context: context,
-        isSuccess: false,
-        message: "Username dan password tidak boleh kosong",
-      );
+      _showDialog(false, "Username dan password tidak boleh kosong");
       return;
     }
 
@@ -45,38 +37,39 @@ class _LoginState extends State<Login> {
 
     bool success = await ApiService.login(username, password);
 
-    if (!mounted) return; // Cegah error jika widget sudah tidak aktif
+    if (!mounted) return;
 
     setState(() => isLoading = false);
 
     if (success) {
       SharedPreferences prefs = await SharedPreferences.getInstance();
       String? role = prefs.getString("role");
-        CustomDialog.show(
-            context: context,
-            isSuccess: true,
-            message: "Login berhasil!",
-            onComplete: ()
-        {
-          if (role == "Admin") {
-            Navigator.of(context).pushReplacement(
-              MaterialPageRoute(builder: (context) => const Beranda()),
-            );
-          } else {
-            Navigator.of(context).pushReplacement(
-              MaterialPageRoute(builder: (context) => const BerandaUser()),
-            );
-          }
-        },
-      );
+
+      _showDialog(true, "Login berhasil!", onComplete: () {
+        if (role == "Admin") {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (context) => const BerandaAdmin()),
+          );
+        } else {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (context) => const BerandaUser()),
+          );
+        }
+      });
     } else {
-      CustomDialog.show(
-        context: context,
-        isSuccess: false,
-        message: "Login gagal. Periksa kembali username/password.",
-      );
+      _showDialog(false, "Login gagal. Periksa kembali username/password.");
     }
   }
+
+  void _showDialog(bool isSuccess, String message, {VoidCallback? onComplete}) {
+    CustomDialog.show(
+      context: context,
+      isSuccess: isSuccess,
+      message: message,
+      onComplete: onComplete,
+    );
+  }
+
 
   @override
   Widget build(BuildContext context) {

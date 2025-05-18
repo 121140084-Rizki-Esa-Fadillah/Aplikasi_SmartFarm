@@ -16,57 +16,57 @@ class AppBarWidget extends StatefulWidget implements PreferredSizeWidget {
   _AppBarWidgetState createState() => _AppBarWidgetState();
 
   @override
-  Size get preferredSize => const Size.fromHeight(60); // Ukuran tetap 60
+  Size get preferredSize => const Size.fromHeight(60);
 }
 
 class _AppBarWidgetState extends State<AppBarWidget> {
-  bool isPressed = false; // State untuk mendeteksi apakah tombol ditekan
+  bool isPressed = false;
 
   @override
   Widget build(BuildContext context) {
-    final size = MediaQuery.of(context).size; // Mendapatkan ukuran layar untuk responsivitas
+    final size = MediaQuery.of(context).size;
 
     return AppBar(
       backgroundColor: ColorConstant.primary,
       elevation: 0,
-      automaticallyImplyLeading: false, // HILANGKAN BACK BUTTON DEFAULT
+      automaticallyImplyLeading: false,
       centerTitle: false,
-      titleSpacing: 0, // Hilangkan jarak default
+      titleSpacing: 0,
       title: Row(
         children: [
           Padding(
-            padding: const EdgeInsets.only(left: 20), // Padding kiri untuk ikon back
+            padding: const EdgeInsets.only(left: 20),
             child: GestureDetector(
               onTapDown: (_) {
                 setState(() {
-                  isPressed = true; // Ubah warna ikon menjadi biru saat ditekan
+                  isPressed = true;
                 });
               },
               onTapUp: (_) {
                 setState(() {
-                  isPressed = false; // Kembalikan ke warna normal setelah dilepas
+                  isPressed = false;
                 });
-                widget.onBackPress(); // Eksekusi aksi back setelah dilepas
+                widget.onBackPress();
               },
               onTapCancel: () {
                 setState(() {
-                  isPressed = false; // Pastikan kembali ke warna normal jika interaksi batal
+                  isPressed = false;
                 });
               },
               child: Image.asset(
-                'assets/icons/icon-back.png', // Path ikon back
-                width: size.width * 0.12, // Ukuran responsif (~7% lebar layar)
-                color: isPressed ? const Color(0xFF316B94) : null, // Ubah warna ikon saat ditekan
+                'assets/icons/icon-back.png',
+                width: size.width * 0.12,
+                color: isPressed ? const Color(0xFF316B94) : null,
               ),
             ),
           ),
-          SizedBox(width: size.width * 0.02), // Jarak antara ikon dan title
+          SizedBox(width: size.width * 0.02),
           Text(
             widget.title,
             style: TextStyle(
-              fontSize: size.width * 0.06, // Ukuran teks responsif (~5% lebar layar)
+              fontSize: size.width * 0.06,
               fontFamily: 'Poppins',
-              fontWeight: FontWeight.w600, // Semibold
+              fontWeight: FontWeight.w600,
               color: Colors.white,
             ),
           ),

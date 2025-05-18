@@ -40,24 +40,17 @@ class _KolomPengaturanSensorState extends State<KolomPengaturanSensor> {
 
   Future<void> fetchSensorConfig() async {
     String sensorType = widget.sensorType.toLowerCase();
-
     try {
       final thresholds = await ApiService.getThresholds(widget.pondId);
       final sensorValueData = await ApiService.getMonitoringData(widget.pondId);
-
-      // Buat key berdasarkan sensorType, misalnya "pHHigh" atau "pHLow"
       final highKey = '${sensorType}High';
       final lowKey = '${sensorType}Low';
-
-      // Ambil nilai tertinggi dan terendah dari thresholds
       final highest = thresholds?[highKey];
       final lowest = thresholds?[lowKey];
 
       setState(() {
         highestValue = highest?.toDouble();
         lowestValue = lowest?.toDouble();
-
-        // Tentukan nilai sementara untuk tertinggi dan terendah
         tempHighValue = highestValue;
         tempLowValue = lowestValue;
 
@@ -71,7 +64,6 @@ class _KolomPengaturanSensorState extends State<KolomPengaturanSensor> {
 
   Future<void> saveThresholdValues() async {
     if (tempHighValue == null || tempLowValue == null) return;
-
     if (tempLowValue! >= tempHighValue!) {
       CustomDialog.show(
         context: context,
@@ -80,34 +72,20 @@ class _KolomPengaturanSensorState extends State<KolomPengaturanSensor> {
       );
       return;
     }
-
-    if (tempHighValue == highestValue && tempLowValue == lowestValue) {
-      CustomDialog.show(
-        context: context,
-        isSuccess: false,
-        message: "Tidak ada perubahan pada batasan sensor.",
-      );
-      return;
-    }
-
     try {
       final sensorType = widget.sensorType.toLowerCase();
-      // Membatasi nilai ke 1 angka di belakang koma untuk memastikan akurasi
       final highValueFormatted = tempHighValue?.toStringAsFixed(1);
       final lowValueFormatted = tempLowValue?.toStringAsFixed(1);
-
       await ApiService.updateThresholds(widget.pondId, {
         sensorType: {
           "high": double.parse(highValueFormatted!),
           "low": double.parse(lowValueFormatted!),
         }
       });
-
       setState(() {
         highestValue = tempHighValue;
         lowestValue = tempLowValue;
       });
-
       CustomDialog.show(
         context: context,
         isSuccess: true,
@@ -135,7 +113,7 @@ class _KolomPengaturanSensorState extends State<KolomPengaturanSensor> {
       case 'ph':
         return 'pH';
       default:
-        return sensorType; // fallback ke original jika tidak ditemukan
+        return sensorType;
     }
   }
 
@@ -179,7 +157,7 @@ class _KolomPengaturanSensorState extends State<KolomPengaturanSensor> {
 
     return Container(
       width: screenWidth * 0.9,
-      height: screenHeight * 0.725,
+      height: screenHeight * 0.7,
       padding: EdgeInsets.only(
         left: screenWidth * 0.05,
         right: screenWidth * 0.05,
@@ -280,9 +258,8 @@ class _KolomPengaturanSensorState extends State<KolomPengaturanSensor> {
       double screenHeight,
       Function(double) onChanged,
       ) {
-    double step = 1.0; // Default step value
+    double step = 1.0;
 
-    // Menentukan step sesuai tipe sensor
     switch (widget.sensorType.toLowerCase()) {
       case "ph":
         step = 0.1;
@@ -310,7 +287,6 @@ class _KolomPengaturanSensorState extends State<KolomPengaturanSensor> {
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Text Kiri
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -340,7 +316,6 @@ class _KolomPengaturanSensorState extends State<KolomPengaturanSensor> {
               minValue: minValue,
               maxValue: maxValue,
               step: step,
-              unit: unit,
               onChanged: onChanged,
             ),
           ],
@@ -375,10 +350,10 @@ class _KolomPengaturanSensorState extends State<KolomPengaturanSensor> {
 
     final sensorRecommendations = recommendations[sensor];
     if (sensorRecommendations == null) {
-      return '--'; // Fallback ke '--' jika sensor tidak dikenali
+      return '--';
     }
 
-    return sensorRecommendations[batasan] ?? '--'; // Mengambil rekomendasi sesuai batasan
+    return sensorRecommendations[batasan] ?? '--';
   }
 
   Widget _buildSaveButton() {
@@ -394,8 +369,18 @@ class _KolomPengaturanSensorState extends State<KolomPengaturanSensor> {
   Widget _buildInfoButton(BuildContext context) {
     return ButtonText(
       text: "Informasi Perangkat Sensor >>",
+      icon: Icons.info,
       onPressed: () {
-        Navigator.push(context, MaterialPageRoute(builder: (context) => InformasiSensor(sensorType: widget.sensorType, pondId: widget.pondId, namePond: widget.namePond)));
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => InformasiSensor(
+              sensorType: widget.sensorType,
+              pondId: widget.pondId,
+              namePond: widget.namePond,
+            ),
+          ),
+        );
       },
     );
   }

@@ -18,26 +18,23 @@ class KolomRiwayat extends StatefulWidget {
 class _KolomRiwayatState extends State<KolomRiwayat> {
   int _currentPage = 0;
   final int itemsPerPage = 7;
-  List<Map<String, dynamic>> historyData = []; // Semua data dari API
-  List<Map<String, dynamic>> filteredData = []; // Data setelah difilter
+  List<Map<String, dynamic>> historyData = [];
+  List<Map<String, dynamic>> filteredData = [];
   bool isLoading = true;
-  bool isFiltered = false; // Untuk menentukan apakah sedang dalam mode filter
+  bool isFiltered = false;
   String? selectedDate;
 
   @override
   void initState() {
     super.initState();
-    _fetchHistory(); // Ambil data saat widget dimuat
+    _fetchHistory();
   }
 
-  // ✅ Ambil Data Riwayat dari API
   Future<void> _fetchHistory() async {
     setState(() {
       isLoading = true;
     });
-
     List<dynamic>? response = await ApiService.getHistoryByPond(widget.pondId);
-
     setState(() {
       if (response != null && response.isNotEmpty) {
         historyData = response.map((item) {
@@ -46,7 +43,6 @@ class _KolomRiwayatState extends State<KolomRiwayat> {
               "${parsedDate.day.toString().padLeft(2, '0')}/"
               "${parsedDate.month.toString().padLeft(2, '0')}/"
               "${parsedDate.year}";
-
           return {
             "id": item["_id"],
             "date": formattedDate,
@@ -59,14 +55,11 @@ class _KolomRiwayatState extends State<KolomRiwayat> {
     });
   }
 
-  // ✅ Filter Data Berdasarkan Tanggal
   void _filterData(DateTime date) {
     String formattedDate =
         "${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}";
-
     List<Map<String, dynamic>> tempFiltered =
     historyData.where((item) => item["date"] == formattedDate).toList();
-
     setState(() {
       selectedDate = formattedDate;
       filteredData = tempFiltered;
@@ -75,7 +68,6 @@ class _KolomRiwayatState extends State<KolomRiwayat> {
     });
   }
 
-  // ✅ Reset Data ke Semua Data
   void _resetFilter() {
     setState(() {
       filteredData = List.from(historyData);
@@ -106,7 +98,7 @@ class _KolomRiwayatState extends State<KolomRiwayat> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // ✅ Input Tanggal dengan Icon Reset (X)
+              // Input Tanggal dengan Icon Reset (X)
               Row(
                 children: [
                   Text(
@@ -124,7 +116,7 @@ class _KolomRiwayatState extends State<KolomRiwayat> {
                       children: [
                         InputDate(
                           onDateSelected: _filterData,
-                          onReset: _resetFilter, // ✅ Reset filter jika tombol X ditekan
+                          onReset: _resetFilter,
                           showCalendarIcon: !isFiltered,
                         ),
                       ],
@@ -135,16 +127,15 @@ class _KolomRiwayatState extends State<KolomRiwayat> {
 
               const SizedBox(height: 15),
 
-              // ✅ Loader jika sedang mengambil data
               if (isLoading)
                 const Center(child: CircularProgressIndicator())
               else if (historyData.isEmpty)
                 Container(
-                  alignment: Alignment.center, // ✅ Menjadikan teks center
+                  alignment: Alignment.center,
                   padding: const EdgeInsets.symmetric(vertical: 50),
                   child: Text(
                     "Belum ada Laporan Riwayat Kualitas Air",
-                    textAlign: TextAlign.center, // ✅ Pastikan teks di tengah jika ada lebih dari satu baris
+                    textAlign: TextAlign.center,
                     style: const TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w500,
@@ -159,11 +150,11 @@ class _KolomRiwayatState extends State<KolomRiwayat> {
                       Expanded(
                         child: displayedData.isEmpty
                             ? Container(
-                          alignment: Alignment.center, // ✅ Menjadikan teks center
+                          alignment: Alignment.center,
                           padding: const EdgeInsets.symmetric(vertical: 50),
                           child: Text(
                             "Laporan Riwayat Kualitas Air pada Tanggal ${selectedDate ?? ""} tidak tersedia",
-                            textAlign: TextAlign.center, // ✅ Pastikan teks di tengah jika ada lebih dari satu baris
+                            textAlign: TextAlign.center,
                             style: const TextStyle(
                               fontSize: 15,
                               fontWeight: FontWeight.w500,
@@ -194,10 +185,8 @@ class _KolomRiwayatState extends State<KolomRiwayat> {
                         ),
                       ),
 
-                      // ✅ Divider selalu di atas Pagination
                       const Divider(color: Colors.white, thickness: 1),
 
-                      // ✅ Pagination (tetap muncul meskipun data kosong)
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [

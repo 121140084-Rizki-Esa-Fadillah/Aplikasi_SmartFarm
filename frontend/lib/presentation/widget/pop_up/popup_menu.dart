@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 
-class PopupMenuKolam extends StatelessWidget {
+class PopupMenu extends StatelessWidget {
   final VoidCallback onEdit;
   final VoidCallback onDelete;
 
-  const PopupMenuKolam({
+  const PopupMenu({
     super.key,
     required this.onEdit,
     required this.onDelete,

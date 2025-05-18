@@ -8,6 +8,7 @@ class ButtonText extends StatelessWidget {
   final VoidCallback onPressed;
   final double fontSize;
   final Color defaultColor;
+  final IconData? icon;
 
   const ButtonText({
     super.key,
@@ -15,6 +16,7 @@ class ButtonText extends StatelessWidget {
     required this.onPressed,
     this.fontSize = 14,
     this.defaultColor = Colors.white,
+    this.icon,
   });
 
   @override
@@ -25,19 +27,28 @@ class ButtonText extends StatelessWidget {
         foregroundColor: WidgetStateProperty.resolveWith<Color>(
               (Set<WidgetState> states) {
             if (states.contains(WidgetState.pressed)) {
-              return ColorConstant.primary; // Warna saat ditekan
+              return ColorConstant.primary;
             }
-            return defaultColor; // Warna default
+            return defaultColor;
           },
         ),
-        overlayColor: WidgetStateProperty.all(Colors.transparent), // Hilangkan efek latar belakang saat ditekan
+        overlayColor: WidgetStateProperty.all(Colors.transparent),
       ),
-      child: Text(
-        text,
-        style: GoogleFonts.poppins(
-          fontSize: fontSize,
-          fontWeight: FontWeight.w600,
-        ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (icon != null) ...[
+            Icon(icon, size: fontSize * 1.4, color: defaultColor),
+            const SizedBox(width: 6),
+          ],
+          Text(
+            text,
+            style: GoogleFonts.poppins(
+              fontSize: fontSize,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
       ),
     );
   }

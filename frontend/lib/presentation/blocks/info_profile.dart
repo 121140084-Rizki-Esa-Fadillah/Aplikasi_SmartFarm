@@ -33,13 +33,12 @@ class InfoProfile extends StatelessWidget {
             info,
             style: GoogleFonts.poppins(
               fontSize: 14,
-              fontWeight: FontWeight.w400, // Regular
+              fontWeight: FontWeight.w400,
                 color: Colors.white
             ),
           ),
         ),
 
-        // Underline
         Container(
           width: 250,
           height: 1.5,

@@ -16,7 +16,7 @@ class KontrolAerator extends StatefulWidget {
 
 class _KontrolAeratorState extends State<KontrolAerator> {
   bool isAeratorOn = false;
-  double? aeratorDelay; // Ubah jadi nullable
+  double? aeratorDelay;
   bool isLoading = true;
   bool isSaving = false;
 
@@ -26,41 +26,28 @@ class _KontrolAeratorState extends State<KontrolAerator> {
     _fetchAeratorConfig();
   }
 
-  // Mengambil status aerator dan delay menggunakan ApiService.getAerator()
   Future<void> _fetchAeratorConfig() async {
     setState(() => isLoading = true);
-
     try {
-      // Mengambil status dan delay aerator menggunakan API Service
       final aeratorData = await ApiService.getAerator(widget.pondId);
-      print("📥 Response (200): $aeratorData");
-
       setState(() {
         if (aeratorData != null) {
-          // Ambil status on/off
           if (aeratorData.containsKey('statusAerator') && aeratorData['statusAerator'] is bool) {
             isAeratorOn = aeratorData['statusAerator'];
-            print("✅ isAeratorOn set to: $isAeratorOn");
           }
-
-          // Ambil delay
           if (aeratorData.containsKey('aeratorOnMinuteAfter') && aeratorData['aeratorOnMinuteAfter'] is num) {
             aeratorDelay = aeratorData['aeratorOnMinuteAfter'].toDouble();
-            print("✅ aeratorDelay set to: $aeratorDelay");
           }
         }
       });
     } catch (e) {
-      print("❌ Error saat mengambil data aerator: $e");
+      print("Error saat mengambil data aerator: $e");
     }
-
     setState(() => isLoading = false);
   }
 
-  // Fungsi untuk update status aerator dan delay
   Future<void> _updateAeratorConfig() async {
     setState(() => isSaving = true);
-
     try {
       await ApiService.updateAerator(
         widget.pondId,
@@ -68,24 +55,22 @@ class _KontrolAeratorState extends State<KontrolAerator> {
           "aerator_delay": aeratorDelay?.toInt(),
         },
       );
-
-      CustomDialog.show(
-        context: context,
-        isSuccess: true,
-        message: "Waktu delay aerator berhasil diperbarui",
-      );
+      _showDialog(true, "Waktu delay aerator berhasil diperbarui");
     } catch (e) {
-      print("❌ Error saat memperbarui delay aerator: $e");
-      CustomDialog.show(
-        context: context,
-        isSuccess: false,
-        message: "Terjadi kesalahan saat menyimpan delay aerator",
-      );
+      print("Error saat memperbarui delay aerator: $e");
+      _showDialog(false, "Terjadi kesalahan saat menyimpan delay aerator");
     }
-
     setState(() => isSaving = false);
   }
 
+  void _showDialog(bool isSuccess, String message, {VoidCallback? onComplete}) {
+    CustomDialog.show(
+      context: context,
+      isSuccess: isSuccess,
+      message: message,
+      onComplete: onComplete,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -158,7 +143,7 @@ class _KontrolAeratorState extends State<KontrolAerator> {
                               : "Aerator berhasil dinonaktifkan",
                         );
                       } catch (e) {
-                        print("❌ Error saat memperbarui aerator: $e");
+                        print("Error saat memperbarui aerator: $e");
                         CustomDialog.show(
                           context: context,
                           isSuccess: false,
@@ -213,7 +198,7 @@ class _KontrolAeratorState extends State<KontrolAerator> {
                           onChanged: (value) {
                             setState(() {
                               aeratorDelay = value;
-                              print("✅ aeratorDelay changed to: $aeratorDelay");
+                              print("aeratorDelay changed to: $aeratorDelay");
                             });
                           },
                         ),

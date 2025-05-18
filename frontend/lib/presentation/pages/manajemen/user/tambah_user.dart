@@ -33,7 +33,7 @@ class _TambahUserState extends State<TambahUser> {
     super.dispose();
   }
 
-  Future<void> _simpanUser() async {
+  Future<void> _AddUser() async {
     String username = usernameController.text.trim();
     String email = emailController.text.trim();
     String password = passwordController.text;
@@ -44,82 +44,53 @@ class _TambahUserState extends State<TambahUser> {
         password.isEmpty ||
         confirmPassword.isEmpty ||
         selectedRole == null) {
-      CustomDialog.show(
-        context: context,
-        isSuccess: false,
-        message: "Semua field harus diisi",
-      );
+      _showDialog(false, "Semua field harus diisi");
       return;
     }
-
     if (username.length < 4 || username.length > 16) {
-      CustomDialog.show(
-        context: context,
-        isSuccess: false,
-        message: "Username harus 4-16 karakter",
-      );
+      _showDialog(false, "Username harus 4-16 karakter");
       return;
     }
 
     final emailRegex = RegExp(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$");
-
     if (!emailRegex.hasMatch(email)) {
-      CustomDialog.show(
-        context: context,
-        isSuccess: false,
-        message: "Format email tidak valid. Pastikan email mengandung '@' dan domain yang benar.",
-      );
+      _showDialog(false, "Format email tidak valid. Harap gunakan format yang benar.");
+      return;
+    }
+
+    final isDomainValid = await ApiService.checkEmailDomain(email);
+    if (!isDomainValid) {
+      _showDialog(false, "Domain email tidak aktif atau tidak valid.");
       return;
     }
 
     if (password != confirmPassword) {
-      CustomDialog.show(
-        context: context,
-        isSuccess: false,
-        message: "Password tidak cocok dengan confirm password",
-      );
+      _showDialog(false, "Password tidak cocok dengan confirm password");
       return;
     }
 
     final passwordRegex = RegExp(r'^(?=.*[0-9])(?=.*[!@#\$&*~_-]).{8,16}$');
     if (!passwordRegex.hasMatch(password)) {
-      CustomDialog.show(
-        context: context,
-        isSuccess: false,
-        message: "Password harus 8-16 karakter, mengandung angka dan simbol (seperti : !@#\$&*~-_).\nContoh: Tambak@123",
-      );
+      _showDialog(false,
+          "Password harus 8-16 karakter, mengandung angka dan simbol (seperti : !@#\$&*~-_).\nContoh: Tambak@123");
       return;
     }
 
-    setState(() {
-      isLoading = true;
-    });
+    setState(() => isLoading = true);
 
-    // 🔎 Cek username/email dulu
     final checkResult = await ApiService.checkUsernameEmail(username, email);
 
     if (checkResult == null) {
-      setState(() {
-        isLoading = false;
-      });
-      CustomDialog.show(
-        context: context,
-        isSuccess: false,
-        message: "Gagal mengecek data pengguna",
-      );
+      setState(() => isLoading = false);
+      _showDialog(false, "Gagal mengecek data pengguna");
       return;
     }
 
     bool usernameConflict = checkResult["usernameExists"] == true;
     bool emailConflict = checkResult["emailExists"] == true;
-
     if (usernameConflict || emailConflict) {
-      setState(() {
-        isLoading = false;
-      });
-
+      setState(() => isLoading = false);
       String message = "";
-
       if (usernameConflict && emailConflict) {
         message = "Username dan Email sudah digunakan, harap gunakan username dan email yang lain.";
       } else if (usernameConflict) {
@@ -127,37 +98,32 @@ class _TambahUserState extends State<TambahUser> {
       } else if (emailConflict) {
         message = "Email sudah digunakan, harap gunakan email yang lain.";
       }
-
-      CustomDialog.show(
-        context: context,
-        isSuccess: false,
-        message: message,
-      );
+      _showDialog(false, message);
       return;
     }
 
-    // ✅ Lanjut tambah user
-    bool success = await ApiService.addUser(
-      username,
-      email,
-      password,
-      selectedRole!,
-    );
+    bool success = await ApiService.addUser(username, email, password, selectedRole!);
 
-    setState(() {
-      isLoading = false;
-    });
+    setState(() => isLoading = false);
 
-    CustomDialog.show(
-      context: context,
-      isSuccess: success,
-      message: success ? "User berhasil ditambahkan" : "Gagal menambahkan user",
+    _showDialog(
+      success,
+      success ? "User berhasil ditambahkan" : "Gagal menambahkan user",
       onComplete: () {
         if (success) {
           widget.onUserAdded();
           Navigator.pop(context);
         }
       },
+    );
+  }
+
+  void _showDialog(bool isSuccess, String message, {VoidCallback? onComplete}) {
+    CustomDialog.show(
+      context: context,
+      isSuccess: isSuccess,
+      message: message,
+      onComplete: onComplete,
     );
   }
 
@@ -230,7 +196,7 @@ class _TambahUserState extends State<TambahUser> {
                             width: double.infinity,
                             child: ButtonFilled(
                               text: "Simpan",
-                              onPressed: isLoading ? () {} : _simpanUser,
+                              onPressed: isLoading ? () {} : _AddUser,
                             ),
                           ),
                           const SizedBox(height: 20),

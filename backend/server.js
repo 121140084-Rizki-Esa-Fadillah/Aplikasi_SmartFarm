@@ -43,6 +43,7 @@ const aeratorRoutes = require("./routes/aerator");
 const feederRoutes = require("./routes/feeder");
 const thresholdRoutes = require("./routes/thresholds");
 const checkDataRouter = require("./routes/checkData");
+const emailCheckRoute = require('./routes/checkEmail');
 
 // 🔹 Routes
 app.use("/api/auth", authRoutes);
@@ -58,6 +59,7 @@ app.use("/api/konfigurasi/aerator", aeratorRoutes);
 app.use("/api/konfigurasi/feeding", feederRoutes);
 app.use("/api/konfigurasi/thresholds", thresholdRoutes);
 app.use("/api/check", checkDataRouter);
+app.use('/api', emailCheckRoute);
 
 // 🔹 Jalankan Server
 const PORT = process.env.PORT || 5000;

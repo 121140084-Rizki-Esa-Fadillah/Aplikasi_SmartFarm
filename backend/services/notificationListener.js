@@ -269,7 +269,7 @@ cron.schedule("*/15 * * * *", async () => {
 });
 
 // 🔁 Cek Water Quality setiap 1 menit
-cron.schedule("* * * * *", async () => {
+cron.schedule("*/15 * * * *", async () => {
       console.log("🔁 [CRON] Mengecek kualitas air...");
 
       const pondsSnapshot = await db.ref("Sadewa_SmartFarm/ponds").once("value");

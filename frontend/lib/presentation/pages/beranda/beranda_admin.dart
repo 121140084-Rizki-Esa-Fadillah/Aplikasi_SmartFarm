@@ -10,14 +10,14 @@ import '../../widget/pop_up/custom_dialog_button.dart';
 import '../manajemen/kolam/edit_kolam.dart';
 import 'manajemen_user.dart';
 
-class Beranda extends StatefulWidget {
-  const Beranda({super.key});
+class BerandaAdmin extends StatefulWidget {
+  const BerandaAdmin({super.key});
 
   @override
-  State<Beranda> createState() => _BerandaState();
+  State<BerandaAdmin> createState() => _BerandaAdminState();
 }
 
-class _BerandaState extends State<Beranda> {
+class _BerandaAdminState extends State<BerandaAdmin> {
   List<Map<String, dynamic>> pondList = [];
 
   @override
@@ -33,7 +33,7 @@ class _BerandaState extends State<Beranda> {
     });
   }
 
-  void _onEditPond(BuildContext context, Map<String, dynamic> pond) async {
+  void _EditPond(BuildContext context, Map<String, dynamic> pond) async {
     final updatedPond = await Navigator.push(
       context,
       MaterialPageRoute(
@@ -46,14 +46,13 @@ class _BerandaState extends State<Beranda> {
       ),
     );
 
-    // ✅ Jika hasil edit tidak null, perbarui daftar kolam
     if (updatedPond != null) {
       fetchPonds();
     }
   }
 
 
-  void _onDeletePond(String id, String pondName) {
+  void _DeletePond(String id, String pondName) {
     CustomDialogButton.show(
       context: context,
       title: "Konfirmasi Hapus",
@@ -71,7 +70,6 @@ class _BerandaState extends State<Beranda> {
       },
     );
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -115,13 +113,13 @@ class _BerandaState extends State<Beranda> {
                         bool? result = await Navigator.of(context).push(
                           MaterialPageRoute(
                             builder: (context) => TambahKolam(
-                              onKolamAdded: fetchPonds, // ✅ Panggil fungsi refresh setelah tambah kolam
+                              onKolamAdded: fetchPonds,
                             ),
                           ),
                         );
 
                         if (result == true) {
-                          fetchPonds(); // ✅ Refresh daftar kolam jika berhasil ditambahkan
+                          fetchPonds();
                         }
                       },
                     ),
@@ -149,8 +147,8 @@ class _BerandaState extends State<Beranda> {
                             status: pond["statusPond"],
                             date: pond["createdAt"].toString().substring(0, 10),
                             pondData: pond,
-                            onEdit: (selectedPond) => _onEditPond(context, selectedPond),
-                            onDelete: () => _onDeletePond(pond["_id"], pond["namePond"]),
+                            onEdit: (selectedPond) => _EditPond(context, selectedPond),
+                            onDelete: () => _DeletePond(pond["_id"], pond["namePond"]),
                             showMenu: true,
                           );
                         },

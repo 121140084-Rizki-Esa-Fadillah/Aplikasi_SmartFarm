@@ -4,12 +4,12 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../main.dart';
 
 class ApiService {
-  static const String baseUrl = "http://192.168.1.38:5000/api";
+  static const String baseUrl = "https://backendsadewasmartfarm-production.up.railway.app/api";
 
   static Future<bool> login(String username, String password) async {
     try {
       if (fcmDeviceToken == null) {
-        print("⚠️ Device token belum tersedia.");
+        print(" Device token belum tersedia.");
         return false;
       }
 
@@ -78,18 +78,28 @@ class ApiService {
     return response.statusCode == 200;
   }
 
-  // **2. Verifikasi OTP**
   static Future<String?> verifyOTP(String email, String otp) async {
-    final response = await http.post(
-      Uri.parse("$baseUrl/password/verify-otp"),
-      headers: {"Content-Type": "application/json"},
-      body: jsonEncode({"email": email, "otp": otp}),
-    );
+    try {
+      final response = await http.post(
+        Uri.parse("$baseUrl/password/verify-otp"),
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode({"email": email, "otp": otp}),
+      );
 
-    if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
-      return data["token"];
-    } else {
+
+      if (response.statusCode == 200) {
+        // OTP valid, kirim token ke halaman ResetPassword
+        return data["token"];
+      } else if (response.statusCode == 401 && data["message"] == "expired") {
+        // OTP sudah kedaluwarsa
+        return "expired";
+      } else {
+        // OTP salah atau error lain
+        return null;
+      }
+    } catch (e) {
+      // Jika ada kesalahan lain (misalnya koneksi error), anggap gagal
       return null;
     }
   }
@@ -428,7 +438,6 @@ class ApiService {
     }
   }
 
-  // Fungsi untuk mengambil konfigurasi Aerator berdasarkan pondId
   static Future<Map<String, dynamic>?> getAerator(String pondId) async {
     final uri = Uri.parse('$baseUrl/konfigurasi/aerator/$pondId');
 
@@ -443,7 +452,6 @@ class ApiService {
     }
   }
 
-// Fungsi untuk memperbarui konfigurasi Aerator
   static Future<void> updateAerator(String pondId, Map<String, dynamic> data) async {
     final uri = Uri.parse('$baseUrl/konfigurasi/aerator/$pondId');
 
@@ -458,7 +466,6 @@ class ApiService {
     }
   }
 
-  /// Ambil data feeding berdasarkan pondId
   static Future<Map<String, dynamic>> getFeeding(String pondId) async {
     final response = await http.get(Uri.parse('$baseUrl/konfigurasi/feeding/$pondId'));
 
@@ -469,7 +476,6 @@ class ApiService {
     }
   }
 
-  /// Update data feeding berdasarkan pondId
   static Future<Map<String, dynamic>> updateFeeding(String pondId, Map<String, dynamic> feedingData) async {
     final response = await http.put(
       Uri.parse('$baseUrl/konfigurasi/feeding/$pondId'),
@@ -484,7 +490,6 @@ class ApiService {
     }
   }
 
-  // Fungsi untuk mengambil data Monitoring berdasarkan pondId
   static Future<Map<String, dynamic>> getMonitoringData(String pondId) async {
     final response = await http.get(Uri.parse('$baseUrl/monitoring/$pondId'));
 
@@ -495,7 +500,6 @@ class ApiService {
     }
   }
 
-  // Fungsi untuk mengambil Threshold berdasarkan pondId dan tambahan query parameters
   static Future<Map<String, dynamic>?> getThresholds(String pondId) async {
     final uri = Uri.parse('$baseUrl/konfigurasi/thresholds/$pondId');
 
@@ -524,15 +528,13 @@ class ApiService {
     }
   }
 
-
-  // ✅ Ambil Notifikasi Berdasarkan ID
   static Future<Map<String, dynamic>?> getNotificationById(String id) async {
     try {
       SharedPreferences prefs = await SharedPreferences.getInstance();
       String? token = prefs.getString("token");
 
       if (token == null) {
-        print("❌ Error: Token tidak ditemukan.");
+        print("Error: Token tidak ditemukan.");
         return null;
       }
 
@@ -547,23 +549,22 @@ class ApiService {
       if (response.statusCode == 200) {
         return jsonDecode(response.body);
       } else {
-        print("⚠️ Gagal mengambil notifikasi: ${response.statusCode} - ${response.body}");
+        print("Gagal mengambil notifikasi: ${response.statusCode} - ${response.body}");
         return null;
       }
     } catch (e) {
-      print("❌ Error saat mengambil notifikasi: $e");
+      print("Error saat mengambil notifikasi: $e");
       return null;
     }
   }
 
-  // ✅ Ambil Notifikasi Berdasarkan idPond
   static Future<List<dynamic>?> getNotificationsByPondId(String idPond) async {
     try {
       SharedPreferences prefs = await SharedPreferences.getInstance();
       String? token = prefs.getString("token");
 
       if (token == null) {
-        print("❌ Error: Token tidak ditemukan.");
+        print("Error: Token tidak ditemukan.");
         return null;
       }
 
@@ -578,23 +579,22 @@ class ApiService {
       if (response.statusCode == 200) {
         return jsonDecode(response.body);
       } else {
-        print("⚠️ Gagal mengambil notifikasi: ${response.statusCode} - ${response.body}");
+        print("Gagal mengambil notifikasi: ${response.statusCode} - ${response.body}");
         return null;
       }
     } catch (e) {
-      print("❌ Error saat mengambil notifikasi berdasarkan idPond: $e");
+      print("Error saat mengambil notifikasi berdasarkan idPond: $e");
       return null;
     }
   }
 
-  // ✅ Tandai Notifikasi sebagai "Read"
   static Future<bool> markNotificationAsRead(String id) async {
     try {
       SharedPreferences prefs = await SharedPreferences.getInstance();
       String? token = prefs.getString("token");
 
       if (token == null) {
-        print("❌ Error: Token tidak ditemukan.");
+        print("Error: Token tidak ditemukan.");
         return false;
       }
 
@@ -609,24 +609,22 @@ class ApiService {
       if (response.statusCode == 200) {
         return true;
       } else {
-        print("⚠️ Gagal menandai notifikasi sebagai dibaca: ${response.statusCode} - ${response.body}");
+        print("Gagal menandai notifikasi sebagai dibaca: ${response.statusCode} - ${response.body}");
         return false;
       }
     } catch (e) {
-      print("❌ Error saat memperbarui notifikasi: $e");
+      print("Error saat memperbarui notifikasi: $e");
       return false;
     }
   }
 
-
-  // ✅ Ambil riwayat berdasarkan pondId
   static Future<List<dynamic>?> getHistoryByPond(String pondId) async {
     try {
       SharedPreferences prefs = await SharedPreferences.getInstance();
       String? token = prefs.getString("token");
 
       if (token == null) {
-        print("❌ Error: Token tidak ditemukan.");
+        print("Error: Token tidak ditemukan.");
         return null;
       }
 
@@ -641,23 +639,22 @@ class ApiService {
       if (response.statusCode == 200) {
         return json.decode(response.body);
       } else {
-        print("⚠️ Gagal mengambil riwayat: ${response.statusCode} - ${response.body}");
+        print("Gagal mengambil riwayat: ${response.statusCode} - ${response.body}");
         return null;
       }
     } catch (e) {
-      print("❌ Error saat mengambil riwayat: $e");
+      print("Error saat mengambil riwayat: $e");
       return null;
     }
   }
 
-  // ✅ Ambil riwayat berdasarkan ID
   static Future<Map<String, dynamic>?> getHistoryById(String historyId) async {
     try {
       SharedPreferences prefs = await SharedPreferences.getInstance();
       String? token = prefs.getString("token");
 
       if (token == null) {
-        print("❌ Error: Token tidak ditemukan.");
+        print("Error: Token tidak ditemukan.");
         return null;
       }
 
@@ -672,12 +669,32 @@ class ApiService {
       if (response.statusCode == 200) {
         return json.decode(response.body);
       } else {
-        print("⚠️ Gagal mengambil riwayat berdasarkan ID: ${response.statusCode} - ${response.body}");
+        print("Gagal mengambil riwayat berdasarkan ID: ${response.statusCode} - ${response.body}");
         return null;
       }
     } catch (e) {
-      print("❌ Error saat mengambil riwayat berdasarkan ID: $e");
+      print("Error saat mengambil riwayat berdasarkan ID: $e");
       return null;
+    }
+  }
+
+  static Future<bool> checkEmailDomain(String email) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/check-email-domain'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'email': email}),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return data['valid'] == true;
+      } else {
+        return false;
+      }
+    } catch (e) {
+      print('Error cek domain email: $e');
+      return false;
     }
   }
 }

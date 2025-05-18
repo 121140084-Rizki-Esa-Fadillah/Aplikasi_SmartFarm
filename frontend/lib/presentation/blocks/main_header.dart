@@ -17,8 +17,8 @@ class _MainHeaderState extends State<MainHeader> {
   late String _currentDate = '';
   late Timer _timer;
 
-  String? username;  // Nullable String untuk username
-  String? role;      // Nullable String untuk role
+  String? username;
+  String? role;
 
   @override
   void initState() {
@@ -27,7 +27,6 @@ class _MainHeaderState extends State<MainHeader> {
     _loadUserProfile();
   }
 
-  // Fungsi untuk format waktu
   void _initializeDateFormatting() async {
     await initializeDateFormatting('id_ID', null);
     _updateTime();
@@ -44,7 +43,6 @@ class _MainHeaderState extends State<MainHeader> {
     });
   }
 
-  // Fungsi untuk memuat profil pengguna
   Future<void> _loadUserProfile() async {
     final profile = await ApiService.getProfile();
     if (profile != null) {
@@ -53,7 +51,6 @@ class _MainHeaderState extends State<MainHeader> {
         role = profile['role'] ?? 'User';
       });
     } else {
-      // Jika gagal mengambil data, beri nilai default
       setState(() {
         username = 'Unknown';
         role = 'User';
@@ -81,7 +78,6 @@ class _MainHeaderState extends State<MainHeader> {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Menampilkan waktu saat ini
                   Text(
                     _currentTime,
                     style: TextStyle(
@@ -90,7 +86,6 @@ class _MainHeaderState extends State<MainHeader> {
                       color: Colors.white,
                     ),
                   ),
-                  // Menampilkan tanggal saat ini
                   Text(
                     _currentDate,
                     style: TextStyle(
@@ -100,10 +95,9 @@ class _MainHeaderState extends State<MainHeader> {
                   ),
                 ],
               ),
-              // Menampilkan TileProfile dengan nilai default jika username dan role null
               TileProfile(
-                username: username ?? ' ',  // Gunakan 'Pengguna' jika username null
-                role: role ?? ' ',              // Gunakan 'User' jika role null
+                username: username ?? ' ',
+                role: role ?? ' ',
               ),
             ],
           ),

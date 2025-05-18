@@ -4,13 +4,13 @@ import '../../../color/color_constant.dart';
 
 class InputDate extends StatefulWidget {
   final Function(DateTime)? onDateSelected;
-  final Function()? onReset; // ✅ Tambahkan callback onReset
+  final Function()? onReset;
   final bool showCalendarIcon;
 
   const InputDate({
     super.key,
     this.onDateSelected,
-    this.onReset, // ✅ Tambahkan parameter onReset
+    this.onReset,
     this.showCalendarIcon = true,
   });
 
@@ -25,7 +25,7 @@ class _InputDateState extends State<InputDate> {
   @override
   void initState() {
     super.initState();
-    _dateController.text = "dd/mm/yyyy"; // ✅ Set default
+    _dateController.text = "dd/mm/yyyy";
   }
 
   @override
@@ -57,7 +57,6 @@ class _InputDateState extends State<InputDate> {
           isDense: true,
           contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
 
-          // ✅ Tampilkan ikon kalender atau ikon reset (X)
           suffixIcon: selectedDate != null
               ? IconButton(
             icon: const Icon(Icons.close, color: Colors.red),
@@ -98,7 +97,6 @@ class _InputDateState extends State<InputDate> {
     }
   }
 
-  // ✅ Fungsi Reset Input
   void resetInput() {
     setState(() {
       selectedDate = null;

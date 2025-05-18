@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:frontend_app/presentation/widget/pop_up/popup_menu_profile.dart'; // Import widget baru
+import 'package:frontend_app/presentation/widget/pop_up/popup_menu_profile.dart';
 
 class TileProfile extends StatefulWidget {
   final String username;
@@ -16,7 +16,7 @@ class TileProfile extends StatefulWidget {
 }
 
 class _TileProfileState extends State<TileProfile> {
-  bool isPressed = false; // State untuk mendeteksi apakah tombol ditekan
+  bool isPressed = false;
 
   void _showProfileMenu(BuildContext context) {
     final RenderBox? box = context.findRenderObject() as RenderBox?;
@@ -30,7 +30,7 @@ class _TileProfileState extends State<TileProfile> {
     final buttonWidth = box.size.width;
 
     Future.delayed(const Duration(milliseconds: 100), () {
-      if (!mounted) return; // Pastikan widget masih aktif sebelum menampilkan popup
+      if (!mounted) return;
 
       showDialog(
         context: context,

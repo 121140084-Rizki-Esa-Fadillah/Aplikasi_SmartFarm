@@ -5,16 +5,16 @@ class InputValue extends StatefulWidget {
   final double initialValue;
   final double minValue;
   final double maxValue;
-  final double step; // Langkah perubahan nilai
-  final String unit; // Satuan nilai (pH, ppt, NTU, gram, menit)
-  final ValueChanged<double>? onChanged; // Callback untuk menangkap perubahan nilai
+  final double step;
+  final String unit;
+  final ValueChanged<double>? onChanged;
 
   const InputValue({
     super.key,
     required this.initialValue,
     required this.minValue,
     required this.maxValue,
-    this.step = 1, // Default langkah 1, bisa diubah untuk nilai desimal
+    this.step = 1,
     this.unit = "",
     this.onChanged,
   });
@@ -60,18 +60,18 @@ class _InputValueState extends State<InputValue> {
       children: [
         // Tombol panah kiri (kurangi nilai)
         GestureDetector(
-          onTapDown: (_) => setState(() {}), // Menyegarkan tampilan saat ditekan
-          onTapUp: (_) => setState(() {}), // Kembali ke warna normal
+          onTapDown: (_) => setState(() {}),
+          onTapUp: (_) => setState(() {}),
           child: Container(
             width: 24,
             height: 24,
             decoration: BoxDecoration(
-              color: isMin ? Colors.grey : Colors.white, // Warna tombol
+              color: isMin ? Colors.grey : Colors.white,
               borderRadius: BorderRadius.circular(5),
             ),
             child: IconButton(
               icon: Icon(Icons.chevron_left, color: isMin ? Colors.black38 : Colors.black, size: 16),
-              onPressed: isMin ? null : _decreaseValue, // Nonaktifkan jika mencapai batas
+              onPressed: isMin ? null : _decreaseValue,
               padding: EdgeInsets.zero,
               constraints: const BoxConstraints.tightFor(width: 24, height: 24),
             ),
@@ -80,7 +80,7 @@ class _InputValueState extends State<InputValue> {
 
         // Tampilan nilai
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 4),
           child: Text(
             _value % 1 == 0 ? "${_value.toInt()} ${widget.unit}" : "${_value.toStringAsFixed(1)} ${widget.unit}", // Format angka
             style: TextStyle(
@@ -93,18 +93,18 @@ class _InputValueState extends State<InputValue> {
 
         // Tombol panah kanan (tambah nilai)
         GestureDetector(
-          onTapDown: (_) => setState(() {}), // Menyegarkan tampilan saat ditekan
-          onTapUp: (_) => setState(() {}), // Kembali ke warna normal
+          onTapDown: (_) => setState(() {}),
+          onTapUp: (_) => setState(() {}),
           child: Container(
             width: 24,
             height: 24,
             decoration: BoxDecoration(
-              color: isMax ? Colors.grey : Colors.white, // Warna tombol
+              color: isMax ? Colors.grey : Colors.white,
               borderRadius: BorderRadius.circular(5),
             ),
             child: IconButton(
               icon: Icon(Icons.chevron_right, color: isMax ? Colors.black38 : Colors.black, size: 16),
-              onPressed: isMax ? null : _increaseValue, // Nonaktifkan jika mencapai batas
+              onPressed: isMax ? null : _increaseValue,
               padding: EdgeInsets.zero,
               constraints: const BoxConstraints.tightFor(width: 24, height: 24),
             ),

@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import '../../../color/color_constant.dart';
 
 class NavigasiBeranda extends StatefulWidget {
-  final Function(int) onTap; // Callback untuk berpindah halaman
-  final int selectedIndex; // Indeks halaman aktif
+  final Function(int) onTap;
+  final int selectedIndex;
 
   const NavigasiBeranda({
     super.key,
@@ -18,7 +18,7 @@ class NavigasiBeranda extends StatefulWidget {
 class _NavigasiBerandaState extends State<NavigasiBeranda> {
   @override
   Widget build(BuildContext context) {
-    double iconSize = MediaQuery.of(context).size.width * 0.08; // Ukuran ikon responsif
+    double iconSize = MediaQuery.of(context).size.width * 0.08;
 
     return ClipRRect(
       borderRadius: const BorderRadius.only(

@@ -1,16 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../../blocks/kolom_riwayat.dart';
 import '../../../widget/navigation/app_bar_widget.dart';
 import '../../../widget/navigation/navigasi_monitoring.dart';
 import '../../../widget/background_widget.dart';
-import '../../beranda/beranda.dart';
+import '../../beranda/beranda_admin.dart';
+import '../../beranda/beranda_user.dart';
 import '../kontrol_pakan_aerator.dart';
 import '../monitoirng_sensor/monitoring.dart';
 import '../notifikasi.dart';
 
 class RiwayatKualitasAir extends StatelessWidget {
   final String pondId;
-  final String namePond; // ✅ Tambahkan namePond
+  final String namePond;
 
   const RiwayatKualitasAir({super.key, required this.pondId, required this.namePond});
 
@@ -22,10 +24,19 @@ class RiwayatKualitasAir extends StatelessWidget {
     return Scaffold(
       appBar: AppBarWidget(
         title: "Riwayat Kualitas Air",
-        onBackPress: () {
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (_) => const Beranda()),
-          );
+        onBackPress: () async {
+          final prefs = await SharedPreferences.getInstance();
+          final role = prefs.getString('role');
+
+          if (role == "Admin") {
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(builder: (_) => const BerandaAdmin()),
+            );
+          } else {
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(builder: (_) => const BerandaUser()),
+            );
+          }
         },
       ),
       resizeToAvoidBottomInset: false,
@@ -33,26 +44,24 @@ class RiwayatKualitasAir extends StatelessWidget {
         children: [
           const BackgroundWidget(),
 
-          // **Konten Utama Riwayat Laporan tanpa scroll**
           Positioned.fill(
             child: Padding(
               padding: EdgeInsets.only(
                 top: screenHeight * 0.0225,
                 left: screenWidth * 0.04,
                 right: screenWidth * 0.04,
-                bottom: screenHeight * 0.10, // Menyesuaikan batas bawah
+                bottom: screenHeight * 0.10,
               ),
               child: Column(
                 children: [
                   Expanded(
-                    child: KolomRiwayat(pondId: pondId, namePond: namePond,), // Pastikan tidak ada scrolling di dalamnya
+                    child: KolomRiwayat(pondId: pondId, namePond: namePond,),
                   ),
                 ],
               ),
             ),
           ),
 
-          // **Navigasi Monitoring dalam Stack**
           Positioned(
             left: 0,
             right: 0,

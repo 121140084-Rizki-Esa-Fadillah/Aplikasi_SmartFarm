@@ -7,7 +7,7 @@ class InputPlaceholder extends StatefulWidget {
   final bool isPassword;
   final String? iconPath;
   final TextEditingController controller;
-  final bool isEmail; // ➕ Tambahkan flag email
+  final bool isEmail;
 
   const InputPlaceholder({
     super.key,
@@ -15,7 +15,7 @@ class InputPlaceholder extends StatefulWidget {
     this.isPassword = false,
     this.iconPath,
     required this.controller,
-    this.isEmail = false, // ➕ Default false
+    this.isEmail = false,
   });
 
   @override

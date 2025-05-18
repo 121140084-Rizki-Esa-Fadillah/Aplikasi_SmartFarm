@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../widget/background_widget.dart';
 import '../../../widget/navigation/app_bar_widget.dart';
 import '../../../widget/navigation/navigasi_monitoring.dart';
-import '../../../widget/tabel/tabel_laporan.dart';
+import '../../../blocks/tabel_laporan.dart';
 import '../kontrol_pakan_aerator.dart';
 import '../monitoirng_sensor/monitoring.dart';
 import '../notifikasi.dart';
@@ -38,16 +38,14 @@ class LaporanKualitasAir extends StatelessWidget {
         children: [
           const BackgroundWidget(),
 
-          // **Konten Utama Riwayat Laporan**
           Positioned(
             top: screenHeight * 0.04,
             left: screenWidth * 0.06,
             right: screenWidth * 0.06,
-            bottom: screenHeight * 0.10, // Menyesuaikan batas bawah
+            bottom: screenHeight * 0.10,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // **Title Tanggal (Tetap)**
                 Padding(
                   padding: const EdgeInsets.only(bottom: 20.0),
                   child: Text(
@@ -59,13 +57,11 @@ class LaporanKualitasAir extends StatelessWidget {
                     ),
                   ),
                 ),
-                // **Tabel Laporan**
                 LaporanTable(id: historyId),
               ],
             ),
           ),
 
-          // **Navigasi Monitoring di Bawah**
           Positioned(
             left: 0,
             right: 0,

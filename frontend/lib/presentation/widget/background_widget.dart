@@ -7,12 +7,12 @@ class BackgroundWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
-        width: double.infinity, // Lebar penuh sesuai layar
-        height: double.infinity, // Tinggi penuh sesuai layar
+        width: double.infinity,
+        height: double.infinity,
         decoration: BoxDecoration(
           image: DecorationImage(
-            image: AssetImage("assets/images/Background-Apk.png"), // Path gambar
-            fit: BoxFit.cover, // Menutupi seluruh layar secara proporsional
+            image: AssetImage("assets/images/Background-Apk.png"),
+            fit: BoxFit.cover,
           ),
         ),
       ),

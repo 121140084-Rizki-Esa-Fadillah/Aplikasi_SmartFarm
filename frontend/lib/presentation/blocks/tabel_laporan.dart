@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../../../color/color_constant.dart';
-import '../../../server/api_service.dart';
+import '../../../color/color_constant.dart';
+import '../../server/api_service.dart';
 
 class LaporanTable extends StatefulWidget {
   final String id;
@@ -16,7 +16,7 @@ class _LaporanTableState extends State<LaporanTable> {
 
   Future<List<Map<String, dynamic>>> _fetchLaporanData() async {
     try {
-      if (widget.id.isEmpty) return []; // Cegah request jika id kosong
+      if (widget.id.isEmpty) return [];
 
       final response = await ApiService.getHistoryById(widget.id);
       if (response != null && response["data"] is List) {
@@ -32,7 +32,7 @@ class _LaporanTableState extends State<LaporanTable> {
             .toList();
       }
     } catch (e) {
-      debugPrint("❌ Error fetching data: $e");
+      debugPrint("Error fetching data: $e");
     }
     return [];
   }
@@ -75,7 +75,6 @@ class _LaporanTableState extends State<LaporanTable> {
 
           const SizedBox(height: 2),
 
-          // Isi Tabel (Scroll Vertikal)
           Expanded(
             child: FutureBuilder<List<Map<String, dynamic>>>(
               future: _fetchLaporanData(),

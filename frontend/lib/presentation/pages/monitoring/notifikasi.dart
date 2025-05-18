@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../widget/navigation/navigasi_monitoring.dart';
 import '../../widget/background_widget.dart';
-import '../beranda/beranda.dart';
+import '../beranda/beranda_admin.dart';
+import '../beranda/beranda_user.dart';
 import 'riwayat_kualitas_air/riwayat_kualitas_air.dart';
 import 'kontrol_pakan_aerator.dart';
 import 'monitoirng_sensor/monitoring.dart';
 import '../../widget/navigation/app_bar_widget.dart';
-import '../../blocks/kolom_notifikasi.dart'; // Import NotifikasiWidget
+import '../../blocks/kolom_notifikasi.dart';
 
 class Notifikasi extends StatelessWidget {
   final String pondId;
@@ -22,10 +24,19 @@ class Notifikasi extends StatelessWidget {
     return Scaffold(
       appBar: AppBarWidget(
         title: "Notifikasi",
-        onBackPress: () {
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (_) => const Beranda()),
-          );
+        onBackPress: () async {
+          final prefs = await SharedPreferences.getInstance();
+          final role = prefs.getString('role');
+
+          if (role == "Admin") {
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(builder: (_) => const BerandaAdmin()),
+            );
+          } else {
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(builder: (_) => const BerandaUser()),
+            );
+          }
         },
       ),
       resizeToAvoidBottomInset: false,
@@ -33,7 +44,6 @@ class Notifikasi extends StatelessWidget {
         children: [
           const BackgroundWidget(),
 
-          // **Konten Utama**
           Positioned(
             top: screenHeight * 0.03,
             left: screenWidth * 0.04,
@@ -42,13 +52,12 @@ class Notifikasi extends StatelessWidget {
             child: Column(
               children: [
                 Expanded(
-                  child: KolomNotifikasi(pondId: pondId), // Dibungkus dengan Expanded agar sesuai dengan tata letak
+                  child: KolomNotifikasi(pondId: pondId),
                 ),
               ],
             ),
           ),
 
-          // **Navigasi Monitoring dalam Stack**
           Positioned(
             left: 0,
             right: 0,

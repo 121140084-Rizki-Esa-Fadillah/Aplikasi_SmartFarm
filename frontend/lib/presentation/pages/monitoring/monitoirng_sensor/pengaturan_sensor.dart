@@ -21,19 +21,18 @@ class PengaturanSensor extends StatelessWidget {
     required this.namePond,
   });
 
-  // 🔹 Fungsi untuk menentukan sensorType berdasarkan sensorName
   String getSensorType(String sensorName) {
-    switch (sensorName.toLowerCase()) { // Ubah input ke huruf kecil untuk memudahkan perbandingan
+    switch (sensorName.toLowerCase()) {
       case "sensor suhu":
-        return "temperature"; // Sesuai dengan Firebase
+        return "temperature";
       case "sensor ph":
-        return "ph"; // Perhatikan huruf besar "pH"
+        return "ph";
       case "sensor salinitas":
-        return "salinity"; // Sesuai dengan Firebase
+        return "salinity";
       case "sensor kekeruhan":
-        return "turbidity"; // Sesuai dengan Firebase
+        return "turbidity";
       default:
-        return ""; // Jika tidak cocok, kembalikan string kosong
+        return "";
     }
   }
 
@@ -49,7 +48,6 @@ class PengaturanSensor extends StatelessWidget {
         children: [
           const BackgroundWidget(),
 
-          // **Widget untuk Menampilkan dan Mengedit Parameter Sensor**
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 30.0),
             child: KolomPengaturanSensor(
@@ -60,7 +58,6 @@ class PengaturanSensor extends StatelessWidget {
             ),
           ),
 
-          // **Navigasi Monitoring dalam Stack**
           Positioned(
             left: 0,
             right: 0,

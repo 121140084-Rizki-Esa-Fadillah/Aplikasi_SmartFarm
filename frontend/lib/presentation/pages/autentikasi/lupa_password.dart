@@ -34,11 +34,7 @@ class _LupaPasswordState extends State<LupaPassword> {
     String email = emailController.text.trim();
 
     if (email.isEmpty) {
-      CustomDialog.show(
-        context: context,
-        isSuccess: false,
-        message: "Email tidak boleh kosong!",
-      );
+      _showDialog(false, "Email tidak boleh kosong!");
       return;
     }
 
@@ -46,50 +42,40 @@ class _LupaPasswordState extends State<LupaPassword> {
 
     bool success = await ApiService.sendOTP(email);
     if (success) {
-      CustomDialog.show(
-        context: context,
-        isSuccess: true,
-        message: "Kode OTP telah dikirim ke email Anda. Silakan cek email Anda.",
-      );
+      _showDialog(true, "Kode OTP telah dikirim ke email Anda. Silakan cek email Anda.");
     } else {
-      CustomDialog.show(
-        context: context,
-        isSuccess: false,
-        message: "Gagal mengirim OTP. Pastikan email sudah terdaftar.",
-      );
+      _showDialog(false, "Gagal mengirim OTP. Pastikan email sudah terdaftar.");
     }
   }
 
-
   void _verifyOTP() async {
     if (otpController.text.isEmpty) {
-      CustomDialog.show(
-        context: context,
-        isSuccess: false,
-        message: "Kode OTP tidak boleh kosong!",
-      );
+      _showDialog(false, "Kode OTP tidak boleh kosong!");
       return;
     }
-
-    String? response = await ApiService.verifyOTP(emailController.text, otpController.text);
+    String? response = await ApiService.verifyOTP(
+      emailController.text,
+      otpController.text,
+    );
 
     if (response == "expired") {
-      CustomDialog.show(
-        context: context,
-        isSuccess: false,
-        message: "Kode OTP telah kedaluwarsa! Silakan minta kode baru.",
-      );
+      _showDialog(false, "Kode OTP telah kedaluwarsa! Silakan minta kode baru.");
     } else if (response != null) {
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(builder: (context) => ResetPassword(token: response)),
       );
     } else {
-      CustomDialog.show(
-        context: context,
-        isSuccess: false,
-        message: "Kode OTP yang Anda masukkan salah!",
-      );
+      _showDialog(false, "Kode OTP yang Anda masukkan salah!");
     }
+  }
+
+  void _showDialog(bool isSuccess, String message, {VoidCallback? onComplete}) {
+    CustomDialog.show(
+      context: context,
+      isSuccess: isSuccess,
+      message: message,
+      onComplete: onComplete,
+    );
   }
 
 
@@ -186,8 +172,7 @@ class _LupaPasswordState extends State<LupaPassword> {
                             ],
                           ),
                         ),
-                        SizedBox(height: size.height * 0.1), // 👈 memberi jarak bawah biar lebih seimbang
-                      ],
+                        SizedBox(height: size.height * 0.1),                      ],
                     ),
                   ),
                 ),

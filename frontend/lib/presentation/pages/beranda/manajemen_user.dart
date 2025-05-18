@@ -4,8 +4,8 @@ import '../../widget/background_widget.dart';
 import '../../widget/button/button_add.dart';
 import '../../widget/navigation/navigasi_beranda.dart';
 import '../../blocks/main_header.dart';
-import '../../widget/tabel/tabel_manajemen_user.dart';
-import 'beranda.dart';
+import '../../blocks/list_user.dart';
+import 'beranda_admin.dart';
 
 class ManajemenUser extends StatefulWidget {
   const ManajemenUser({super.key});
@@ -15,9 +15,8 @@ class ManajemenUser extends StatefulWidget {
 }
 
 class _ManajemenUserState extends State<ManajemenUser> {
-  final GlobalKey<UserManagementTableState> _tableKey = GlobalKey();
+  final GlobalKey<UserListState> _tableKey = GlobalKey<UserListState>();
 
-  /// ✅ **Method untuk refresh tabel setelah user ditambah**
   void _refreshUserTable() {
     _tableKey.currentState?.refreshData();
   }
@@ -59,7 +58,7 @@ class _ManajemenUserState extends State<ManajemenUser> {
                           Navigator.of(context).push(
                             MaterialPageRoute(
                               builder: (context) => TambahUser(
-                                onUserAdded: _refreshUserTable, // ✅ Refresh tabel setelah tambah user
+                                onUserAdded: _refreshUserTable,
                               ),
                             ),
                           );
@@ -70,7 +69,6 @@ class _ManajemenUserState extends State<ManajemenUser> {
                 ),
                 const SizedBox(height: 15),
 
-                // 🔹 Tabel User dalam Expanded agar tidak tertutup
                 Expanded(
                   child: Padding(
                     padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.06),
@@ -79,7 +77,7 @@ class _ManajemenUserState extends State<ManajemenUser> {
                         borderRadius: BorderRadius.circular(8),
                         color: Colors.transparent,
                       ),
-                      child: UserManagementTable(key: _tableKey), // ✅ Gunakan GlobalKey
+                        child: UserList(key: _tableKey)
                     ),
                   ),
                 ),
@@ -97,7 +95,7 @@ class _ManajemenUserState extends State<ManajemenUser> {
                 if (index == 0) {
                   Navigator.pushReplacement(
                     context,
-                    MaterialPageRoute(builder: (context) => const Beranda()),
+                    MaterialPageRoute(builder: (context) => const BerandaAdmin()),
                   );
                 }
               },

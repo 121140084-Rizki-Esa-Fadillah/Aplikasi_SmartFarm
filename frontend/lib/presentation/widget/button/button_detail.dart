@@ -13,35 +13,35 @@ class ButtonDetail extends StatelessWidget {
     required this.text,
     required this.onPressed,
     this.isFullWidth = false,
-    this.borderColor = const Color(0xFF16425B), // Default border color
-    this.textColor = const Color(0xFF16425B), // Default text color
+    this.borderColor = const Color(0xFF16425B),
+    this.textColor = const Color(0xFF16425B),
   });
 
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      width: isFullWidth ? double.infinity : null, // Lebar penuh jika isFullWidth true
+      width: isFullWidth ? double.infinity : null,
       child: OutlinedButton(
         onPressed: onPressed,
         style: ButtonStyle(
-          minimumSize: WidgetStateProperty.all(Size.zero), // Tidak membatasi ukuran minimum
+          minimumSize: WidgetStateProperty.all(Size.zero),
           padding: WidgetStateProperty.all(
             const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
           ),
           side: WidgetStateProperty.all(
-            BorderSide(color: borderColor, width: 1), // Border
+            BorderSide(color: borderColor, width: 1),
           ),
-          foregroundColor: WidgetStateProperty.all(textColor), // Warna teks
+          foregroundColor: WidgetStateProperty.all(textColor),
           backgroundColor: WidgetStateProperty.resolveWith<Color>(
                 (states) {
               if (states.contains(WidgetState.pressed)) {
-                return const Color(0xFF81C3D7); // Warna berubah saat ditekan
+                return const Color(0xFF81C3D7);
               }
-              return Colors.transparent; // Warna default
+              return Colors.transparent;
             },
           ),
           shape: WidgetStateProperty.all(
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)), // Sudut lebih halus
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
           ),
         ),
         child: Text(

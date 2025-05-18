@@ -18,4 +18,7 @@ try {
 const db = admin.database();
 const messaging = admin.messaging();
 
-module.exports = { db, messaging };
+module.exports = {
+    db,
+    messaging
+};

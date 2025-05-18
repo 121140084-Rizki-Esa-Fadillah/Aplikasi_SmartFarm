@@ -95,7 +95,7 @@ class ChartSensor extends StatelessWidget {
                 );
               }).toList(),
               isCurved: true,
-              curveSmoothness: 0.15, // Kurangi agar tidak menembus sumbu
+              curveSmoothness: 0.15,
               color: Colors.blue,
               barWidth: screenWidth * 0.007,
               belowBarData: BarAreaData(
