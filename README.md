@@ -8,3 +8,6 @@ Aplikasi Monitoring dan Kontrol Otomatis tambak Udang untuk Sadewa Farm
 
 ### Link Firebase Real-Time
 * https://console.firebase.google.com/u/1/project/app-sadewa-smartfarm/database/app-sadewa-smartfarm-default-rtdb/data
+
+### Unduh Aplikasi Sadewa SmartFarm
+* https://drive.google.com/drive/folders/1uw_XUhEJx4d3Uir74h87YbZYGN7Kujvl?usp=sharing
