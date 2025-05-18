@@ -44,7 +44,6 @@ class _LaporanTableState extends State<LaporanTable> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header Tabel (Tetap)
           Container(
             color: ColorConstant.primary,
             child: Table(
@@ -53,9 +52,9 @@ class _LaporanTableState extends State<LaporanTable> {
               columnWidths: const {
                 0: FlexColumnWidth(2),
                 1: FlexColumnWidth(1.5),
-                2: FlexColumnWidth(1),
+                2: FlexColumnWidth(1.5),
                 3: FlexColumnWidth(2),
-                4: FlexColumnWidth(2.5),
+                4: FlexColumnWidth(2),
                 5: FlexColumnWidth(1.5),
               },
               children: [
@@ -65,7 +64,7 @@ class _LaporanTableState extends State<LaporanTable> {
                     _buildHeaderCell("Suhu\n(°C)"),
                     _buildHeaderCell("pH"),
                     _buildHeaderCell("Salinitas\n(PPT)"),
-                    _buildHeaderCell("Kekeruhan\n(NTU)"),
+                    _buildHeaderCell("Turbidity\n(NTU)"),
                     _buildHeaderCell("Hujan"),
                   ],
                 ),
@@ -98,9 +97,9 @@ class _LaporanTableState extends State<LaporanTable> {
                       columnWidths: const {
                         0: FlexColumnWidth(2),
                         1: FlexColumnWidth(1.5),
-                        2: FlexColumnWidth(1),
+                        2: FlexColumnWidth(1.5),
                         3: FlexColumnWidth(2),
-                        4: FlexColumnWidth(2.5),
+                        4: FlexColumnWidth(2),
                         5: FlexColumnWidth(1.5),
                       },
                       children: laporanData.map((data) {
@@ -137,7 +136,7 @@ class _LaporanTableState extends State<LaporanTable> {
           style: const TextStyle(
             color: Colors.white,
             fontWeight: FontWeight.bold,
-            fontSize: 12,
+            fontSize: 11,
           ),
           textAlign: TextAlign.center,
         ),

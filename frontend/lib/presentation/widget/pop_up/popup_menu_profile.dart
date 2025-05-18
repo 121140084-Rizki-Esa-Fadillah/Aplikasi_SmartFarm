@@ -28,10 +28,14 @@ class PopupMenuProfile extends StatefulWidget {
 class _PopupMenuProfileState extends State<PopupMenuProfile> {
   bool _notificationsEnabled = true;
 
+  bool _loading = true;
+
   @override
   void initState() {
     super.initState();
-    _checkNotificationStatus();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkNotificationStatus();
+    });
   }
 
   Future<String?> _getCurrentUserId() async {
@@ -56,15 +60,19 @@ class _PopupMenuProfileState extends State<PopupMenuProfile> {
 
 
   Future<void> _checkNotificationStatus() async {
-    final userId = await _getCurrentUserId();
-    if (userId == null) return;
+    final profile = await ApiService.getProfile();
+    if (profile == null || !profile.containsKey('_id')) return;
 
+    final userId = profile['_id'];
     final prefs = await SharedPreferences.getInstance();
     final status = prefs.getBool('notifications_enabled_$userId') ?? true;
 
-    setState(() {
-      _notificationsEnabled = status;
-    });
+    if (mounted) {
+      setState(() {
+        _notificationsEnabled = status;
+        _loading = false;
+      });
+    }
   }
 
   Future<void> _toggleNotifications(bool value) async {
@@ -72,11 +80,8 @@ class _PopupMenuProfileState extends State<PopupMenuProfile> {
     if (userId == null) return;
 
     final prefs = await SharedPreferences.getInstance();
-    setState(() {
-      _notificationsEnabled = value;
-    });
-
     await prefs.setBool('notifications_enabled_$userId', value);
+
     if (value) {
       await FirebaseMessaging.instance.subscribeToTopic('global_notifications');
     } else {
@@ -93,7 +98,10 @@ class _PopupMenuProfileState extends State<PopupMenuProfile> {
       confirmText: "Ya",
       onConfirm: () async {
         final prefs = await SharedPreferences.getInstance();
-        await prefs.remove('notifications_enabled');
+        final userId = await _getCurrentUserId();
+        if (userId != null) {
+          await prefs.remove('notifications_enabled_$userId');
+        }
         await ApiService.logout();
         MyApp.navigatorKey.currentState?.pushAndRemoveUntil(
           MaterialPageRoute(builder: (context) => const Login()),
@@ -105,75 +113,95 @@ class _PopupMenuProfileState extends State<PopupMenuProfile> {
     );
   }
 
+  Future<bool> _fetchNotificationStatus() async {
+    final profile = await ApiService.getProfile();
+    if (profile == null || !profile.containsKey('_id')) return true;
+
+    final userId = profile['_id'];
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool('notifications_enabled_$userId') ?? true;
+  }
+
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
-    return Stack(
-      children: [
-        Positioned(
-          left: widget.leftPosition,
-          top: widget.topPosition,
-          width: size.width * 0.475,
-          child: Material(
-            color: Colors.transparent,
-            child: Container(
-              padding: const EdgeInsets.symmetric(vertical: 5),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(8),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black26,
-                    blurRadius: 8,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  _buildMenuItem(
-                    icon: Icons.info,
-                    text: "Info Profile",
-                    color: Colors.blue,
-                    onTap: () {
-                      Navigator.pop(context);
-                      _infoProfile();
-                    },
-                  ),
-                  _buildDivider(),
-                  _buildMenuItem(
-                    icon: Icons.edit,
-                    text: "Edit Profile",
-                    color: Colors.green,
-                    onTap: () {
-                      Navigator.pop(context);
-                      _editProfile();
-                    },
-                  ),
-                  _buildDivider(),
+    return FutureBuilder<bool>(
+      future: _fetchNotificationStatus(),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) {
+          return const Center(child: CircularProgressIndicator());
+        }
 
-                  NotifikasiItem(
-                    initialValue: _notificationsEnabled,
-                    onToggle: _toggleNotifications,
-                  ),
+        final currentNotificationStatus = snapshot.data!;
 
-                  _buildDivider(),
-                  _buildMenuItem(
-                    icon: Icons.logout,
-                    text: "Logout",
-                    color: Colors.red,
-                    onTap: () {
-                      Navigator.pop(context);
-                      _logout();
-                    },
+        return Stack(
+          children: [
+            Positioned(
+              left: widget.leftPosition,
+              top: widget.topPosition,
+              width: size.width * 0.475,
+              child: Material(
+                color: Colors.transparent,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(vertical: 5),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(8),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black26,
+                        blurRadius: 8,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
                   ),
-                ],
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      _buildMenuItem(
+                        icon: Icons.info,
+                        text: "Info Profile",
+                        color: Colors.blue,
+                        onTap: () {
+                          Navigator.pop(context);
+                          _infoProfile();
+                        },
+                      ),
+                      _buildDivider(),
+                      _buildMenuItem(
+                        icon: Icons.edit,
+                        text: "Edit Profile",
+                        color: Colors.green,
+                        onTap: () {
+                          Navigator.pop(context);
+                          _editProfile();
+                        },
+                      ),
+                      _buildDivider(),
+
+                      NotifikasiItem(
+                        initialValue: currentNotificationStatus,
+                        onToggle: _toggleNotifications,
+                      ),
+
+                      _buildDivider(),
+                      _buildMenuItem(
+                        icon: Icons.logout,
+                        text: "Logout",
+                        color: Colors.red,
+                        onTap: () {
+                          Navigator.pop(context);
+                          _logout();
+                        },
+                      ),
+                    ],
+                  ),
+                ),
               ),
             ),
-          ),
-        ),
-      ],
+          ],
+        );
+      },
     );
   }
 

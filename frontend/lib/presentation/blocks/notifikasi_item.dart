@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../widget/pop_up/custom_dialog.dart';
 import '../widget/pop_up/custom_dialog_button.dart';
 
@@ -10,7 +9,8 @@ class NotifikasiItem extends StatefulWidget {
   const NotifikasiItem({
     super.key,
     required this.initialValue,
-    required this.onToggle,});
+    required this.onToggle,
+  });
 
   @override
   State<NotifikasiItem> createState() => NotifikasiItemState();
@@ -19,6 +19,7 @@ class NotifikasiItem extends StatefulWidget {
 class NotifikasiItemState extends State<NotifikasiItem> {
   bool _expanded = false;
   bool _currentValue = false;
+
 
   @override
   void initState() {
@@ -36,12 +37,6 @@ class NotifikasiItemState extends State<NotifikasiItem> {
     }
   }
 
-  Future<void> _savePreference(bool value) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('notifications_enabled', value);
-  }
-
-
   void _toggleExpand() {
     setState(() {
       _expanded = !_expanded;
@@ -57,8 +52,7 @@ class NotifikasiItemState extends State<NotifikasiItem> {
         confirmText: "Ya, Matikan",
         cancelText: "Batal",
         isWarning: true,
-        onConfirm: () async {
-          await _savePreference(newValue);
+        onConfirm: () {
           setState(() {
             _currentValue = newValue;
           });
@@ -70,12 +64,11 @@ class NotifikasiItemState extends State<NotifikasiItem> {
         context: context,
         isSuccess: true,
         message: "Notifikasi diaktifkan",
-        onComplete: () async {
-          await _savePreference(newValue);
+        onComplete: () {
           setState(() {
             _currentValue = newValue;
           });
-          widget.onToggle(newValue);
+          widget.onToggle(newValue); // Biarkan parent simpan ke SharedPreferences
         },
       );
     }
@@ -113,7 +106,7 @@ class NotifikasiItemState extends State<NotifikasiItem> {
             ),
             if (_expanded) ...[
               Padding(
-                padding: const EdgeInsets.only(left: 20), // Atur sesuai kebutuhan
+                padding: const EdgeInsets.only(left: 20),
                 child: Row(
                   children: [
                     Transform.scale(
