@@ -70,7 +70,7 @@ class _KontrolPakanState extends State<KontrolPakan> {
       print('Error loading config: $e');
       setState(() {
         isFeedingOn = false;
-        feedAmount = 100.0;
+        feedAmount = 50.0;
         _feedingSchedule = List.filled(4, null);
       });
     } finally {
