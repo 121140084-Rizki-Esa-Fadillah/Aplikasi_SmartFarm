@@ -128,3 +128,17 @@ Hasilnya akan menampilkan IP lokal seperti:
 ```bash
 192.168.xx.xx
 ```
+
+## Root User
+
+Role Admin
+
+`Username`: OwnerTambak
+
+`Password`: Admin@123
+
+Role User
+
+`Username`: PekerjaTambak
+
+`Password`: User@123
