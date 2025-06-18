@@ -129,7 +129,11 @@ Hasilnya akan menampilkan IP lokal seperti:
 192.168.xx.xx
 ```
 
-## Root User
+## Demo Aplikasi Sadewa SmartFarm
+
+Link : https://drive.google.com/file/d/1p0o6VkcmZlfqyyuJDKLn_7VCoAvvGQvj/view?usp=sharing
+
+Pengguna dapat mengakases aplikasi dengan Root User sebagai berikut:
 
 Role Admin
 
