@@ -38,16 +38,79 @@ Install dependencies
 
 Buat file .env di direktori root dan tambahkan konfigurasi berikut:
 
-* Konfigurasi server 
+`PORT`=5000
 
-PORT=5000
-MONGO_URI=mongodb+srv://<user>:<password>@<cluster>.mongodb.net/<dbname>?retryWrites=true&w=majority
-JWT_SECRET=your_jwt_secret_key
-EMAIL_HOST=smtp.your-email-provider.com
-EMAIL_PORT=587
-EMAIL_USER=your-email@example.com
-EMAIL_PASS=your-email-password
+`MONGO_URI`=mongodb+srv://<user>:<password>@<cluster>.mongodb.net/<dbname>?retryWrites=true&w=majority
 
+`JWT_SECRET`=your_jwt_secret_key
 
+`EMAIL_HOST`=smtp.your-email-provider.com
 
+`EMAIL_PORT`=465
+
+`EMAIL_USER`=your-email@example.com
+
+`EMAIL_PASS`=your-email-password
+
+### Jalankan Server
+
+```bash
+  node server.js
+```
+
+## Sadewa Smart Farm Frontend
+
+Pada file `api_service.dart` terdapat base URL API yang menghubungkan antara backend dengan frontend.
+
+Secara default, backend telah dideploy ke platform Railway dengan base URL production sebagai berikut:
+
+`static const String baseUrl = "https://backendsadewasmartfarm-production.up.railway.app/api";`
+
+Untuk penggunaan di perangkat lain seperti smartphone untuk keperluan testing dapat menggunakan URL:
+
+`static const String baseUrl = "http://<IP Lokal>/api";`
+
+### Cara Mengetahui IP Lokal
+
+Untuk mengakses backend dari perangkat lain seperti HP (misalnya saat testing Flutter), Anda perlu mengetahui IP lokal dari komputer yang menjalankan backend.
+
+### 🖥️ Windows
+
+Buka **Command Prompt** lalu jalankan perintah berikut:
+
+```bash
+ipconfig
+```
+
+Cari bagian seperti ini:
+
+```bash
+Wireless LAN adapter Wi-Fi:
+
+   IPv4 Address. . . . . . . . . . . : 192.168.xx.xx
+```
+
+Gunakan IP tersebut dalam URL Anda, misalnya:
+
+`static const String baseUrl = "http://192.168.xx.xx:5000/api";`
+
+### 🖥️ Windows
+
+Buka Terminal dan jalankan salah satu perintah berikut:
+
+```bash
+ifconfig
+```
+
+atau
+
+```bash
+hostname -I
+```
+
+Hasilnya akan menampilkan IP lokal seperti:
+
+```bash
+192.168.xx.xx
+```
 
