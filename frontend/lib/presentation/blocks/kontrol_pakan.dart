@@ -19,7 +19,7 @@ class KontrolPakan extends StatefulWidget {
 class _KontrolPakanState extends State<KontrolPakan> {
   List<TimeOfDay?> _feedingSchedule = List.filled(4, null);
   bool? isFeedingOn;
-  double feedAmount = 100.0;
+  double feedAmount = 50.0;
   bool isLoading = true;
   bool isSaving = false;
 
@@ -262,9 +262,9 @@ class _KontrolPakanState extends State<KontrolPakan> {
                           const SizedBox(height: 12),
                           InputValue(
                             initialValue: feedAmount,
-                            minValue: 100,
-                            maxValue: 500,
-                            step: 100,
+                            minValue: 50,
+                            maxValue: 250,
+                            step: 50,
                             unit: "Gr",
                             onChanged: (value) =>
                                 setState(() => feedAmount = value),

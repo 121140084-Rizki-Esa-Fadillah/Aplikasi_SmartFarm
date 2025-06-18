@@ -99,7 +99,10 @@ class InformasiSensor extends StatelessWidget {
           "Tegangan Operasi: 3 - 5.5VDC",
           "Jenis Sensor: Dallas DS18B20",
           "Jenis Output: Digital",
-          "Rentang Suhu: -55°C hingga +125°C"
+          "Rentang Suhu: -55°C hingga +125°C",
+          "Akurasi: ±0.5°C pada -10°C hingga +85°C",
+          "Resolusi: 9 hingga 12 bit (0.5°C hingga 0.0625°C)",
+          "Waktu Konversi Suhu: hingga 750ms (12-bit)",
         ],
         "optimalRange": "Udang tumbuh optimal pada suhu air antara 28°C hingga 32°C dan memiliki toleransi antara 26°C hingga 35°C.",
         "rangeTitle": "Rentang Suhu Optimal",
@@ -108,15 +111,19 @@ class InformasiSensor extends StatelessWidget {
         "title": "Sensor pH",
         "image": "assets/images/Sensor-pH.jpg",
         "description":
-        "Sensor pH digunakan untuk mengukur tingkat keasaman atau kebasaan dalam air. pH air sangat penting dalam budidaya perikanan untuk memastikan lingkungan yang sehat bagi organisme akuatik. Jensi sensor pH yang digunakan pada perangkat ini adalah ",
-        "specifications": <String>[
+        "Sensor pH digunakan untuk mengukur tingkat keasaman atau kebasaan dalam air. pH air sangat penting dalam budidaya perikanan untuk memastikan lingkungan yang sehat bagi organisme akuatik. Jenis sensor pH yang digunakan pada perangkat ini adalah sensor pH SEN0161.",
+        "specifications": [
           "Tegangan Operasi: 5VDC",
           "Rentang pH: 0 - 14",
           "Jenis Output: Analog",
-          "Akurasi: ±0.1 pH"
+          "Akurasi: ±0.1 pH pada 25°C",
+          "Waktu Respon: ≤1 menit",
+          "Konektor Probe: BNC",
+          "Panjang Kabel: 660mm",
+          "Rentang Suhu Operasi: 0 - 60°C"
         ],
         "optimalRange": "Udang membutuhkan pH antara 7.5 hingga 8.5 untuk pertumbuhan yang optimal.",
-        "rangeTitle": "Rentang pH Optimal",
+        "rangeTitle": "Rentang pH Optimal"
       },
       "salinity": {
         "title": "Sensor Salinitas",
@@ -127,7 +134,9 @@ class InformasiSensor extends StatelessWidget {
           "Tegangan Operasi: 3.3V - 5VDC",
           "Rentang Salinitas: 0 - 40 ppt",
           "Jenis Output: Analog",
-          "Akurasi: ±1% dari rentang pengukuran"
+          "Akurasi: ±1% dari rentang pengukuran",
+          "Suhu Operasi: 0–40°C",
+          "Kehidupan Probe: 0.5 tahun (tergantung pada frekuensi penggunaan)"
         ],
         "optimalRange": "Udang vannamei tumbuh optimal pada salinitas antara 15 - 25 ppt.",
         "rangeTitle": "Rentang Salinitas Optimal",
@@ -141,7 +150,8 @@ class InformasiSensor extends StatelessWidget {
           "Tegangan Operasi: 5VDC",
           "Rentang Kekeruhan: 0 - 1000 NTU",
           "Jenis Output: Analog",
-          "Akurasi: ±2% dari rentang pengukuran"
+          "Akurasi: ±2% dari rentang pengukuran",
+          "Catatan: Bagian atas probe tidak tahan air; hindari perendaman total"
         ],
         "optimalRange": "Tingkat kekeruhan air yang aman untuk budidaya udang berkisar antara 30 - 80 NTU.",
         "rangeTitle": "Rentang Kekeruhan Optimal",

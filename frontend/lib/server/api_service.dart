@@ -5,6 +5,7 @@ import '../main.dart';
 
 class ApiService {
   static const String baseUrl = "https://backendsadewasmartfarm-production.up.railway.app/api";
+  //static const String baseUrl = "http://<IP Lokal>/api";
 
   static Future<bool> login(String username, String password) async {
     try {

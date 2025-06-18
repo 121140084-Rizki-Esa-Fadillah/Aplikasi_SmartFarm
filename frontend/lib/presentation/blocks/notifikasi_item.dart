@@ -49,7 +49,7 @@ class NotifikasiItemState extends State<NotifikasiItem> {
         context: context,
         title: "Matikan Notifikasi?",
         message: "Apakah Anda yakin ingin mematikan popup notifikasi?",
-        confirmText: "Ya, Matikan",
+        confirmText: "Ya",
         cancelText: "Batal",
         isWarning: true,
         onConfirm: () {

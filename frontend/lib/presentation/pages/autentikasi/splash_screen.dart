@@ -32,22 +32,33 @@ class _SplashScreenState extends State<SplashScreen> {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('token');
     final role = prefs.getString('role');
+    bool isLoggedIn = token != null && token.isNotEmpty && !JwtDecoder.isExpired(token);
 
     RemoteMessage? initialMessage = await FirebaseMessaging.instance.getInitialMessage();
-    if (initialMessage != null && token != null && token.isNotEmpty && !JwtDecoder.isExpired(token)) {
-      _navigateToNotifikasi(initialMessage.data);
+    if (initialMessage != null) {
+      if (isLoggedIn) {
+        _navigateToNotifikasi(initialMessage.data);
+      } else {
+        await prefs.remove('pending_notification');
+        Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => const Login()));
+      }
       return;
     }
 
     final pendingPayload = prefs.getString('pending_notification');
-    if (pendingPayload != null && token != null && token.isNotEmpty && !JwtDecoder.isExpired(token)) {
-      final data = jsonDecode(pendingPayload);
-      await prefs.remove('pending_notification');
-      _navigateToNotifikasi(data);
+    if (pendingPayload != null) {
+      if (isLoggedIn) {
+        final data = jsonDecode(pendingPayload);
+        await prefs.remove('pending_notification');
+        _navigateToNotifikasi(data);
+      } else {
+        await prefs.remove('pending_notification');
+        Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => const Login()));
+      }
       return;
     }
 
-    if (token != null && token.isNotEmpty && !JwtDecoder.isExpired(token)) {
+    if (isLoggedIn) {
       if (role == "Admin") {
         Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => const BerandaAdmin()));
       } else {
@@ -59,6 +70,7 @@ class _SplashScreenState extends State<SplashScreen> {
       Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => const Login()));
     }
   }
+
 
   void _navigateToNotifikasi(Map<String, dynamic> data) {
     final pondId = data['pondId'];

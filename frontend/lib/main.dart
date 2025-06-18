@@ -3,8 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:frontend_app/presentation/pages/autentikasi/login.dart';
 import 'package:frontend_app/presentation/pages/autentikasi/splash_screen.dart';
 import 'package:frontend_app/presentation/pages/monitoring/notifikasi.dart';
+import 'package:jwt_decoder/jwt_decoder.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 FirebaseMessaging messaging = FirebaseMessaging.instance;
@@ -15,7 +17,13 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
 
-  await setupFirebaseMessaging(subscribe: false);
+  // Cek initialMessage di sini juga
+  RemoteMessage? initialMessage = await FirebaseMessaging.instance.getInitialMessage();
+  if (initialMessage != null) {
+    print("Initial Message dari terminated: ${initialMessage.data}");
+  }
+
+  await setupFirebaseMessagingOnFirstLaunch();
 
   setupLocalNotifications();
 
@@ -47,7 +55,7 @@ class MyApp extends StatelessWidget {
 }
 
 // Setup Firebase Messaging
-Future<void> setupFirebaseMessaging({required bool subscribe}) async {
+Future<void> setupFirebaseMessagingOnFirstLaunch() async {
   NotificationSettings settings = await messaging.requestPermission(
     alert: true,
     badge: true,
@@ -55,20 +63,20 @@ Future<void> setupFirebaseMessaging({required bool subscribe}) async {
   );
 
   if (settings.authorizationStatus == AuthorizationStatus.authorized) {
+    print("Izin notifikasi diberikan.");
+
     fcmDeviceToken = await messaging.getToken();
     print("Firebase Token: $fcmDeviceToken");
 
-    if (subscribe) {
-      await messaging.subscribeToTopic('global_notifications');
-      print("Subscribed to global_notifications");
-    }
+    // Auto-subscribe ke topik global
+    await messaging.subscribeToTopic('global_notifications');
+    print("Subscribed to global_notifications");
 
     FirebaseMessaging.instance.onTokenRefresh.listen((newToken) {
       fcmDeviceToken = newToken;
       print("Device token diperbarui: $fcmDeviceToken");
     });
 
-    // Notifikasi saat app aktif
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
       print("FCM diterima (foreground): ${message.notification?.title}, ${message.notification?.body}, ${message.data}");
 
@@ -87,13 +95,12 @@ Future<void> setupFirebaseMessaging({required bool subscribe}) async {
       }
     });
 
-    // Notifikasi dibuka dari background
     FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
       print("Dibuka dari notifikasi (background): ${message.data}");
       handleNotificationClick(jsonEncode(message.data));
     });
   } else {
-    print("Izin notifikasi ditolak.");
+    print("Izin notifikasi tidak diberikan.");
   }
 }
 
@@ -153,15 +160,31 @@ void showLocalNotification(String title, String body, {Map<String, dynamic>? dat
 }
 
 // Navigasi berdasarkan tipe notifikasi
-void handleNotificationClick(String payload) {
+void handleNotificationClick(String payload) async {
   final data = jsonDecode(payload);
   final type = data['type'];
   final pondId = data['pondId'];
   final namePond = data['namePond'];
 
-  print("Navigasi berdasarkan tipe: $type");
+  final prefs = await SharedPreferences.getInstance();
+  final token = prefs.getString('token');
+  bool isLoggedIn = token != null && token.isNotEmpty && !JwtDecoder.isExpired(token);
 
-  MyApp.navigatorKey.currentState?.push(
-    MaterialPageRoute(builder: (_) => Notifikasi(pondId: pondId, namePond: namePond)),
-  );
+  if (isLoggedIn) {
+    print("Navigasi ke Notifikasi: $type");
+    MyApp.navigatorKey.currentState?.push(
+      MaterialPageRoute(builder: (_) => Notifikasi(pondId: pondId, namePond: namePond)),
+    );
+  } else {
+    print("Belum login. Navigasi ke halaman Login.");
+
+    // Simpan payload sementara agar bisa digunakan setelah login jika perlu
+    await prefs.setString('pending_notification', payload);
+
+    MyApp.navigatorKey.currentState?.pushAndRemoveUntil(
+      MaterialPageRoute(builder: (_) => const Login()),
+          (route) => false,
+    );
+  }
 }
+
