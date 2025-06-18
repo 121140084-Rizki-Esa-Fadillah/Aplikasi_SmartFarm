@@ -12,6 +12,7 @@
 
 Repository ini merupakan backend service untuk aplikasi **Sadewa Smart Farm** yang dibangun menggunakan **Node.js (Express.js)** dan berfungsi sebagai jembatan antara aplikasi Flutter dan layanan database seperti **Firebase Realtime Database** serta **MongoDB**.
 
+
 ### Instalasi
 
 ---
@@ -34,6 +35,7 @@ Install dependencies
   npm install
 ```
 
+
 ### Setup Environment
 
 Buat file .env di direktori root dan tambahkan konfigurasi berikut:
@@ -52,11 +54,20 @@ Buat file .env di direktori root dan tambahkan konfigurasi berikut:
 
 `EMAIL_PASS`=your-email-password
 
+
+### Tambahkan FIle Firebase
+
+Tambahkan file firebase-admin.json ke direktori root. File ini dapat diunduh dari:
+
+`Firebase Console > Project Settings > Service Accounts > Generate New Private Key`
+
+
 ### Jalankan Server
 
 ```bash
   node server.js
 ```
+
 
 ## Sadewa Smart Farm Frontend
 
@@ -70,9 +81,12 @@ Untuk penggunaan di perangkat lain seperti smartphone untuk keperluan testing da
 
 `static const String baseUrl = "http://<IP Lokal>/api";`
 
+
+
 ### Cara Mengetahui IP Lokal
 
 Untuk mengakses backend dari perangkat lain seperti HP (misalnya saat testing Flutter), Anda perlu mengetahui IP lokal dari komputer yang menjalankan backend.
+
 
 ### 🖥️ Windows
 
@@ -94,7 +108,8 @@ Gunakan IP tersebut dalam URL Anda, misalnya:
 
 `static const String baseUrl = "http://192.168.xx.xx:5000/api";`
 
-### 🖥️ Windows
+
+### 🖥️ MAC/Linux
 
 Buka Terminal dan jalankan salah satu perintah berikut:
 
@@ -113,4 +128,3 @@ Hasilnya akan menampilkan IP lokal seperti:
 ```bash
 192.168.xx.xx
 ```
-
