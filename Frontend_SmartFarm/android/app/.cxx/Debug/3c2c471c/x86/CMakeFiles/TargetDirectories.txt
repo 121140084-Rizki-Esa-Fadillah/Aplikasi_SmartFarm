@@ -1,0 +1,2 @@
+C:/Users/LENOVO/Sadewa_SmartFarm/frontend/android/app/.cxx/Debug/3c2c471c/x86/CMakeFiles/edit_cache.dir
+C:/Users/LENOVO/Sadewa_SmartFarm/frontend/android/app/.cxx/Debug/3c2c471c/x86/CMakeFiles/rebuild_cache.dir
