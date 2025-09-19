@@ -1,5 +1,5 @@
 {
-  "name": "sadewa-backend",
+  "name": "app-smartfarm",
   "version": "1.0.0",
   "description": "Backend API for your application using Express.js and MongoDB",
   "main": "server.js",

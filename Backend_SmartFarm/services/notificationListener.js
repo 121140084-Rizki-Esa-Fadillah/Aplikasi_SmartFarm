@@ -31,7 +31,7 @@ const previousValues = {};
 
 // Fungsi untuk mengambil nilai awal dari Firebase
 const initializePreviousValues = async () => {
-      const pondsRef = db.ref("Sadewa_SmartFarm/ponds");
+      const pondsRef = db.ref("App_SmartFarm/ponds");
       const pondsSnapshot = await pondsRef.once("value");
       const pondsData = pondsSnapshot.val();
 
@@ -70,7 +70,7 @@ function displayName(key) {
 
 
 // Pemantauan Firebase Realtime Database
-db.ref("Sadewa_SmartFarm/ponds").on("child_changed", async (snapshot) => {
+db.ref("App_SmartFarm/ponds").on("child_changed", async (snapshot) => {
       const pondId = snapshot.key;
       const pondData = snapshot.val();
       if (!pondData) return;
@@ -96,7 +96,7 @@ db.ref("Sadewa_SmartFarm/ponds").on("child_changed", async (snapshot) => {
                         const newVal = newThresholds[key];
                         if (JSON.stringify(oldVal) !== JSON.stringify(newVal)) {
                               changes.push(
-                                    `${displayName(key)}: ${oldVal.low}–${oldVal.high} => ${newVal.low}–${newVal.high}`
+                                    `${displayName(key)}: ${oldVal.low}– ${oldVal.high} => ${newVal.low}–${newVal.high}`
                               );
                         }
                   }
@@ -128,9 +128,9 @@ db.ref("Sadewa_SmartFarm/ponds").on("child_changed", async (snapshot) => {
 
             const scheduleChanged = prevSchedule && JSON.stringify(prevSchedule) !== JSON.stringify(newSchedule);
             const amountChanged = prevAmount !== undefined && prevAmount !== newAmount;
-            console.log(` Jadwal dan/atau jumlah pakan diperbarui untuk ${namePond}`);
 
             if (scheduleChanged || amountChanged) {
+                  console.log(` Jadwal dan/atau jumlah pakan diperbarui untuk ${namePond}`);
                   if (feedUpdateCache[pondId]?.timeout) {
                         clearTimeout(feedUpdateCache[pondId].timeout);
                   }
@@ -159,20 +159,20 @@ db.ref("Sadewa_SmartFarm/ponds").on("child_changed", async (snapshot) => {
 
                               if (scheduleChanged && amountChanged) {
                                     title = "Jadwal & Jumlah Pakan Diperbarui";
-                                    message += `Jadwal: \n${prevSchedule?.join(", ")} \n => ${newSchedule.join(", ")}\n`;
-                                    message += `Jumlah: \n${prevAmount} => ${newAmount} gram`;
+                                    message += `Jadwal Lama: \n${prevSchedule?.join(", ")} \n Jadwal Baru: \n${newSchedule.join(", ")}\n\n`;
+                                    message += `Jumlah: \n${prevAmount} gram => ${newAmount} gram`;
                                     metadata.previous_schedule = prevSchedule;
                                     metadata.new_schedule = newSchedule;
                                     metadata.previous_amount = prevAmount;
                                     metadata.new_amount = newAmount;
                               } else if (scheduleChanged) {
                                     title = "Jadwal Pakan Diperbarui";
-                                    message += `Jadwal: \n${prevSchedule?.join(", ")} \n => ${newSchedule.join(", ")}\n`;
+                                    message += `Jadwal Lama: \n${prevSchedule?.join(", ")} \n Jadwal Baru: \n${newSchedule.join(", ")}\n\n`;
                                     metadata.previous_schedule = prevSchedule;
                                     metadata.new_schedule = newSchedule;
                               } else if (amountChanged) {
                                     title = "Jumlah Pakan Diperbarui";
-                                    message += `Jumlah: \n${prevAmount} => ${newAmount} gram`;
+                                    message += `Jumlah: \n${prevAmount} gram => ${newAmount} gram`;
                                     metadata.previous_amount = prevAmount;
                                     metadata.new_amount = newAmount;
                               }
@@ -205,7 +205,7 @@ db.ref("Sadewa_SmartFarm/ponds").on("child_changed", async (snapshot) => {
             if (prevAerator !== undefined && newAerator !== undefined && prevAerator !== newAerator) {
                   console.log(`Delay aerator diperbarui untuk ${namePond}`);
 
-                  const message = `Delay aerator untuk ${namePond} telah diubah dari ${prevAerator} menit => ${newAerator} menit`;
+                  const message = `Delay aerator untuk ${namePond} telah diperbarui: \nDelay: \n${prevAerator} menit => ${newAerator} menit`;
 
                   await buatNotifikasi({
                         idPond: pondId,
@@ -230,7 +230,7 @@ db.ref("Sadewa_SmartFarm/ponds").on("child_changed", async (snapshot) => {
 cron.schedule("*/30 * * * *", async () => {
       console.log("[CRON] Mengecek kondisi feed_alert...");
 
-      const pondsSnapshot = await db.ref("Sadewa_SmartFarm/ponds").once("value");
+      const pondsSnapshot = await db.ref("App_SmartFarm/ponds").once("value");
       const pondsData = pondsSnapshot.val();
 
       if (!pondsData) return;
@@ -264,7 +264,7 @@ cron.schedule("*/30 * * * *", async () => {
 cron.schedule("*/5 * * * *", async () => {
       console.log("[CRON] Mengecek kualitas air...");
 
-      const pondsSnapshot = await db.ref("Sadewa_SmartFarm/ponds").once("value");
+      const pondsSnapshot = await db.ref("App_SmartFarm/ponds").once("value");
       const pondsData = pondsSnapshot.val();
 
       if (!pondsData) return;
@@ -316,7 +316,7 @@ cron.schedule("*/5 * * * *", async () => {
                               idPond: pondId,
                               type: "water_quality_alert",
                               title: "Kualitas Air",
-                              message: `Kualitas ${alerts.join(", ")} air pada ${namePond} berada di luar batas normal.\nNilai ${alertDetails.join(", ")}`,
+                              message: `Kualitas ${alerts.join(", ")} air pada ${namePond} berada di luar batas normal.\n\n${alertDetails.join("\n")}`,
                               time: new Date(),
                               status: "unread",
                               metadata: {

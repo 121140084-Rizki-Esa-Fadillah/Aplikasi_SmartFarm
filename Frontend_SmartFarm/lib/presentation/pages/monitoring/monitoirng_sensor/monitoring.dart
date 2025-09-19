@@ -33,7 +33,7 @@ class _MonitoringState extends State<Monitoring> {
   void initState() {
     super.initState();
     fetchSensorData();
-    _sensorFetchTimer = Timer.periodic(const Duration(seconds: 10), (timer) {
+    _sensorFetchTimer = Timer.periodic(const Duration(seconds: 5), (timer) {
       fetchSensorData();
     });
   }

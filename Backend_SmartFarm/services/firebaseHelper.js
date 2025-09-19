@@ -5,7 +5,7 @@ const {
 // Ambil data sensor berdasarkan pondId
 const getMonitoringData = async (pondId) => {
       try {
-            const firebasePath = `Sadewa_SmartFarm/ponds/${pondId}/sensor_data`;
+            const firebasePath = `App_SmartFarm/ponds/${pondId}/sensor_data`;
             const snapshot = await db.ref(firebasePath).once("value");
             if (!snapshot.exists()) {
                   throw new Error(`Data sensor untuk pondId ${pondId} tidak ditemukan.`);
@@ -20,7 +20,7 @@ const getMonitoringData = async (pondId) => {
 // Ambil konfigurasi device
 const getDeviceConfig = async (pondId, keyPath = "") => {
       try {
-            let fullPath = `Sadewa_SmartFarm/ponds/${pondId}/device_config`;
+            let fullPath = `App_SmartFarm/ponds/${pondId}/device_config`;
             if (keyPath) {
                   fullPath += `/${keyPath.replace(/^\/*|\/*$/g, '')}`;
             }
@@ -43,7 +43,7 @@ const updateDeviceConfig = async (pondId, keyPath, newValue) => {
                   throw new Error("Path konfigurasi harus ditentukan.");
             }
 
-            let updatePath = `Sadewa_SmartFarm/ponds/${pondId}/device_config/${keyPath.replace(/^\/|\/$/g, '')}`;
+            let updatePath = `App_SmartFarm/ponds/${pondId}/device_config/${keyPath.replace(/^\/|\/$/g, '')}`;
 
             if (typeof newValue === 'number' || typeof newValue === 'string') {
                   await db.ref().child(updatePath).set(Number(newValue));

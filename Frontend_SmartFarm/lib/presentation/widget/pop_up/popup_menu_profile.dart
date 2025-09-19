@@ -98,10 +98,10 @@ class _PopupMenuProfileState extends State<PopupMenuProfile> {
       confirmText: "Ya",
       onConfirm: () async {
         final prefs = await SharedPreferences.getInstance();
-        final userId = await _getCurrentUserId();
-        if (userId != null) {
-          await prefs.remove('notifications_enabled_$userId');
-        }
+        //final userId = await _getCurrentUserId();
+        //if (userId != null) {
+        //  await prefs.remove('notifications_enabled_$userId');
+        //}
         await ApiService.logout();
         MyApp.navigatorKey.currentState?.pushAndRemoveUntil(
           MaterialPageRoute(builder: (context) => const Login()),

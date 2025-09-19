@@ -31,7 +31,7 @@ const collectDataFromFirebase = async () => {
 	try {
 		console.log("Mengambil data monitoring dari Firebase...");
 
-		const ref = db.ref("Sadewa_SmartFarm/ponds");
+		const ref = db.ref("App_SmartFarm/ponds");
 		const snapshot = await ref.once("value");
 		const pondsData = snapshot.val();
 
@@ -120,15 +120,15 @@ const hapusHistory = async () => {
 };
 
 // Jadwal Cron
-cron.schedule("*/15 * * * *", async () => {
-	console.log("Mengambil data setiap 15 menit...");
+cron.schedule("*/5 * * * *", async () => {
+	console.log("Mengambil data setiap 5 menit...");
 	await collectDataFromFirebase();
 }, {
 	scheduled: true,
 	//timezone: "Asia/Jakarta",
 });
 
-cron.schedule("0 17 * * *", async () => {
+cron.schedule("0 18 * * *", async () => {
 	console.log("Menyimpan laporan harian dan menghapus riwayat lama...");
 	try {
 		await simpanHistory();

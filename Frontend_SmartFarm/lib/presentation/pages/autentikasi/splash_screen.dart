@@ -99,7 +99,7 @@ class _SplashScreenState extends State<SplashScreen> {
                 ),
                 const SizedBox(height: 10),
                 Text(
-                  "Sadewa Smartfarm",
+                  "Smartfarm App",
                   style: GoogleFonts.poppins(
                     fontSize: size.width * 0.07,
                     fontWeight: FontWeight.w600,

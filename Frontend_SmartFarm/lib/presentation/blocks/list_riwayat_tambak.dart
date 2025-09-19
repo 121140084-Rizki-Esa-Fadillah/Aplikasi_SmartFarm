@@ -97,7 +97,7 @@ class _ListRiwayatTambakState extends State<ListRiwayatTambak> {
                       ),
                       padding: const EdgeInsets.all(6),
                       child: Icon(
-                        LucideIcons.download,
+                        Icons.download,   // bawaan Flutter
                         color: isPressed ? Colors.blue : const Color(0xFF16425B),
                         size: iconSize,
                       ),

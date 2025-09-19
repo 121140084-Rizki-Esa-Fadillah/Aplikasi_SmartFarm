@@ -1,22 +1,22 @@
 {
   "project_info": {
-    "project_number": "777329603359",
-    "firebase_url": "https://app-sadewa-smartfarm-default-rtdb.asia-southeast1.firebasedatabase.app",
-    "project_id": "app-sadewa-smartfarm",
-    "storage_bucket": "app-sadewa-smartfarm.firebasestorage.app"
+    "project_number": "264892607556",
+    "firebase_url": "https://app-smartfarm-bd7d2-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "project_id": "app-smartfarm-bd7d2",
+    "storage_bucket": "app-smartfarm-bd7d2.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:777329603359:android:eaa401f86080233c28b62a",
+        "mobilesdk_app_id": "1:264892607556:android:44b216b4d315191c9b2011",
         "android_client_info": {
-          "package_name": "com.example.frontend_app"
+          "package_name": "com.app_smartfarm"
         }
       },
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyBecmgvQAV6GGkfFOgGeAPo8QIBty26Puo"
+          "current_key": "AIzaSyA78SnxHvUxV54D8lFPgrKJ5tFxvZuGDko"
         }
       ],
       "services": {

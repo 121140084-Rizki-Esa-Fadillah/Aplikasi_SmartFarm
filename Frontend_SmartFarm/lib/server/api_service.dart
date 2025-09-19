@@ -4,8 +4,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../main.dart';
 
 class ApiService {
-  static const String baseUrl = "https://backendsadewasmartfarm-production.up.railway.app/api";
-  //static const String baseUrl = "http://<IP Lokal>/api";
+  //static const String baseUrl = "https://backendsadewasmartfarm-production.up.railway.app/api";
+  static const String baseUrl = "http://192.168.96.45:5000/api";
 
   static Future<bool> login(String username, String password) async {
     try {
