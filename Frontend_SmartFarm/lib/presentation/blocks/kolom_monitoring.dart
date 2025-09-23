@@ -49,7 +49,7 @@ class _KolomMonitoringState extends State<KolomMonitoring> {
 
   String formatSensorValue(String value, String sensorType) {
     double parsedValue = double.tryParse(value) ?? 0.0;
-    String formattedValue = parsedValue.toStringAsFixed(1);
+    String formattedValue = parsedValue.toStringAsFixed(2);
 
     switch (sensorType) {
       case 'temperature':

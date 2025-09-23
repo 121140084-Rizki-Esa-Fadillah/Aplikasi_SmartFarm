@@ -8,7 +8,7 @@
     <uses-permission android:name="android.permission.INTERNET" />
 
     <application
-        android:label="Sadewa SmartFarm"
+        android:label="App SmartFarm"
         android:enableOnBackInvokedCallback="true"
         android:usesCleartextTraffic="true"
         android:icon="@drawable/ic_notification">

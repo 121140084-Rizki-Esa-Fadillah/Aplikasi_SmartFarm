@@ -21,25 +21,41 @@ void updatePH() {
   for (int i = 0; i < numSamples; i++) {
     int sensorValue = analogRead(PH_SENSOR_PIN);
     totalVoltage += sensorValue * (3.3 / 4095.0);
-    delay(100);
+    delay(300);
   }
   
   float tegangan_pH = totalVoltage / numSamples;
 
   // Kalibrasi berdasarkan regresi linear
-  pH = round2Decimal(-6.0 * tegangan_pH + 22.0);
+  pH = -10.31 * tegangan_pH + 13.25;
+
+  // Batasi ke rentang 0 - 14
+  if (pH < 0) pH = 0;
+  if (pH > 14) pH = 14;
+
+  pH = round2Decimal(pH);
 
   Serial.print("pH Value: "); Serial.print(pH, 2);
   Serial.print(" | pH Voltage: "); Serial.println(tegangan_pH, 3);
 }
 
+
 void updateSalinity() {
-  int analogValueEC = analogRead(SALINITY_PIN);
-  float voltageEC = analogValueEC * (vRef / ADC_RESOLUTION);
+  float totalVoltage = 0;
+  int numSamples = 10;
+
+  for (int i = 0; i < numSamples; i++) {
+    int analogValueEC = analogRead(SALINITY_PIN);
+    totalVoltage += analogValueEC * (vRef / ADC_RESOLUTION);
+    delay(300);
+  }
+
+  float voltageEC = totalVoltage / numSamples;
   float compensatedVoltageEC = voltageEC / (1 + temperatureCompensation * (temperature - 25));
 
-  // Kalibrasi baru berdasarkan dua titik data
-  salinity = 29.58 * compensatedVoltageEC - 23.75;
+  // Kalibrasi berdasarkan dua titik data
+  salinity = 33.23 * compensatedVoltageEC - 13.96;
+
   if (salinity < 0) salinity = 0;
   salinity = round2Decimal(salinity);
 
@@ -49,19 +65,25 @@ void updateSalinity() {
 }
 
 void updateTurbidity() {
-  int turbidityValue = analogRead(TURBIDITY_SENSOR_PIN);
+  float totalVoltage = 0;
+  int numSamples = 10;
 
-  float turbidityVoltage = turbidityValue * (V_REF / ADC_RESOLUTION);
+  for (int i = 0; i < numSamples; i++) {
+    int turbidityValue = analogRead(TURBIDITY_SENSOR_PIN);
+    totalVoltage += turbidityValue * (V_REF / ADC_RESOLUTION);
+    delay(300);
+  }
+
+  float turbidityVoltage = totalVoltage / numSamples;
 
   // Kalibrasi linear dari dua titik
-  turbidity = -123.82 * turbidityVoltage + 195.94;
+  turbidity = -238.42 * turbidityVoltage + 394.32;
 
   turbidity = round2Decimal(turbidity);
   if (turbidity < 0) turbidity = 0;
-  if (turbidity > 100) turbidity = 100;
+  if (turbidity > 1000) turbidity = 1000;
 
   Serial.print("Turbidity (NTU): "); Serial.print(turbidity);
-  Serial.print(" | ADC: "); Serial.print(turbidityValue);
   Serial.print(" | Voltage: "); Serial.println(turbidityVoltage, 3);
   Serial.println();
 }

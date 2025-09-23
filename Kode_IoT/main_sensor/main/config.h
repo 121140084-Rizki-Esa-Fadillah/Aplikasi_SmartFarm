@@ -30,7 +30,7 @@ extern FirebaseJson Json;
 extern DallasTemperature sensors;
 
 //PH
-#define PH_SENSOR_PIN 36
+#define PH_SENSOR_PIN 32
 
 //Turbidity
 #define TURBIDITY_SENSOR_PIN 34

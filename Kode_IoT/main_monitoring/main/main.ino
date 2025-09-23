@@ -121,8 +121,7 @@ void loop() {
   Serial.print("Waktu sekarang: ");
   Serial.println(getDateTimeString(now));
 
-  int rainAnalogValue = analogRead(RAIN_SENSOR_ANALOG_PIN);
-
+  updateRainStatus();
   sendDataToFirebase(now, isRaining);
   getDataFromFirebase(temperature, salinity, turbidity, pH);
   updateDisplay(rainAnalogValue, temperature, salinity, turbidity, pH, isFeeding, feedEmpty, isRaining);

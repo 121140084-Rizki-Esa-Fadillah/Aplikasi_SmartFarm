@@ -1,12 +1,12 @@
 #include "config.h"
 
 // Wi-Fi
-// const char* ssid = "Galaxy A12 8FE5";
-// const char* password = "123454321";
+const char* ssid = "App Smartfarm";
+const char* password = "12345678";
 
 // Wi-Fi
-const char* ssid = "Prolink_PRT7011L_E3F7D";
-const char* password = "prolink12345";
+//const char* ssid = "Prolink_PRT7011L_E3F7D";
+//const char* password = "prolink12345";
 
 // Firebase
 FirebaseData firebaseData;

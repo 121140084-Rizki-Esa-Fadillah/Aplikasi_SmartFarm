@@ -12,6 +12,8 @@ void setup() {
     delay(500);
     Serial.print(".");
   }
+  Serial.println("\nWiFi terhubung");
+  Serial.println("IP Address: " + WiFi.localIP().toString());
   
   // OneWire
   sensors.begin();
