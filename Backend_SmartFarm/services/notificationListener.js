@@ -80,7 +80,7 @@ db.ref("App_SmartFarm/ponds").on("child_changed", async (snapshot) => {
       });
       const namePond = kolam ? kolam.namePond : pondId;
 
-      console.log(`Perubahan data untuk ${namePond} (Pond ID: ${pondId})`);
+      //console.log(`Perubahan data untuk ${namePond} (Pond ID: ${pondId})`);
 
       // Notifikasi Perubahan Ambang Batas Sensor (threshold_update)
       if (pondData.device_config && pondData.device_config.thresholds) {
@@ -260,7 +260,7 @@ cron.schedule("*/30 * * * *", async () => {
       }
 });
 
-// Cek Water Quality setiap 1 menit
+// Cek Water Quality setiap 5 menit
 cron.schedule("*/5 * * * *", async () => {
       console.log("[CRON] Mengecek kualitas air...");
 

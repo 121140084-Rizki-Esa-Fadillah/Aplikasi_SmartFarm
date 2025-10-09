@@ -128,7 +128,7 @@ cron.schedule("*/5 * * * *", async () => {
 	//timezone: "Asia/Jakarta",
 });
 
-cron.schedule("0 18 * * *", async () => {
+cron.schedule("0 00 * * *", async () => {
 	console.log("Menyimpan laporan harian dan menghapus riwayat lama...");
 	try {
 		await simpanHistory();

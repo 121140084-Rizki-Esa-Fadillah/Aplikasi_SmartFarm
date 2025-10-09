@@ -100,7 +100,7 @@ const hapusNotifikasi = async () => {
 };
 
 // Penghapusan notifikasi
-cron.schedule("0 18 * * *", async () => {
+cron.schedule("0 00 * * *", async () => {
       console.log("Cron job: hapus notifikasi lama...");
       await hapusNotifikasi();
 }, {
