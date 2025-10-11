@@ -15,7 +15,9 @@ const app = express();
 app.use(express.urlencoded({
 	extended: true
 }));
-app.use(express.json({ strict: false }));
+app.use(express.json({
+	strict: false
+}));
 app.use(cors());
 app.use(helmet());
 
@@ -42,6 +44,7 @@ const feederRoutes = require("./routes/feeder");
 const thresholdRoutes = require("./routes/thresholds");
 const checkDataRouter = require("./routes/checkData");
 const emailCheckRoute = require('./routes/checkEmail');
+const cronRoutes = require("./routes/cron");
 
 // Routes
 app.use("/api/auth", authRoutes);
@@ -58,6 +61,7 @@ app.use("/api/konfigurasi/feeding", feederRoutes);
 app.use("/api/konfigurasi/thresholds", thresholdRoutes);
 app.use("/api/check", checkDataRouter);
 app.use('/api', emailCheckRoute);
+app.use("/api/cron", cronRoutes);
 
 // Jalankan Server
 const PORT = process.env.PORT || 5000;

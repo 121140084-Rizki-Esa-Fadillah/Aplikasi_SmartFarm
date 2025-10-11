@@ -8,12 +8,12 @@ const Kolam = require("../models/kolam");
 const Notification = require("../models/notifikasi"); 
 const cron = require("node-cron");
 
-// Fungsi untuk mencegah notifikasi duplikat dalam 5 menit terakhir
+// Fungsi untuk mencegah notifikasi duplikat dalam 10 menit terakhir
 const isDuplicateNotification = async (idPond, type) => {
       if (type !== "feed_alert") return false;
 
       const checkTime = new Date();
-      checkTime.setMinutes(checkTime.getMinutes() - 5);
+      checkTime.setMinutes(checkTime.getMinutes() - 10);
 
       const existingNotification = await Notification.model.findOne({
             idPond,
@@ -258,10 +258,14 @@ cron.schedule("*/30 * * * *", async () => {
                   });
             }
       }
+},
+{
+	scheduled: true,
+	timezone: "Asia/Jakarta",
 });
 
-// Cek Water Quality setiap 5 menit
-cron.schedule("*/5 * * * *", async () => {
+// Cek Water Quality setiap 10 menit
+cron.schedule("*/10 * * * *", async () => {
       console.log("[CRON] Mengecek kualitas air...");
 
       const pondsSnapshot = await db.ref("App_SmartFarm/ponds").once("value");
@@ -332,6 +336,9 @@ cron.schedule("*/5 * * * *", async () => {
                   }
             }
       }
+}, {
+	scheduled: true,
+	timezone: "Asia/Jakarta",
 });
 
 

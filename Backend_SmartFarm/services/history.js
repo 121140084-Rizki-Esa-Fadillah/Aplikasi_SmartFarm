@@ -14,7 +14,7 @@ const ambilHistoryByPond = async (idPond) => {
 		const history = await History.ambilHistoryByPond(idPond);
 		return history.length > 0 ? history : null;
 	} catch (error) {
-		throw new Error("Gagal mengambil riwayat:", error.message);
+		throw new Error("Gagal mengambil riwayat:${error.message}");
 	}
 };
 
@@ -23,7 +23,7 @@ const ambilHistoryById = async (id) => {
 		const history = await History.ambilHistoryById(id);
 		return history || null;
 	} catch (error) {
-		throw new Error("Gagal mengambil riwayat berdasarkan ID:", error.message);
+		throw new Error("Gagal mengambil riwayat berdasarkan ID: ${error.message}");
 	}
 };
 
@@ -119,16 +119,15 @@ const hapusHistory = async () => {
 	}
 };
 
-// Jadwal Cron
-cron.schedule("*/5 * * * *", async () => {
-	console.log("Mengambil data setiap 5 menit...");
+cron.schedule("*/15 * * * *", async () => {
+	console.log("Mengambil data setiap 15 menit...");
 	await collectDataFromFirebase();
 }, {
 	scheduled: true,
-	//timezone: "Asia/Jakarta",
+	timezone: "Asia/Jakarta",
 });
 
-cron.schedule("0 00 * * *", async () => {
+cron.schedule("50 23 * * *", async () => {
 	console.log("Menyimpan laporan harian dan menghapus riwayat lama...");
 	try {
 		await simpanHistory();
@@ -138,7 +137,7 @@ cron.schedule("0 00 * * *", async () => {
 	}
 }, {
 	scheduled: true,
-	//timezone: "Asia/Jakarta",
+	timezone: "Asia/Jakarta",
 });
 
 module.exports = {
@@ -146,4 +145,10 @@ module.exports = {
 	ambilHistoryById,
 	simpanHistory,
 	hapusHistory
+
 };
+
+
+
+
+
