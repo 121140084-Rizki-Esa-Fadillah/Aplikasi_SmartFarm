@@ -1,3 +1,6 @@
+# Desain Figma Smart App Aquaculture
+Link Figma High Fidelity : https://www.figma.com/design/HrD9DUBxa3wY8k8kyggjcA/High-Fidelity---Aplikasi-Sadewa-SmartFarm?node-id=0-1&t=bLOjM4lI8JK7XekC-1
+
 # Tools & Teknologi
 
 - **Express.js** (Backend Framework)
