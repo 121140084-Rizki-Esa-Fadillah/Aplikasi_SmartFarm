@@ -75,7 +75,7 @@ Pada file `api_service.dart` terdapat base URL API yang menghubungkan antara bac
 
 Secara default, backend telah dideploy ke platform Railway dengan base URL production sebagai berikut:
 
-`static const String baseUrl = "https://backendsadewasmartfarm-production.up.railway.app/api";`
+`static const String baseUrl = "https://backendsmartfarm-production.up.railway.app/api";`
 
 Untuk penggunaan di perangkat lain seperti smartphone untuk keperluan testing dapat menggunakan URL:
 
