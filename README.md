@@ -1,3 +1,6 @@
+# Link Vidio Demo Aplikasi
+Link GDrive : https://drive.google.com/drive/folders/1ustF-T44Lzk9xnpRewehroSwVmLbxCfB?usp=sharing
+
 # Desain Figma Smart App Aquaculture
 Link Figma High Fidelity : https://www.figma.com/design/HrD9DUBxa3wY8k8kyggjcA/High-Fidelity---Aplikasi-Sadewa-SmartFarm?node-id=0-1&t=bLOjM4lI8JK7XekC-1
 
